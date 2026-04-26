@@ -252,6 +252,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .sw-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;}
 .sw input:checked+.sw-slider{background:var(--green);}
 .sw input:checked+.sw-slider:before{transform:translateX(18px);}
+details summary::-webkit-details-marker{display:none;}
+.ds-bar-wrap:hover .ds-bar{filter:brightness(1.15);}
+.ds-bar-wrap:active{transform:scaleY(.97);}
+.sr.ds-open{background:var(--surface2);}
 </style>
 </head>
 <body>
@@ -371,7 +375,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <div class="form-section-title">📋 Referencia <span style="font-weight:400;font-size:.68rem;">(opcional)</span></div>
         <div class="form-row">
           <input class="input-f input-num" type="number" id="ref-cant" placeholder="Cant." min="0" step="any"/>
-          <select class="select-f" id="ref-fmt"><option value="">— Formato —</option><option value="unidad">Unidad</option><option value="caja">Caja</option><option value="bolsa">Bolsa</option><option value="bolsita">Bolsita</option><option value="paquete">Paquete</option><option value="sobre">Sobre</option><option value="sachet">Sachet</option><option value="java">Java</option><option value="botella">Botella</option><option value="lata">Lata</option><option value="frasco">Frasco</option><option value="empaque-vacio">Empaque al vacío</option><option value="a-granel">A granel</option><option value="al-corte">Al corte</option><option value="docena">Docena</option><option value="rollo">Rollo</option><option value="mixto">Mixto</option></select>
+          <select class="select-f" id="ref-fmt"><option value="">— Formato —</option><option value="bolsa">Bolsa</option><option value="paquete">Paquete</option><option value="caja">Caja</option><option value="sachet">Sachet</option><option value="sobre">Sobre</option><option value="botella">Botella</option><option value="lata">Lata</option><option value="frasco">Frasco</option><option value="rollo">Rollo</option><option value="java">Java</option><option value="mixto">Mixto</option><option value="unidad">Unidad</option></select>
         </div>
       </div>
       <div class="field">
@@ -390,21 +394,29 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div id="sec-comp" style="display:none">
       <div class="form-section">
         <div class="form-section-title">🛒 Compra <span class="req">*</span></div>
+        <div style="font-size:.73rem;color:var(--text3);margin-bottom:8px;">¿Cómo te despacharon el producto? Selecciona el formato en que lo recibiste.</div>
         <div class="form-row">
           <input class="input-f input-num" type="number" id="ni-cant" placeholder="Cant." min="0" step="any" oninput="recalcular()"/>
-          <select class="select-f" id="ni-fmt" onchange="recalcular()"><option value="">— Formato —</option><option value="unidad">Unidad</option><option value="caja">Caja</option><option value="bolsa">Bolsa</option><option value="bolsita">Bolsita</option><option value="paquete">Paquete</option><option value="sobre">Sobre</option><option value="sachet">Sachet</option><option value="java">Java</option><option value="botella">Botella</option><option value="lata">Lata</option><option value="frasco">Frasco</option><option value="empaque-vacio">Empaque al vacío</option><option value="a-granel">A granel</option><option value="al-corte">Al corte</option><option value="docena">Docena</option><option value="rollo">Rollo</option><option value="mixto">Mixto</option></select>
+          <select class="select-f" id="ni-fmt" onchange="recalcular();actualizarFmtEcho();manejarMixto()"><option value="">— Formato —</option><option value="bolsa">Bolsa</option><option value="paquete">Paquete</option><option value="caja">Caja</option><option value="sachet">Sachet</option><option value="sobre">Sobre</option><option value="botella">Botella</option><option value="lata">Lata</option><option value="frasco">Frasco</option><option value="rollo">Rollo</option><option value="java">Java</option><option value="mixto">Mixto</option><option value="unidad">Unidad</option></select>
         </div>
       </div>
-      <div class="form-section">
-        <div class="form-section-title">📦 Contenido por formato <span class="req">*</span></div>
-        <div style="font-size:.74rem;color:var(--text3);margin-bottom:8px;">Cada <span id="fmt-echo">formato</span> contiene:</div>
+      <div class="form-section" id="sec-contenido">
+        <div class="form-section-title">📦 Contenido por formato</div>
+        <div style="font-size:.74rem;color:var(--text3);margin-bottom:8px;">Cada <strong id="fmt-echo">formato</strong> contiene:</div>
         <div class="form-row">
-          <input class="input-f input-num" type="number" id="ni-cont-cant" placeholder="Cant." min="0" step="any" oninput="recalcular()"/>
-          <select class="select-f" id="ni-cont-und" onchange="recalcular()"><option value="">— Unidad base —</option><option value="unidades">Unidades</option><option value="gramos">Gramos</option><option value="ml">Mililitros (ml)</option></select>
+          <input class="input-f input-num" type="number" id="ni-cont-cant" placeholder="Cant." min="0" step="any" oninput="this.dataset.manualEdit='manual';onContenidoInput()"/>
+          <select class="select-f" id="ni-cont-und" onchange="onContenidoInput()"><option value="">— Unidad base —</option><option value="unidades">Unidades</option><option value="gramos">Gramos</option><option value="ml">Mililitros (ml)</option><option value="metros">Metros</option></select>
         </div>
+        <details style="margin-top:8px;">
+          <summary style="font-size:.7rem;color:var(--text3);cursor:pointer;user-select:none;list-style:none;display:flex;align-items:center;gap:4px;"><span>▸</span> <span>Ejemplos de unidades</span></summary>
+          <div style="font-size:.7rem;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);padding:8px 10px;margin-top:6px;line-height:1.8;">
+            <span>🍰 En torta → <strong>unidades</strong> = porciones</span><br>
+            <span>🫓 En empanadas → <strong>unidades</strong> = piezas</span>
+          </div>
+        </details>
       </div>
-      <div class="form-section">
-        <div class="form-section-title">➕ Variaciones <span style="font-weight:400;font-size:.68rem;">(si los formatos difieren)</span></div>
+      <div class="form-section" id="sec-variaciones">
+        <div class="form-section-title" id="var-section-title">➕ Variaciones <span style="font-weight:400;font-size:.68rem;">(si el contenido difiere entre unidades)</span></div>
         <div id="lista-variaciones"></div>
         <button class="btn-add-var" onclick="agregarVariacion()">+ Agregar variación</button>
       </div>
@@ -644,33 +656,133 @@ window.setEst=function(el,v){
 window.setResp=function(el,v){if(respBtn)respBtn.classList.remove('sel');el.classList.add('sel');respBtn=el;respA=v;updSD();};
 
 // CÁLCULO
+const FMT_LABELS={'bolsa':'Bolsa','paquete':'Paquete','caja':'Caja','sachet':'Sachet','sobre':'Sobre','botella':'Botella','lata':'Lata','frasco':'Frasco','rollo':'Rollo','java':'Java','mixto':'Mixto','unidad':'Unidad'};
+
+function actualizarFmtEcho(){
+  const fmt=document.getElementById('ni-fmt').value;
+  const el=document.getElementById('fmt-echo');
+  if(el)el.textContent=FMT_LABELS[fmt]||fmt||'formato';
+}
+window.actualizarFmtEcho=actualizarFmtEcho;
+
+// Llamado cuando el usuario escribe en Contenido por formato
+function onContenidoInput(){
+  const contCant=parseFloat(document.getElementById('ni-cont-cant').value)||0;
+  const contUnd=document.getElementById('ni-cont-und').value;
+  const hayContenido=contCant>0||contUnd!=='';
+  if(hayContenido){
+    // Tiene contenido → ocultar variaciones, limpiarlas si las hubiera
+    document.getElementById('sec-variaciones').style.display='none';
+    if(variaciones.length>0){variaciones=[];document.getElementById('lista-variaciones').innerHTML='';}
+  }else{
+    document.getElementById('sec-variaciones').style.display='block';
+  }
+  recalcular();
+}
+window.onContenidoInput=onContenidoInput;
+
+function manejarMixto(){
+  const fmt=document.getElementById('ni-fmt').value;
+  const secCont=document.getElementById('sec-contenido');
+  const secVar=document.getElementById('sec-variaciones');
+  const varTitle=document.getElementById('var-section-title');
+  if(fmt==='mixto'){
+    secCont.style.display='none';
+    secVar.style.display='block';
+    document.getElementById('ni-cont-cant').value='';
+    document.getElementById('ni-cont-und').value='';
+    document.getElementById('ni-cont-cant').dataset.manualEdit='';
+    varTitle.innerHTML='➕ Variaciones <span class="req">*</span> <span style="font-weight:400;font-size:.68rem;">obligatorio para Mixto</span>';
+  }else{
+    secCont.style.display='block';
+    varTitle.innerHTML='➕ Variaciones <span style="font-weight:400;font-size:.68rem;">(si el contenido difiere entre unidades)</span>';
+    const contCant=parseFloat(document.getElementById('ni-cont-cant').value)||0;
+    const hayContenido=contCant>0;
+    if(variaciones.length>0){
+      secCont.style.display='none';
+      secVar.style.display='block';
+    }else if(hayContenido){
+      secVar.style.display='none';
+      secCont.style.display='block';
+    }else{
+      secCont.style.display='block';
+      secVar.style.display='block';
+    }
+  }
+  recalcular();
+}
+window.manejarMixto=manejarMixto;
+
 function recalcular(){
   if(estA!=='comp'){document.getElementById('calc-preview').classList.remove('vis');return;}
   const cant=parseFloat(document.getElementById('ni-cant').value)||0;
-  const fmt=document.getElementById('ni-fmt').value||'formato';
-  const contCant=parseFloat(document.getElementById('ni-cont-cant').value)||0;
-  const contUnd=document.getElementById('ni-cont-und').value||'unidades';
-  const precio=parseFloat(document.getElementById('ni-pre').value)||0;
-  document.getElementById('fmt-echo').textContent=fmt;
+  const fmt=document.getElementById('ni-fmt').value||'';
+  const esMixto=fmt==='mixto';
+  actualizarFmtEcho();
   const hayVars=variaciones.length>0;
-  let total=hayVars?variaciones.reduce((s,v)=>(parseFloat(v.cant)||0)*(parseFloat(v.contCant)||0)+s,0):cant>0&&contCant>0?cant*contCant:0;
+  const contCant=parseFloat(document.getElementById('ni-cont-cant').value)||0;
+  const contUndEl=document.getElementById('ni-cont-und');
+  const contUnd=contUndEl.value||'unidades';
+  const precio=parseFloat(document.getElementById('ni-pre').value)||0;
+
+  // Determinar total y unidad base efectiva
+  let total=0;
+  let undBase=contUnd;
+  if(hayVars){
+    total=variaciones.reduce((s,v)=>(parseFloat(v.cant)||0)*(parseFloat(v.contCant)||0)+s,0);
+    // Unidad base desde variaciones: primera variación con unidad definida
+    const primeraUnd=variaciones.find(v=>v.contUnd)?.contUnd;
+    if(primeraUnd)undBase=primeraUnd;
+  }else if(cant>0&&contCant>0){
+    total=cant*contCant;
+    undBase=contUnd;
+  }
+
   const prev=document.getElementById('calc-preview');const warnEl=document.getElementById('calc-warn');
   if(total>0||cant>0){
     prev.classList.add('vis');
-    document.getElementById('calc-total').textContent=total>0?`${total} ${contUnd}`:'—';
-    document.getElementById('calc-cu').textContent=precio>0&&total>0?`S/ ${(precio/total).toFixed(4)} por ${contUnd.replace(/es$/,'')||'unid'}`:'—';
-    if(hayVars&&cant>0&&contCant>0&&Math.abs(total-cant*contCant)>0){warnEl.style.display='block';warnEl.textContent=`⚠️ Usando variaciones: total ${total} ${contUnd} (base ignorada: ${cant*contCant})`;}
-    else warnEl.style.display='none';
-  }else prev.classList.remove('vis');
+    const undLabel=undBase||'unid';
+    document.getElementById('calc-total').textContent=total>0?`${total} ${undLabel}`:'—';
+    // Costo unitario: precio / total unidades base
+    const undSingular=undLabel.replace(/es$|s$/,'').trim()||'unid';
+    document.getElementById('calc-cu').textContent=precio>0&&total>0?`S/ ${(precio/total).toFixed(4)} por ${undSingular}`:'—';
+    warnEl.style.display='none';
+  }else{
+    prev.classList.remove('vis');
+  }
   updSD();
 }
+window.recalcular=recalcular;
 
 // VARIACIONES
-window.agregarVariacion=function(){variaciones.push({cant:'',fmt:'',contCant:'',contUnd:''});renderVariaciones();recalcular();};
-window.eliminarVariacion=function(i){variaciones.splice(i,1);renderVariaciones();recalcular();};
+window.agregarVariacion=function(){
+  variaciones.push({cant:'',fmt:'',contCant:'',contUnd:''});
+  renderVariaciones();
+  // Al agregar variación: ocultar contenido por formato si no es mixto
+  const fmt=document.getElementById('ni-fmt').value;
+  if(fmt!=='mixto'){
+    document.getElementById('sec-contenido').style.display='none';
+    document.getElementById('sec-variaciones').style.display='block';
+    // Limpiar campo contenido
+    document.getElementById('ni-cont-cant').value='';
+    document.getElementById('ni-cont-und').value='';
+    document.getElementById('ni-cont-cant').dataset.manualEdit='';
+  }
+  recalcular();
+};
+window.eliminarVariacion=function(i){
+  variaciones.splice(i,1);
+  renderVariaciones();
+  // Si ya no quedan variaciones, volver a mostrar contenido por formato
+  const fmt=document.getElementById('ni-fmt').value;
+  if(variaciones.length===0&&fmt!=='mixto'){
+    document.getElementById('sec-contenido').style.display='block';
+  }
+  recalcular();
+};
 window.updateVar=function(i,c,v){if(variaciones[i])variaciones[i][c]=v;recalcular();};
-function fmtOpts(sel){const fL={'unidad':'Unidad','caja':'Caja','bolsa':'Bolsa','bolsita':'Bolsita','paquete':'Paquete','sobre':'Sobre','sachet':'Sachet','java':'Java','botella':'Botella','lata':'Lata','frasco':'Frasco','rollo':'Rollo','empaque-vacio':'Empaque al vacío','a-granel':'A granel','al-corte':'Al corte','docena':'Docena','mixto':'Mixto'};return Object.keys(fL).map(v=>`<option value="${v}"${sel===v?' selected':''}>${fL[v]}</option>`).join('');}
-function undOpts(sel){return[['unidades','Unidades'],['gramos','Gramos'],['ml','Mililitros (ml)']].map(([v,l])=>`<option value="${v}"${sel===v?' selected':''}>${l}</option>`).join('');}
+function fmtOpts(sel){const fL={'bolsa':'Bolsa','paquete':'Paquete','caja':'Caja','sachet':'Sachet','sobre':'Sobre','botella':'Botella','lata':'Lata','frasco':'Frasco','rollo':'Rollo','java':'Java','mixto':'Mixto','unidad':'Unidad'};return Object.keys(fL).map(v=>`<option value="${v}"${sel===v?' selected':''}>${fL[v]}</option>`).join('');}
+function undOpts(sel){return[['unidades','Unidades'],['gramos','Gramos'],['ml','Mililitros (ml)'],['metros','Metros']].map(([v,l])=>`<option value="${v}"${sel===v?' selected':''}>${l}</option>`).join('');}
 function renderVariaciones(){
   const c=document.getElementById('lista-variaciones');
   c.innerHTML=variaciones.map((v,i)=>`<div class="variacion-item"><div class="variacion-num">Variación ${i+1}</div><button class="btn-var-del" onclick="eliminarVariacion(${i})">✕</button>
@@ -686,6 +798,7 @@ function updSD(){
   if(estA==='pc'){_sd('sd-cat-p',!!document.getElementById('cat-p').value);_sd('sd-urg',!!urgA);}
   if(estA==='comp'){_sd('sd-pre',(parseFloat(document.getElementById('ni-pre').value)||0)>0);_sd('sd-cat-c',!!document.getElementById('cat-c').value);}
 }
+window.updSD=updSD;
 function _sd(id,ok){const e=document.getElementById(id);if(!e)return;e.classList.toggle('ok',ok);e.classList.remove('err');}
 function _sdErr(id){const e=document.getElementById(id);if(!e)return;e.classList.remove('ok');e.classList.add('err');}
 
@@ -693,6 +806,11 @@ function _sdErr(id){const e=document.getElementById(id);if(!e)return;e.classList
 function limpiarForm(){
   ['ni-nom','ref-cant','ni-cant','ni-cont-cant','ni-pre'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   ['ref-fmt','ni-fmt','ni-cont-und','cat-p','cat-c'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const fmtEcho=document.getElementById('fmt-echo');if(fmtEcho)fmtEcho.textContent='formato';
+  const contCantEl=document.getElementById('ni-cont-cant');if(contCantEl)contCantEl.dataset.manualEdit='';
+  const secCont=document.getElementById('sec-contenido');if(secCont)secCont.style.display='block';
+  const secVar=document.getElementById('sec-variaciones');if(secVar)secVar.style.display='block';
+  const varTitle=document.getElementById('var-section-title');if(varTitle)varTitle.innerHTML='➕ Variaciones <span style="font-weight:400;font-size:.68rem;">(si el contenido difiere entre unidades)</span>';
   document.getElementById('lista-variaciones').innerHTML='';variaciones=[];
   document.getElementById('sec-pc').style.display='none';document.getElementById('sec-comp').style.display='none';
   document.getElementById('calc-preview').classList.remove('vis');document.getElementById('sug-box').classList.remove('show');
@@ -725,15 +843,20 @@ window.agregarItem=function(){
     const contCant=parseFloat(document.getElementById('ni-cont-cant').value)||0;const contUnd=document.getElementById('ni-cont-und').value;
     const pre=parseFloat(document.getElementById('ni-pre').value)||0;const cat=document.getElementById('cat-c').value;
     const hayVars=variaciones.length>0;
+    const esMixto=fmt==='mixto';
     if(cant<=0){showModal('⚠️','Cantidad requerida','Ingresa la cantidad comprada.');return;}
     if(!fmt){showModal('⚠️','Formato requerido','Selecciona el formato de compra.');return;}
-    if(!hayVars&&contCant<=0){showModal('⚠️','Contenido requerido','Ingresa el contenido por formato o agrega variaciones.');return;}
-    if(!hayVars&&!contUnd){showModal('⚠️','Unidad base requerida','Selecciona la unidad base del contenido.');return;}
+    if(esMixto&&!hayVars){showModal('⚠️','Variaciones requeridas','Para formato Mixto debes agregar al menos una variación con su contenido.');return;}
+    if(!esMixto&&!hayVars&&contCant<=0){showModal('⚠️','Contenido requerido','Ingresa el contenido por formato o agrega variaciones.');return;}
+    if(!esMixto&&!hayVars&&!contUnd){showModal('⚠️','Unidad base requerida','Selecciona la unidad base del contenido.');return;}
     if(pre<=0){_sdErr('sd-pre');showModal('⚠️','Precio requerido','Ingresa el precio total de la compra.');return;}
     if(!cat){_sdErr('sd-cat-c');showModal('⚠️','Categoría requerida','Selecciona la categoría del producto.');return;}
     const totalCalc=hayVars?variaciones.reduce((s,v)=>(parseFloat(v.cant)||0)*(parseFloat(v.contCant)||0)+s,0):cant*contCant;
+    // Para mixto, derivar unidad_base desde la primera variación válida
+    const contUndFinal=esMixto?(variaciones.find(v=>v.contUnd)?.contUnd||'unidades'):contUnd;
+    const contCantFinal=esMixto?0:contCant;
     const vars=variaciones.map(v=>({cantidad:parseFloat(v.cant)||0,formato:v.fmt,contenido:{cantidad:parseFloat(v.contCant)||0,unidad:v.contUnd}}));
-    guardarItem({nombre,categoria:cat,urgencia:normUrg(urgA||'baja'),responsable:respA,quien,comprado:true,tsComprado:Date.now(),estado:'comprado',compra:{cantidad:cant,formato:fmt},contenido_por_formato:{cantidad:contCant,unidad:contUnd},unidad_base:contUnd,precio_total:pre,precio:pre,variaciones:vars,total_calculado:totalCalc,cantidad:cant,unidad:fmt});
+    guardarItem({nombre,categoria:cat,urgencia:normUrg(urgA||'baja'),responsable:respA,quien,comprado:true,tsComprado:Date.now(),estado:'comprado',compra:{cantidad:cant,formato:fmt},contenido_por_formato:{cantidad:contCantFinal,unidad:contUndFinal},unidad_base:contUndFinal,precio_total:pre,precio:pre,variaciones:vars,total_calculado:totalCalc,cantidad:cant,unidad:fmt});
   }
 };
 
@@ -758,7 +881,9 @@ window.editarItem=function(key){
     document.getElementById('ni-cant').value=item.compra?.cantidad||item.cantidad||'';document.getElementById('ni-fmt').value=item.compra?.formato||item.unidad||'';
     document.getElementById('ni-cont-cant').value=item.contenido_por_formato?.cantidad||'';document.getElementById('ni-cont-und').value=item.contenido_por_formato?.unidad||item.unidad_base||'';
     document.getElementById('ni-pre').value=item.precio_total||item.precio||'';document.getElementById('cat-c').value=item.categoria||'';
-    variaciones=(item.variaciones||[]).map(v=>({cant:v.cantidad,fmt:v.formato,contCant:v.contenido?.cantidad,contUnd:v.contenido?.unidad}));renderVariaciones();recalcular();
+    variaciones=(item.variaciones||[]).map(v=>({cant:v.cantidad,fmt:v.formato,contCant:v.contenido?.cantidad,contUnd:v.contenido?.unidad}));renderVariaciones();
+    // Restaurar estado mixto si aplica
+    manejarMixto();
   }else{
     document.getElementById('ref-cant').value=item.compra?.cantidad||item.cantidad||'';document.getElementById('ref-fmt').value=item.compra?.formato||item.unidad||'';
     document.getElementById('cat-p').value=item.categoria||'';
@@ -877,9 +1002,9 @@ window.abrirEditHist=function(fbKey,tipo){
   // helpers
   const _L={CARNES:'Carnes',VERDURAS:'Verduras y hojas',LACTEOS:'Lácteos, huevos y derivados',FRUTAS:'Frutas',INSUMOS:'Otros insumos',PREPARADOS:'Preparados (listo para vender)',BEBIDAS:'Bebidas envasadas (listo para vender)',ENVASES:'Envases y embalaje',LIMPIEZA:'Limpieza',OTROS:'Otros'};
   const catOpts=['CARNES','VERDURAS','LACTEOS','FRUTAS','INSUMOS','PREPARADOS','BEBIDAS','ENVASES','LIMPIEZA','OTROS'].map(cat=>`<option value="${cat}"${it.categoria===cat?' selected':''}>${EM[cat]||''} ${_L[cat]}</option>`).join('');
-  const _fL={'unidad':'Unidad','caja':'Caja','bolsa':'Bolsa','bolsita':'Bolsita','paquete':'Paquete','sobre':'Sobre','sachet':'Sachet','java':'Java','botella':'Botella','lata':'Lata','frasco':'Frasco','rollo':'Rollo','empaque-vacio':'Empaque al vacío','a-granel':'A granel','al-corte':'Al corte','docena':'Docena','mixto':'Mixto'};
+  const _fL={'bolsa':'Bolsa','paquete':'Paquete','caja':'Caja','sachet':'Sachet','sobre':'Sobre','botella':'Botella','lata':'Lata','frasco':'Frasco','rollo':'Rollo','java':'Java','mixto':'Mixto','unidad':'Unidad'};
   function mkFmtSel(id,val){return `<select class="select-f" id="${id}"><option value="">— Formato —</option>${Object.keys(_fL).map(v=>`<option value="${v}"${val===v?' selected':''}>${_fL[v]}</option>`).join('')}</select>`;}
-  function mkUndSel(id,val){return `<select class="select-f" id="${id}"><option value="">— Unidad base —</option>${[['unidades','Unidades'],['gramos','Gramos'],['ml','Mililitros (ml)']].map(([v,l])=>`<option value="${v}"${val===v?' selected':''}>${l}</option>`).join('')}</select>`;}
+  function mkUndSel(id,val){return `<select class="select-f" id="${id}"><option value="">— Unidad base —</option>${[['unidades','Unidades'],['gramos','Gramos'],['ml','Mililitros (ml)'],['metros','Metros']].map(([v,l])=>`<option value="${v}"${val===v?' selected':''}>${l}</option>`).join('')}</select>`;}
 
   const fmtVal=it.compra?.formato||it.unidad||'';
   const contUndVal=it.contenido_por_formato?.unidad||it.unidad_base||'';
@@ -1036,14 +1161,83 @@ function renderStats(){
     document.getElementById('st-ticket').innerHTML=`<div class="sr"><span class="sr-n">Promedio</span><span class="sr-v" style="width:auto">S/ ${avg.toFixed(2)}</span></div><div class="sr"><span class="sr-n">Mediana</span><span class="sr-v" style="width:auto">S/ ${med.toFixed(2)}</span></div><div class="sr"><span class="sr-n">Rango (min–max)</span><span class="sr-e" style="width:auto">S/ ${mn2.toFixed(2)} – S/ ${mx2.toFixed(2)}</span></div><div class="sr"><span class="sr-n">Compras con precio</span><span class="sr-v" style="width:auto">${conPrecio.length} / ${todos.length}</span></div>`;
   }else document.getElementById('st-ticket').innerHTML=nd;
 
-  // Gasto por día de semana
-  const DS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];const gDS={};DS.forEach((d,i)=>gDS[i]={label:d,g:0,c:0});
-  todos.forEach(i=>{const dd=new Date(i.tsComprado||i.ts||0).getDay();gDS[dd].g+=getP(i);gDS[dd].c++;});
+  // Gasto por día de semana — interactivo
+  const DS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];const gDS={};DS.forEach((d,i)=>gDS[i]={label:d,g:0,c:0,items:[]});
+  todos.forEach(i=>{const dd=new Date(i.tsComprado||i.ts||0).getDay();gDS[dd].g+=getP(i);gDS[dd].c++;if(getP(i)>0)gDS[dd].items.push(i);});
   const dsArr=Object.values(gDS);const mxDS=dsArr.reduce((b,d)=>d.g>b.g?d:b,{g:0});
-  document.getElementById('st-diasem').innerHTML=`<div style="display:flex;gap:4px;align-items:flex-end;height:60px;margin-bottom:6px;">${dsArr.map(d=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="width:100%;background:${mxDS.label===d.label?'var(--accent)':'var(--border)'};border-radius:3px 3px 0 0;height:${mxDS.g>0?Math.max(4,Math.round(d.g/mxDS.g*48)):4}px;"></div><span style="font-size:.55rem;color:var(--text3);font-weight:600;">${d.label}</span></div>`).join('')}</div><div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--text3);"><span>Pico: <strong style="color:var(--accent)">${mxDS.label} S/ ${mxDS.g.toFixed(2)}</strong></span><span>${mxDS.c} compras</span></div>`;
+  const diasemHTML=`<div id="diasem-chart" style="display:flex;gap:4px;align-items:flex-end;height:70px;margin-bottom:6px;">${dsArr.map((d,i)=>{const h=mxDS.g>0?Math.max(4,Math.round(d.g/mxDS.g*54)):4;const isMx=mxDS.label===d.label;return `<div class="ds-bar-wrap" data-idx="${i}" onclick="toggleDiaSem(${i})" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;"><div class="ds-bar" data-idx="${i}" style="width:100%;background:${isMx?'var(--accent)':'var(--border)'};border-radius:3px 3px 0 0;height:${h}px;transition:all .18s;"></div><span style="font-size:.55rem;color:var(--text3);font-weight:600;">${d.label}</span></div>`;}).join('')}</div><div id="diasem-foot" style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--text3);"><span>Pico: <strong style="color:var(--accent)">${mxDS.label} S/ ${mxDS.g.toFixed(2)}</strong></span><span>${mxDS.c} compras</span></div><div id="diasem-detail" style="display:none;margin-top:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);padding:10px 12px;font-size:.78rem;"></div>`;
+  document.getElementById('st-diasem').innerHTML=diasemHTML;
+  // guardar dsArr globalmente para el toggle
+  window._dsArr=dsArr;
+  window._dsSelIdx=null;
 
+  // Interactividad en Gasto por categoría
+  const stCat=document.getElementById('st-cat');
+  stCat.querySelectorAll('.sr').forEach(row=>{
+    row.style.cursor='pointer';row.style.borderRadius='var(--rsm)';row.style.transition='background .15s';
+    row.addEventListener('click',function(){
+      const wasOpen=this.classList.contains('ds-open');
+      stCat.querySelectorAll('.sr').forEach(r=>{r.classList.remove('ds-open');r.style.background='';const ex=r.nextElementSibling;if(ex&&ex.classList.contains('sr-expand'))ex.remove();});
+      if(!wasOpen){
+        this.classList.add('ds-open');this.style.background='var(--surface2)';
+        const catName=this.querySelector('.sr-n').textContent.trim().replace(/^[^\s]+\s/,'');
+        const catItems=todos.filter(i=>(i.categoria||'OTROS')===catName&&getP(i)>0).sort((a,b)=>getP(b)-getP(a)).slice(0,3);
+        if(catItems.length){const div=document.createElement('div');div.className='sr-expand';div.style.cssText='padding:4px 0 4px 8px;margin-top:-4px;margin-bottom:6px;border-left:2px solid var(--accent);font-size:.72rem;color:var(--text2);';div.innerHTML=catItems.map(it=>`<div style="display:flex;justify-content:space-between;padding:2px 0;"><span>${it.nombre}</span><span style="font-weight:700;color:var(--text);">S/ ${getP(it).toFixed(2)}</span></div>`).join('');this.after(div);}
+      }
+    });
+  });
+
+  // Interactividad en Más comprados
+  const stTop=document.getElementById('st-top');
+  stTop.querySelectorAll('.sr').forEach(row=>{
+    row.style.cursor='pointer';row.style.borderRadius='var(--rsm)';row.style.transition='background .15s';
+    row.addEventListener('click',function(){
+      const wasOpen=this.classList.contains('ds-open');
+      stTop.querySelectorAll('.sr').forEach(r=>{r.classList.remove('ds-open');r.style.background='';const ex=r.nextElementSibling;if(ex&&ex.classList.contains('sr-expand'))ex.remove();});
+      if(!wasOpen){
+        this.classList.add('ds-open');this.style.background='var(--surface2)';
+        const nom=this.querySelector('.sr-n').textContent.trim();
+        const nomNorm=nom.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+        const prodItems=todos.filter(i=>norm(i.nombre||'')===nomNorm&&getP(i)>0).sort((a,b)=>getP(b)-getP(a));
+        if(prodItems.length){const avg=prodItems.reduce((s,it)=>s+getP(it),0)/prodItems.length;const last=new Date(prodItems[0]?.tsComprado||0);const D=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];const lastStr=`${D[last.getDay()]} ${last.getDate()} ${M[last.getMonth()]}`;const div=document.createElement('div');div.className='sr-expand';div.style.cssText='padding:4px 0 4px 8px;margin-top:-4px;margin-bottom:6px;border-left:2px solid var(--accent);font-size:.72rem;color:var(--text2);';div.innerHTML=`<div style="display:flex;justify-content:space-between;padding:2px 0;"><span>Precio promedio</span><span style="font-weight:700;color:var(--text);">S/ ${avg.toFixed(2)}</span></div><div style="display:flex;justify-content:space-between;padding:2px 0;"><span>Última compra</span><span style="font-weight:700;color:var(--text);">${lastStr}</span></div><div style="display:flex;justify-content:space-between;padding:2px 0;"><span>Total comprado</span><span style="font-weight:700;color:var(--text);">${prodItems.length}x</span></div>`;this.after(div);}
+      }
+    });
+  });
 
 }
+
+// DÍA DE SEMANA — toggle interactivo
+window.toggleDiaSem=function(idx){
+  const dsArr=window._dsArr;if(!dsArr)return;
+  const d=dsArr[idx];
+  const detail=document.getElementById('diasem-detail');
+  const bars=document.querySelectorAll('.ds-bar');
+  const wraps=document.querySelectorAll('.ds-bar-wrap');
+  const mxDS=dsArr.reduce((b,dd)=>dd.g>b.g?dd:b,{g:0});
+  if(window._dsSelIdx===idx){
+    // deseleccionar
+    window._dsSelIdx=null;detail.style.display='none';
+    bars.forEach((bar,i)=>{bar.style.background=mxDS.label===dsArr[i].label?'var(--accent)':'var(--border)';bar.style.opacity='1';});
+  }else{
+    window._dsSelIdx=idx;
+    bars.forEach((bar,i)=>{
+      const isSel=i===idx;const isMx=mxDS.label===dsArr[i].label;
+      bar.style.background=isSel?'var(--blue)':isMx?'var(--accent)':'var(--border)';
+      bar.style.opacity=isSel?'1':'0.5';
+    });
+    // resumen del día
+    const caroArr=d.items.sort((a,b)=>getP(b)-getP(a));
+    const caroItem=caroArr[0];
+    const M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    let html=`<div style="font-weight:700;color:var(--text);margin-bottom:6px;">📅 ${d.label} — resumen</div>`;
+    html+=`<div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--text3);">Total gastado</span><span style="font-weight:700;color:var(--accent);">S/ ${d.g.toFixed(2)}</span></div>`;
+    html+=`<div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--text3);">N° de compras</span><span style="font-weight:700;">${d.c}</span></div>`;
+    if(d.g>0&&d.c>0)html+=`<div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--text3);">Ticket promedio</span><span style="font-weight:700;">S/ ${(d.g/d.c).toFixed(2)}</span></div>`;
+    if(caroItem)html+=`<div style="display:flex;flex-direction:column;gap:2px;margin-bottom:3px;"><span style="color:var(--text3);">Producto más caro</span><div style="display:flex;justify-content:space-between;align-items:center;gap:6px;"><span style="font-weight:600;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${caroItem.nombre}</span><span style="font-weight:700;color:var(--red);white-space:nowrap;flex-shrink:0;">S/ ${getP(caroItem).toFixed(2)}</span></div></div>`;
+    if(d.c===0)html+=`<div style="color:var(--text3);text-align:center;padding:4px 0;">Sin compras registradas este día</div>`;
+    detail.innerHTML=html;detail.style.display='block';
+  }
+};
 
 // ADMIN PANEL HISTORIAL
 // PIN nunca persiste — siempre se pide al abrir. Timeout de inactividad: 3 min.
@@ -1133,4 +1327,4 @@ iniciarReminderLoop();
 </script>
 </body>
   </html>
-                                                                                                                                         
+  
