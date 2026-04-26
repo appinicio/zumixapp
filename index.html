@@ -160,6 +160,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .mm-nom{font-size:.8rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .mm-precio{font-size:.9rem;font-weight:800;margin-top:2px;}
 .mm.max .mm-precio{color:#027A48;}.mm.min .mm-precio{color:var(--blue);}
+[data-theme="dark"] .mm.max{background:#064E3B;border-color:#065F46;}
+[data-theme="dark"] .mm.min{background:#1E3A5F;border-color:#1D4ED8;}
+[data-theme="dark"] .mm.max .mm-nom,[data-theme="dark"] .mm.max .mm-lab{color:#6EE7B7;}
+[data-theme="dark"] .mm.min .mm-nom,[data-theme="dark"] .mm.min .mm-lab{color:#93C5FD;}
+[data-theme="dark"] .mm.max .mm-precio{color:#34D399;}
+[data-theme="dark"] .mm.min .mm-precio{color:#60A5FA;}
 .textarea-f{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--rsm);font-family:'Inter',sans-serif;font-size:.88rem;color:var(--text);background:var(--surface);outline:none;resize:none;}
 .textarea-f::placeholder{color:var(--text3);}
 .preview-c{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-top:10px;display:none;}
@@ -363,7 +369,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <div class="form-section-title">📋 Referencia <span style="font-weight:400;font-size:.68rem;">(opcional)</span></div>
         <div class="form-row">
           <input class="input-f input-num" type="number" id="ref-cant" placeholder="Cant." min="0" step="any"/>
-          <select class="select-f" id="ref-fmt"><option value="">— Formato —</option><option value="unidad">Unidad</option><option value="caja">Caja</option><option value="bolsa">Bolsa</option><option value="bolsita">Bolsita</option><option value="paquete">Paquete</option><option value="sobre">Sobre</option><option value="sachet">Sachet</option><option value="java">Java</option><option value="botella">Botella</option><option value="lata">Lata</option><option value="frasco">Frasco</option><option value="empaque-vacio">Empaque al vacío</option><option value="a-granel">A granel / al corte</option><option value="docena">Docena</option><option value="rollo">Rollo</option><option value="mixto">Mixto</option></select>
+          <select class="select-f" id="ref-fmt"><option value="">— Formato —</option><option value="unidad">Unidad</option><option value="caja">Caja</option><option value="bolsa">Bolsa</option><option value="bolsita">Bolsita</option><option value="paquete">Paquete</option><option value="sobre">Sobre</option><option value="sachet">Sachet</option><option value="java">Java</option><option value="botella">Botella</option><option value="lata">Lata</option><option value="frasco">Frasco</option><option value="empaque-vacio">Empaque al vacío</option><option value="a-granel">A granel</option><option value="al-corte">Al corte</option><option value="docena">Docena</option><option value="rollo">Rollo</option><option value="mixto">Mixto</option></select>
         </div>
       </div>
       <div class="field">
@@ -384,7 +390,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <div class="form-section-title">🛒 Compra <span class="req">*</span></div>
         <div class="form-row">
           <input class="input-f input-num" type="number" id="ni-cant" placeholder="Cant." min="0" step="any" oninput="recalcular()"/>
-          <select class="select-f" id="ni-fmt" onchange="recalcular()"><option value="">— Formato —</option><option value="unidad">Unidad</option><option value="caja">Caja</option><option value="bolsa">Bolsa</option><option value="bolsita">Bolsita</option><option value="paquete">Paquete</option><option value="sobre">Sobre</option><option value="sachet">Sachet</option><option value="java">Java</option><option value="botella">Botella</option><option value="lata">Lata</option><option value="frasco">Frasco</option><option value="empaque-vacio">Empaque al vacío</option><option value="a-granel">A granel / al corte</option><option value="docena">Docena</option><option value="rollo">Rollo</option><option value="mixto">Mixto</option></select>
+          <select class="select-f" id="ni-fmt" onchange="recalcular()"><option value="">— Formato —</option><option value="unidad">Unidad</option><option value="caja">Caja</option><option value="bolsa">Bolsa</option><option value="bolsita">Bolsita</option><option value="paquete">Paquete</option><option value="sobre">Sobre</option><option value="sachet">Sachet</option><option value="java">Java</option><option value="botella">Botella</option><option value="lata">Lata</option><option value="frasco">Frasco</option><option value="empaque-vacio">Empaque al vacío</option><option value="a-granel">A granel</option><option value="al-corte">Al corte</option><option value="docena">Docena</option><option value="rollo">Rollo</option><option value="mixto">Mixto</option></select>
         </div>
       </div>
       <div class="form-section">
@@ -495,7 +501,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="stat-card"><div class="stat-title">👤 Actividad por persona</div><div id="st-emp"><p class="no-data">Sin datos</p></div></div>
     <div class="stat-card"><div class="stat-title">🎯 Ticket promedio y dispersión</div><div id="st-ticket"><p class="no-data">Sin datos</p></div></div>
     <div class="stat-card"><div class="stat-title">📆 Gasto por día de semana</div><div id="st-diasem"><p class="no-data">Sin datos</p></div></div>
-    <div class="stat-card"><div class="stat-title">💡 Productos sin precio registrado</div><div id="st-sinprecio"><p class="no-data">Sin datos</p></div></div>
   </div>
   <div class="subpane" id="sp-comparaciones">
     <div class="stat-card"><div class="stat-title">📅 Últimos 3 días</div><div class="comp-grid" id="comp-dias"></div></div>
@@ -657,7 +662,7 @@ function recalcular(){
 window.agregarVariacion=function(){variaciones.push({cant:'',fmt:'',contCant:'',contUnd:''});renderVariaciones();recalcular();};
 window.eliminarVariacion=function(i){variaciones.splice(i,1);renderVariaciones();recalcular();};
 window.updateVar=function(i,c,v){if(variaciones[i])variaciones[i][c]=v;recalcular();};
-function fmtOpts(sel){const fL={'unidad':'Unidad','caja':'Caja','bolsa':'Bolsa','bolsita':'Bolsita','paquete':'Paquete','sobre':'Sobre','sachet':'Sachet','java':'Java','botella':'Botella','lata':'Lata','frasco':'Frasco','rollo':'Rollo','empaque-vacio':'Empaque al vacío','a-granel':'A granel / al corte','docena':'Docena','mixto':'Mixto'};return Object.keys(fL).map(v=>`<option value="${v}"${sel===v?' selected':''}>${fL[v]}</option>`).join('');}
+function fmtOpts(sel){const fL={'unidad':'Unidad','caja':'Caja','bolsa':'Bolsa','bolsita':'Bolsita','paquete':'Paquete','sobre':'Sobre','sachet':'Sachet','java':'Java','botella':'Botella','lata':'Lata','frasco':'Frasco','rollo':'Rollo','empaque-vacio':'Empaque al vacío','a-granel':'A granel','al-corte':'Al corte','docena':'Docena','mixto':'Mixto'};return Object.keys(fL).map(v=>`<option value="${v}"${sel===v?' selected':''}>${fL[v]}</option>`).join('');}
 function undOpts(sel){return[['unidades','Unidades'],['gramos','Gramos'],['ml','Mililitros (ml)']].map(([v,l])=>`<option value="${v}"${sel===v?' selected':''}>${l}</option>`).join('');}
 function renderVariaciones(){
   const c=document.getElementById('lista-variaciones');
@@ -828,7 +833,7 @@ function renderHist(){
   let filFinal=fil;
   if(adminModeActive&&searchAdminHist){const qa=norm(searchAdminHist);filFinal=fil.filter(i=>norm(i.nombre||'').includes(qa)||norm(i.categoria||'').includes(qa)||norm(i.quien||'').includes(qa));}
   const _urgDot=u=>u==='alta'||u==='urgente'?'urg':u==='media'?'med':u==='baja'?'baj':'nor';
-  cont.innerHTML=filFinal.map(it=>{const d=new Date(it.tsComprado||it.ts||0);const fT=`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;const em=EM[it.categoria]||'⚙️';const dot=_urgDot(it.urgencia);const p=getP(it);const cantStr=it.compra?.cantidad?`${it.compra.cantidad} ${it.compra.formato||''}`:`${it.cantidad||1} ${it.unidad||'und'}`;const totalStr8=it.total_calculado&&it.unidad_base?` · ${it.total_calculado} ${it.unidad_base}`:'';const cuStr=p&&it.total_calculado&&it.total_calculado>0?` · S/ ${(p/it.total_calculado).toFixed(4)}/${(it.unidad_base||'unid').replace(/es$/,'')||'unid'}`:'';const modBadge=adminModeActive&&modifiedInSession.has(it.fbKey)?'<span class="mod-badge">✏️ modificado recientemente</span>':'';const editBtn=adminModeActive?`<button class="ia-sm" onclick="event.stopPropagation();abrirEditHist('${it.fbKey}','hist')" style="font-size:.7rem;padding:3px 7px;">✏️ Editar</button>`:'';return `<div class="arch-item" style="${adminModeActive?'cursor:pointer':''}"><div class="ai-dot ${dot}"></div><div class="ai-body"><div class="ai-nom">${em} ${it.nombre}</div><div class="ai-sub">${cantStr}${totalStr8}${cuStr} · ${it.categoria||'—'} · ${it.quien||'—'}</div>${modBadge}</div><div class="ai-right"><div class="ai-precio">${p?`S/ ${p.toFixed(2)}`:'—'}</div><div class="ai-fecha">${fT}</div>${editBtn}</div></div>`;}).join('');
+  cont.innerHTML=filFinal.map(it=>{const d=new Date(it.tsComprado||it.ts||0);const fT=`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;const em=EM[it.categoria]||'⚙️';const dot=_urgDot(it.urgencia);const p=getP(it);const cantStr=it.compra?.cantidad?`${it.compra.cantidad} ${it.compra.formato||''}`:`${it.cantidad||1} ${it.unidad||'und'}`;const totalStr8=it.total_calculado&&it.unidad_base?` · ${it.total_calculado} ${it.unidad_base}`:'';const cuStr=p&&it.total_calculado&&it.total_calculado>0?` · S/ ${(p/it.total_calculado).toFixed(4)}/${(it.unidad_base||'unid').replace(/es$/,'')||'unid'}`:'';const modBadge=adminModeActive&&modifiedInSession.has(it.fbKey)?'<span class="mod-badge">✏️ modificado recientemente</span>':'';const editBtn=adminModeActive?`<button class="ia-sm btn-hedit-admin" data-key="${it.fbKey}" data-tipo="hist" style="font-size:.7rem;padding:3px 7px;margin-top:4px;">✏️ Editar</button>`:'';return `<div class="arch-item"><div class="ai-dot ${dot}"></div><div class="ai-body"><div class="ai-nom">${em} ${it.nombre}</div><div class="ai-sub">${cantStr}${totalStr8}${cuStr} · ${it.categoria||'—'} · ${it.quien||'—'}</div>${modBadge}</div><div class="ai-right"><div class="ai-precio">${p?`S/ ${p.toFixed(2)}`:'—'}</div><div class="ai-fecha">${fT}</div>${editBtn}</div></div>`;}).join('');
 }
 
 // BÚSQUEDA
@@ -851,21 +856,49 @@ window.exportarExcel=function(){
 
 // MODAL EDICIÓN HISTORIAL
 window.abrirEditHist=function(fbKey,tipo){
-  const it=tipo==='hist'?historial.find(h=>h.fbKey===fbKey):activos.find(a=>a.fbKey===fbKey);if(!it)return;editHistItem={...it,_tipo:tipo||'hist'};
-  const d=new Date(it.tsComprado||it.ts||0);const pad=n=>String(n).padStart(2,'0');const dtStr=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  document.getElementById('hedit-fields').innerHTML=`<div class="hedit-field"><div class="hedit-label">Nombre</div><input class="input-f" id="he-nom" value="${it.nombre||''}" placeholder="Nombre"/></div><div class="hedit-field"><div class="hedit-label">Cantidad</div><div class="hedit-row"><input class="input-f" id="he-cant" type="number" value="${it.compra?.cantidad||it.cantidad||1}" style="width:80px" min="0.01" step="any"/><input class="input-f" id="he-fmt" value="${it.compra?.formato||it.unidad||'und'}" placeholder="Formato" style="flex:1"/></div></div><div class="hedit-field"><div class="hedit-label">Precio total (S/)</div><input class="input-f" id="he-pre" type="number" value="${getP(it)||''}" placeholder="0.00" min="0" step="0.01"/></div><div class="hedit-field"><div class="hedit-label">Categoría</div><select class="select-f" id="he-cat">${(()=>{const _L={CARNES:'Carnes',VERDURAS:'Verduras y hojas',LACTEOS:'Lácteos, huevos y derivados',FRUTAS:'Frutas',INSUMOS:'Otros insumos',PREPARADOS:'Preparados',BEBIDAS:'Bebidas y envasados',ENVASES:'Envases y embalaje',LIMPIEZA:'Limpieza',OTROS:'Otros'};return['CARNES','VERDURAS','LACTEOS','FRUTAS','INSUMOS','PREPARADOS','BEBIDAS','ENVASES','LIMPIEZA','OTROS'].map(c=>`<option value="${c}"${it.categoria===c?' selected':''}>${EM[c]||''} ${_L[c]}</option>`).join('');})()}</select></div><div class="hedit-field"><div class="hedit-label">Urgencia</div><select class="select-f" id="he-urg"><option value="alta"${it.urgencia==='alta'||it.urgencia==='urgente'?' selected':''}>🔴 Alta prioridad</option><option value="media"${it.urgencia==='media'?' selected':''}>🔵 Media prioridad</option><option value="baja"${it.urgencia==='baja'||it.urgencia==='normal'||(it.urgencia!=='alta'&&it.urgencia!=='urgente'&&it.urgencia!=='media')?' selected':''}>🟢 Puede esperar</option></select></div><div class="hedit-field"><div class="hedit-label">Registrado por</div><input class="input-f" id="he-quien" value="${it.quien||''}" placeholder="Nombre"/></div><div class="hedit-field"><div class="hedit-label">Fecha y hora de compra</div><input class="input-f" id="he-fecha" type="datetime-local" value="${dtStr}"/></div>`;
+  if(!adminModeActive)return; // solo admin
+  // Buscar en historial primero, luego en activos comprados
+  let it=historial.find(h=>h.fbKey===fbKey);
+  let tipoReal='hist';
+  if(!it){it=activos.find(a=>a.fbKey===fbKey);tipoReal='activo';}
+  if(!it)return;
+  editHistItem={...it,_tipo:tipoReal};
+  const d=new Date(it.tsComprado||it.ts||0);const pad=n=>String(n).padStart(2,'0');
+  const dtStr=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const catOpts=(()=>{const _L={CARNES:'Carnes',VERDURAS:'Verduras y hojas',LACTEOS:'Lácteos, huevos y derivados',FRUTAS:'Frutas',INSUMOS:'Otros insumos',PREPARADOS:'Preparados (listo para vender)',BEBIDAS:'Bebidas envasadas (listo para vender)',ENVASES:'Envases y embalaje',LIMPIEZA:'Limpieza',OTROS:'Otros'};return['CARNES','VERDURAS','LACTEOS','FRUTAS','INSUMOS','PREPARADOS','BEBIDAS','ENVASES','LIMPIEZA','OTROS'].map(cat=>`<option value="${cat}"${it.categoria===cat?' selected':''}>${EM[cat]||''} ${_L[cat]}</option>`).join('');})();
+  const fmtVal=it.compra?.formato||it.unidad||'';
+  const fmtOA=(()=>{const fL={'unidad':'Unidad','caja':'Caja','bolsa':'Bolsa','bolsita':'Bolsita','paquete':'Paquete','sobre':'Sobre','sachet':'Sachet','java':'Java','botella':'Botella','lata':'Lata','frasco':'Frasco','rollo':'Rollo','empaque-vacio':'Empaque al vacío','a-granel':'A granel','al-corte':'Al corte','docena':'Docena','mixto':'Mixto'};return Object.keys(fL).map(v=>`<option value="${v}"${fmtVal===v?' selected':''}>${fL[v]}</option>`).join('');})();
+  document.getElementById('hedit-fields').innerHTML=
+    `<div class="hedit-field"><div class="hedit-label">Nombre del producto</div><input class="input-f" id="he-nom" value="${(it.nombre||'').replace(/"/g,'&quot;')}" placeholder="Nombre"/></div>`+
+    `<div class="hedit-field"><div class="hedit-label">Cantidad comprada</div><div class="hedit-row"><input class="input-f" id="he-cant" type="number" value="${it.compra?.cantidad||it.cantidad||1}" style="width:90px" min="0.01" step="any"/><select class="select-f" id="he-fmt"><option value="">— Formato —</option>${fmtOA}</select></div></div>`+
+    `<div class="hedit-field"><div class="hedit-label">Precio total (S/)</div><input class="input-f" id="he-pre" type="number" value="${getP(it)||''}" placeholder="0.00" min="0" step="0.01"/></div>`+
+    `<div class="hedit-field"><div class="hedit-label">Categoría</div><select class="select-f" id="he-cat">${catOpts}</select></div>`+
+    `<div class="hedit-field"><div class="hedit-label">Urgencia</div><select class="select-f" id="he-urg"><option value="alta"${it.urgencia==='alta'||it.urgencia==='urgente'?' selected':''}>🔴 Alta prioridad</option><option value="media"${it.urgencia==='media'?' selected':''}>🔵 Media prioridad</option><option value="baja"${(it.urgencia==='baja'||it.urgencia==='normal'||!it.urgencia)?' selected':''}>🟢 Puede esperar</option></select></div>`+
+    `<div class="hedit-field"><div class="hedit-label">Registrado por</div><input class="input-f" id="he-quien" value="${(it.quien||'').replace(/"/g,'&quot;')}" placeholder="Nombre"/></div>`+
+    `<div class="hedit-field"><div class="hedit-label">📅 Fecha y hora de compra</div><input class="input-f" id="he-fecha" type="datetime-local" value="${dtStr}"/><div style="font-size:.68rem;color:var(--text3);margin-top:3px;">Modifica si se registró en fecha/hora incorrecta</div></div>`;
   document.getElementById('overlay-hedit').classList.add('show');
 };
 window.guardarEditHist=function(){
   if(!editHistItem)return;const nom=document.getElementById('he-nom').value.trim();if(!nom){alert('El nombre es obligatorio.');return;}
-  const cant=parseFloat(document.getElementById('he-cant').value)||1;const fmt=document.getElementById('he-fmt').value.trim();const pre=parseFloat(document.getElementById('he-pre').value)||null;const cat=document.getElementById('he-cat').value;const _urgRaw=document.getElementById('he-urg').value;const urg=_urgRaw==='urgente'?'alta':_urgRaw==='normal'?'baja':_urgRaw;const quien=document.getElementById('he-quien').value.trim().toUpperCase();const fechaVal=document.getElementById('he-fecha').value;const tsComprado=fechaVal?new Date(fechaVal).getTime():(editHistItem.tsComprado||Date.now());
-  const payload={nombre:nom,cantidad:cant,unidad:fmt,precio:pre,precio_total:pre,categoria:cat,urgencia:urg,quien,tsComprado,ts:editHistItem.ts||tsComprado,compra:{cantidad:cant,formato:fmt}};
-  if(editHistItem._tipo==='hist')update(ref(db,`archivo/${editHistItem.fbKey}`),payload);else{payload.comprado=true;update(ref(db,`faltantes/${editHistItem.fbKey}`),payload);}
+  const cant=parseFloat(document.getElementById('he-cant').value)||1;const fmt=document.getElementById('he-fmt').value||'und';const pre=parseFloat(document.getElementById('he-pre').value)||null;const cat=document.getElementById('he-cat').value;const _urgRaw=document.getElementById('he-urg').value;const urg=_urgRaw==='urgente'?'alta':_urgRaw==='normal'?'baja':_urgRaw;const quien=document.getElementById('he-quien').value.trim().toUpperCase()||editHistItem.quien||'';const fechaVal=document.getElementById('he-fecha').value;const tsComprado=fechaVal?new Date(fechaVal).getTime():(editHistItem.tsComprado||Date.now());
+  const payload={nombre:nom,cantidad:cant,unidad:fmt,precio:pre,precio_total:pre,categoria:cat,urgencia:urg,quien,tsComprado,ts:editHistItem.ts||tsComprado,compra:{cantidad:cant,formato:fmt},contenido_por_formato:editHistItem.contenido_por_formato||null,unidad_base:editHistItem.unidad_base||null,total_calculado:editHistItem.total_calculado||null,variaciones:editHistItem.variaciones||[]};
+  const _ref=editHistItem._tipo==='activo'?`faltantes/${editHistItem.fbKey}`:`archivo/${editHistItem.fbKey}`;
+  if(editHistItem._tipo==='activo'){payload.comprado=true;}update(ref(db,_ref),payload);
   if(adminModeActive)modifiedInSession.add(editHistItem.fbKey);
   closeHEdit();showModal('✅','Registro corregido','Los cambios se guardaron correctamente.');
 };
 window.eliminarHist=function(){if(!editHistItem)return;if(!confirm('¿Eliminar este registro permanentemente?'))return;if(editHistItem._tipo==='hist')remove(ref(db,`archivo/${editHistItem.fbKey}`));else remove(ref(db,`faltantes/${editHistItem.fbKey}`));closeHEdit();};
 window.closeHEdit=function(){document.getElementById('overlay-hedit').classList.remove('show');editHistItem=null;renderHist();};
+
+// Listener delegado para botones de edición en historial (evita problemas de escapado)
+document.addEventListener('click',function(e){
+  const btn=e.target.closest('.btn-hedit-admin');
+  if(!btn)return;
+  e.stopPropagation();
+  const fbKey=btn.dataset.key;
+  const tipo=btn.dataset.tipo||'hist';
+  if(fbKey)window.abrirEditHist(fbKey,tipo);
+});
 
 // WSP
 window.genWSP=function(tipo){
@@ -951,24 +984,34 @@ function renderStats(){
   const dsArr=Object.values(gDS);const mxDS=dsArr.reduce((b,d)=>d.g>b.g?d:b,{g:0});
   document.getElementById('st-diasem').innerHTML=`<div style="display:flex;gap:4px;align-items:flex-end;height:60px;margin-bottom:6px;">${dsArr.map(d=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="width:100%;background:${mxDS.label===d.label?'var(--accent)':'var(--border)'};border-radius:3px 3px 0 0;height:${mxDS.g>0?Math.max(4,Math.round(d.g/mxDS.g*48)):4}px;"></div><span style="font-size:.55rem;color:var(--text3);font-weight:600;">${d.label}</span></div>`).join('')}</div><div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--text3);"><span>Pico: <strong style="color:var(--accent)">${mxDS.label} S/ ${mxDS.g.toFixed(2)}</strong></span><span>${mxDS.c} compras</span></div>`;
 
-  // Productos sin precio
-  const spArr=todos.filter(i=>getP(i)===0);
-  document.getElementById('st-sinprecio').innerHTML=spArr.length?`<div style="font-size:.75rem;color:var(--orange);font-weight:600;margin-bottom:8px;">⚠️ ${spArr.length} registro${spArr.length>1?'s':''} sin precio — afectan los totales</div>`+spArr.slice(0,6).map(i=>`<div class="sr"><span class="sr-n">${EM[i.categoria]||'⚙️'} ${i.nombre}</span><span class="sr-e">${new Date(i.tsComprado||i.ts||0).toLocaleDateString('es-PE',{day:'2-digit',month:'2-digit'})}</span></div>`).join('')+(spArr.length>6?`<div style="font-size:.72rem;color:var(--text3);margin-top:4px;">+${spArr.length-6} más…</div>`:''):`<div style="text-align:center;color:var(--green);font-size:.82rem;padding:8px 0;">✅ Todos los registros tienen precio</div>`;
+
 }
 
 // ADMIN PANEL HISTORIAL
+// PIN nunca persiste — siempre se pide al abrir. Timeout de inactividad: 3 min.
 const ADMIN_PIN_KEY='zumix_admin_pin';
-const ADMIN_SESSION_KEY='zumix_admin_session';
-const DEFAULT_ADMIN_PIN='1234'; // Cambiar desde Firebase config
+const DEFAULT_ADMIN_PIN='1234';
 let adminModeActive=false;
 let searchAdminHist='';
-let modifiedInSession=new Set(); // keys editados en esta sesión admin
+let modifiedInSession=new Set();
+let adminTimeoutId=null;
+const ADMIN_TIMEOUT_MS=3*60*1000; // 3 minutos
 
-function isAdminSession(){return sessionStorage.getItem(ADMIN_SESSION_KEY)==='true';}
-function setAdminSession(v){sessionStorage.setItem(ADMIN_SESSION_KEY,v?'true':'false');}
+function resetAdminTimeout(){
+  if(!adminModeActive)return;
+  clearTimeout(adminTimeoutId);
+  adminTimeoutId=setTimeout(()=>{
+    if(adminModeActive){
+      cerrarAdminPanel();
+      showModal('⏱','Sesión expirada','El panel de edición se cerró por inactividad.');
+    }
+  },ADMIN_TIMEOUT_MS);
+}
+// Escuchar actividad para resetear timeout
+['touchstart','click','keydown'].forEach(ev=>document.addEventListener(ev,()=>{if(adminModeActive)resetAdminTimeout();},{passive:true}));
 
 window.abrirAdminPanel=function(){
-  if(isAdminSession()){mostrarAdminPanel();return;}
+  // SIEMPRE pide PIN — sin sesión persistente
   document.getElementById('admin-pin-input').value='';
   document.getElementById('admin-pin-error').style.display='none';
   document.getElementById('overlay-admin-login').classList.add('show');
@@ -977,10 +1020,8 @@ window.abrirAdminPanel=function(){
 
 window.verificarAdminPin=function(){
   const pin=document.getElementById('admin-pin-input').value.trim();
-  // PIN guardado en Firebase o default
   const stored=localStorage.getItem(ADMIN_PIN_KEY)||DEFAULT_ADMIN_PIN;
   if(pin===stored){
-    setAdminSession(true);
     document.getElementById('overlay-admin-login').classList.remove('show');
     mostrarAdminPanel();
   }else{
@@ -995,12 +1036,14 @@ function mostrarAdminPanel(){
   modifiedInSession=new Set();
   document.getElementById('admin-panel-hist').style.display='block';
   document.getElementById('btn-admin-hist').style.display='none';
+  resetAdminTimeout();
   renderHist();
 }
 
 window.cerrarAdminPanel=function(){
   adminModeActive=false;
   modifiedInSession=new Set();
+  clearTimeout(adminTimeoutId);
   document.getElementById('admin-panel-hist').style.display='none';
   document.getElementById('btn-admin-hist').style.display='flex';
   renderHist();
