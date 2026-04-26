@@ -162,8 +162,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .mm.max .mm-precio{color:#027A48;}.mm.min .mm-precio{color:var(--blue);}
 [data-theme="dark"] .mm.max{background:#064E3B;border-color:#065F46;}
 [data-theme="dark"] .mm.min{background:#1E3A5F;border-color:#1D4ED8;}
-[data-theme="dark"] .mm.max .mm-nom,[data-theme="dark"] .mm.max .mm-lab{color:#6EE7B7;}
-[data-theme="dark"] .mm.min .mm-nom,[data-theme="dark"] .mm.min .mm-lab{color:#93C5FD;}
+[data-theme="dark"] .mm.max .mm-nom{color:#fff;}
+[data-theme="dark"] .mm.max .mm-lab{color:#6EE7B7;}
+[data-theme="dark"] .mm.min .mm-nom{color:#fff;}
+[data-theme="dark"] .mm.min .mm-lab{color:#93C5FD;}
 [data-theme="dark"] .mm.max .mm-precio{color:#34D399;}
 [data-theme="dark"] .mm.min .mm-precio{color:#60A5FA;}
 .textarea-f{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--rsm);font-family:'Inter',sans-serif;font-size:.88rem;color:var(--text);background:var(--surface);outline:none;resize:none;}
@@ -558,6 +560,8 @@ window.switchTab=function(t){
   document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['lista','historial','stats'][i]===t));
   document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
   document.getElementById(`pane-${t}`).classList.add('active');
+  // Al volver a lista desde otro tab, limpiar form si no hay edición
+  if(t==='lista'&&!editKey){limpiarForm();}
   if(t==='historial')renderHist();if(t==='stats')renderStats();
 };
 window.switchST=function(t){
@@ -567,6 +571,8 @@ window.switchST=function(t){
 };
 window.switchLista=function(t){
   ['reg','pend','comp'].forEach(id=>{document.getElementById(`lstab-${id}`).classList.toggle('active',id===t);document.getElementById(`lsp-${id}`).classList.toggle('active',id===t);});
+  // Limpiar formulario al volver a Registrar si no hay edición activa
+  if(t==='reg'&&!editKey){limpiarForm();}
 };
 
 // FIREBASE
@@ -668,7 +674,7 @@ function renderVariaciones(){
   const c=document.getElementById('lista-variaciones');
   c.innerHTML=variaciones.map((v,i)=>`<div class="variacion-item"><div class="variacion-num">Variación ${i+1}</div><button class="btn-var-del" onclick="eliminarVariacion(${i})">✕</button>
     <div class="form-row" style="margin-bottom:8px"><input class="input-f input-num" type="number" placeholder="Cant." value="${v.cant||''}" oninput="updateVar(${i},'cant',this.value)" min="0" step="any"/><select class="select-f" onchange="updateVar(${i},'fmt',this.value)"><option value="">Formato</option>${fmtOpts(v.fmt)}</select></div>
-    <div class="form-row"><input class="input-f input-num" type="number" placeholder="Contenido" value="${v.contCant||''}" oninput="updateVar(${i},'contCant',this.value)" min="0" step="any"/><select class="select-f" onchange="updateVar(${i},'contUnd',this.value)"><option value="">Unidad</option>${undOpts(v.contUnd)}</select></div>
+    <div class="form-row"><input class="input-f input-num" type="number" placeholder="Contenido" value="${v.contCant||''}" oninput="updateVar(${i},'contCant',this.value)" min="0" step="any"/><select class="select-f" onchange="updateVar(${i},'contUnd',this.value)"><option value="">— Unidad base —</option>${undOpts(v.contUnd)}</select></div>
   </div>`).join('');
 }
 
@@ -856,32 +862,83 @@ window.exportarExcel=function(){
 
 // MODAL EDICIÓN HISTORIAL
 window.abrirEditHist=function(fbKey,tipo){
-  if(!adminModeActive)return; // solo admin
-  // Buscar en historial primero, luego en activos comprados
+  if(!adminModeActive)return;
   let it=historial.find(h=>h.fbKey===fbKey);
   let tipoReal='hist';
   if(!it){it=activos.find(a=>a.fbKey===fbKey);tipoReal='activo';}
   if(!it)return;
   editHistItem={...it,_tipo:tipoReal};
-  const d=new Date(it.tsComprado||it.ts||0);const pad=n=>String(n).padStart(2,'0');
+
+  const d=new Date(it.tsComprado||it.ts||0);
+  const pad=n=>String(n).padStart(2,'0');
   const dtStr=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  const catOpts=(()=>{const _L={CARNES:'Carnes',VERDURAS:'Verduras y hojas',LACTEOS:'Lácteos, huevos y derivados',FRUTAS:'Frutas',INSUMOS:'Otros insumos',PREPARADOS:'Preparados (listo para vender)',BEBIDAS:'Bebidas envasadas (listo para vender)',ENVASES:'Envases y embalaje',LIMPIEZA:'Limpieza',OTROS:'Otros'};return['CARNES','VERDURAS','LACTEOS','FRUTAS','INSUMOS','PREPARADOS','BEBIDAS','ENVASES','LIMPIEZA','OTROS'].map(cat=>`<option value="${cat}"${it.categoria===cat?' selected':''}>${EM[cat]||''} ${_L[cat]}</option>`).join('');})();
+
+  // helpers
+  const _L={CARNES:'Carnes',VERDURAS:'Verduras y hojas',LACTEOS:'Lácteos, huevos y derivados',FRUTAS:'Frutas',INSUMOS:'Otros insumos',PREPARADOS:'Preparados (listo para vender)',BEBIDAS:'Bebidas envasadas (listo para vender)',ENVASES:'Envases y embalaje',LIMPIEZA:'Limpieza',OTROS:'Otros'};
+  const catOpts=['CARNES','VERDURAS','LACTEOS','FRUTAS','INSUMOS','PREPARADOS','BEBIDAS','ENVASES','LIMPIEZA','OTROS'].map(cat=>`<option value="${cat}"${it.categoria===cat?' selected':''}>${EM[cat]||''} ${_L[cat]}</option>`).join('');
+  const _fL={'unidad':'Unidad','caja':'Caja','bolsa':'Bolsa','bolsita':'Bolsita','paquete':'Paquete','sobre':'Sobre','sachet':'Sachet','java':'Java','botella':'Botella','lata':'Lata','frasco':'Frasco','rollo':'Rollo','empaque-vacio':'Empaque al vacío','a-granel':'A granel','al-corte':'Al corte','docena':'Docena','mixto':'Mixto'};
+  function mkFmtSel(id,val){return `<select class="select-f" id="${id}"><option value="">— Formato —</option>${Object.keys(_fL).map(v=>`<option value="${v}"${val===v?' selected':''}>${_fL[v]}</option>`).join('')}</select>`;}
+  function mkUndSel(id,val){return `<select class="select-f" id="${id}"><option value="">— Unidad base —</option>${[['unidades','Unidades'],['gramos','Gramos'],['ml','Mililitros (ml)']].map(([v,l])=>`<option value="${v}"${val===v?' selected':''}>${l}</option>`).join('')}</select>`;}
+
   const fmtVal=it.compra?.formato||it.unidad||'';
-  const fmtOA=(()=>{const fL={'unidad':'Unidad','caja':'Caja','bolsa':'Bolsa','bolsita':'Bolsita','paquete':'Paquete','sobre':'Sobre','sachet':'Sachet','java':'Java','botella':'Botella','lata':'Lata','frasco':'Frasco','rollo':'Rollo','empaque-vacio':'Empaque al vacío','a-granel':'A granel','al-corte':'Al corte','docena':'Docena','mixto':'Mixto'};return Object.keys(fL).map(v=>`<option value="${v}"${fmtVal===v?' selected':''}>${fL[v]}</option>`).join('');})();
+  const contUndVal=it.contenido_por_formato?.unidad||it.unidad_base||'';
+  const contCantVal=it.contenido_por_formato?.cantidad||'';
+  const urgSel=(u)=>u==='alta'||u==='urgente'?'alta':u==='media'?'media':'baja';
+  const urgOpts=`<option value="alta"${urgSel(it.urgencia)==='alta'?' selected':''}>🔴 Alta prioridad</option><option value="media"${urgSel(it.urgencia)==='media'?' selected':''}>🔵 Media prioridad</option><option value="baja"${urgSel(it.urgencia)==='baja'?' selected':''}>🟢 Puede esperar</option>`;
+  const respVal=it.responsable||'nosotros';
+
+  // Variaciones del item guardado
+  const varsGuardadas=(it.variaciones||[]);
+  const varsHTML=varsGuardadas.length>0
+    ? varsGuardadas.map((v,i)=>`<div class="variacion-item" id="hev-${i}"><div class="variacion-num">Variación ${i+1}</div><div class="form-row" style="margin-bottom:8px"><input class="input-f input-num" type="number" placeholder="Cant." value="${v.cantidad||''}" id="hev-cant-${i}" min="0" step="any"/>${mkFmtSel(`hev-fmt-${i}`,v.formato)}</div><div class="form-row"><input class="input-f input-num" type="number" placeholder="Contenido" value="${v.contenido?.cantidad||''}" id="hev-cc-${i}" min="0" step="any"/>${mkUndSel(`hev-und-${i}`,v.contenido?.unidad)}</div></div>`).join('')
+    : '';
+
   document.getElementById('hedit-fields').innerHTML=
-    `<div class="hedit-field"><div class="hedit-label">Nombre del producto</div><input class="input-f" id="he-nom" value="${(it.nombre||'').replace(/"/g,'&quot;')}" placeholder="Nombre"/></div>`+
-    `<div class="hedit-field"><div class="hedit-label">Cantidad comprada</div><div class="hedit-row"><input class="input-f" id="he-cant" type="number" value="${it.compra?.cantidad||it.cantidad||1}" style="width:90px" min="0.01" step="any"/><select class="select-f" id="he-fmt"><option value="">— Formato —</option>${fmtOA}</select></div></div>`+
-    `<div class="hedit-field"><div class="hedit-label">Precio total (S/)</div><input class="input-f" id="he-pre" type="number" value="${getP(it)||''}" placeholder="0.00" min="0" step="0.01"/></div>`+
-    `<div class="hedit-field"><div class="hedit-label">Categoría</div><select class="select-f" id="he-cat">${catOpts}</select></div>`+
-    `<div class="hedit-field"><div class="hedit-label">Urgencia</div><select class="select-f" id="he-urg"><option value="alta"${it.urgencia==='alta'||it.urgencia==='urgente'?' selected':''}>🔴 Alta prioridad</option><option value="media"${it.urgencia==='media'?' selected':''}>🔵 Media prioridad</option><option value="baja"${(it.urgencia==='baja'||it.urgencia==='normal'||!it.urgencia)?' selected':''}>🟢 Puede esperar</option></select></div>`+
-    `<div class="hedit-field"><div class="hedit-label">Registrado por</div><input class="input-f" id="he-quien" value="${(it.quien||'').replace(/"/g,'&quot;')}" placeholder="Nombre"/></div>`+
-    `<div class="hedit-field"><div class="hedit-label">📅 Fecha y hora de compra</div><input class="input-f" id="he-fecha" type="datetime-local" value="${dtStr}"/><div style="font-size:.68rem;color:var(--text3);margin-top:3px;">Modifica si se registró en fecha/hora incorrecta</div></div>`;
+    // Nombre
+    `<div class="hedit-field"><div class="hedit-label">📦 Nombre del producto</div><input class="input-f" id="he-nom" value="${(it.nombre||'').replace(/"/g,'&quot;')}" placeholder="Nombre"/></div>`+
+
+    // Sección compra
+    `<div class="form-section"><div class="form-section-title">🛒 Compra</div>`+
+    `<div class="hedit-field" style="margin-bottom:8px"><div class="hedit-label">Cantidad y formato</div><div class="hedit-row"><input class="input-f input-num" type="number" id="he-cant" value="${it.compra?.cantidad||it.cantidad||1}" min="0.01" step="any"/>${mkFmtSel('he-fmt',fmtVal)}</div></div>`+
+    `<div class="hedit-field"><div class="hedit-label">Contenido por formato</div><div class="hedit-row"><input class="input-f input-num" type="number" id="he-cont-cant" value="${contCantVal}" placeholder="Cant." min="0" step="any"/>${mkUndSel('he-cont-und',contUndVal)}</div></div>`+
+    // Variaciones guardadas (solo vista — no editables individualmente para simplificar)
+    (varsGuardadas.length>0?`<div style="font-size:.72rem;color:var(--text3);margin-top:6px;">ℹ️ Este registro tenía ${varsGuardadas.length} variación(es). Al guardar se reemplazará el contenido por formato ingresado arriba.</div>`:'')+ 
+    `</div>`+
+
+    // Precio
+    `<div class="hedit-field"><div class="hedit-label">💰 Precio total (S/)</div><div class="prefix-wrap"><span class="prefix-lbl">S/</span><input class="input-f" id="he-pre" type="number" value="${getP(it)||''}" placeholder="0.00" min="0" step="0.01" style="padding-left:32px"/></div></div>`+
+
+    // Categoría + Urgencia
+    `<div class="hedit-field"><div class="hedit-label">🏷 Categoría</div><select class="select-f" id="he-cat">${catOpts}</select></div>`+
+    `<div class="hedit-field"><div class="hedit-label">🚦 Urgencia</div><select class="select-f" id="he-urg">${urgOpts}</select></div>`+
+
+    // Responsable
+    `<div class="hedit-field"><div class="hedit-label">👥 Responsable</div><select class="select-f" id="he-resp"><option value="darlyn"${respVal==='darlyn'?' selected':''}>👑 Darlyn y Luz</option><option value="nosotros"${respVal==='nosotros'?' selected':''}>👥 Nosotros</option></select></div>`+
+
+    // Quién registró
+    `<div class="hedit-field"><div class="hedit-label">👤 Registrado por (nombre)</div><input class="input-f" id="he-quien" value="${(it.quien||'').replace(/"/g,'&quot;')}" placeholder="Nombre en mayúsculas"/></div>`+
+
+    // Fecha y hora
+    `<div class="hedit-field"><div class="hedit-label">📅 Fecha y hora de compra</div><input class="input-f" id="he-fecha" type="datetime-local" value="${dtStr}"/><div style="font-size:.68rem;color:var(--text3);margin-top:3px;">Modifica si se registró en fecha u hora incorrecta</div></div>`;
+
   document.getElementById('overlay-hedit').classList.add('show');
 };
 window.guardarEditHist=function(){
   if(!editHistItem)return;const nom=document.getElementById('he-nom').value.trim();if(!nom){alert('El nombre es obligatorio.');return;}
-  const cant=parseFloat(document.getElementById('he-cant').value)||1;const fmt=document.getElementById('he-fmt').value||'und';const pre=parseFloat(document.getElementById('he-pre').value)||null;const cat=document.getElementById('he-cat').value;const _urgRaw=document.getElementById('he-urg').value;const urg=_urgRaw==='urgente'?'alta':_urgRaw==='normal'?'baja':_urgRaw;const quien=document.getElementById('he-quien').value.trim().toUpperCase()||editHistItem.quien||'';const fechaVal=document.getElementById('he-fecha').value;const tsComprado=fechaVal?new Date(fechaVal).getTime():(editHistItem.tsComprado||Date.now());
-  const payload={nombre:nom,cantidad:cant,unidad:fmt,precio:pre,precio_total:pre,categoria:cat,urgencia:urg,quien,tsComprado,ts:editHistItem.ts||tsComprado,compra:{cantidad:cant,formato:fmt},contenido_por_formato:editHistItem.contenido_por_formato||null,unidad_base:editHistItem.unidad_base||null,total_calculado:editHistItem.total_calculado||null,variaciones:editHistItem.variaciones||[]};
+  const cant=parseFloat(document.getElementById('he-cant').value)||1;
+  const fmt=document.getElementById('he-fmt').value||'und';
+  const pre=parseFloat(document.getElementById('he-pre').value)||null;
+  const cat=document.getElementById('he-cat').value;
+  const _urgRaw=document.getElementById('he-urg').value;
+  const urg=_urgRaw==='urgente'?'alta':_urgRaw==='normal'?'baja':_urgRaw;
+  const resp=document.getElementById('he-resp')?.value||editHistItem.responsable||'nosotros';
+  const quien=document.getElementById('he-quien').value.trim().toUpperCase()||editHistItem.quien||'';
+  const fechaVal=document.getElementById('he-fecha').value;
+  const tsComprado=fechaVal?new Date(fechaVal).getTime():(editHistItem.tsComprado||Date.now());
+  const contCant=parseFloat(document.getElementById('he-cont-cant')?.value)||editHistItem.contenido_por_formato?.cantidad||0;
+  const contUnd=document.getElementById('he-cont-und')?.value||editHistItem.contenido_por_formato?.unidad||editHistItem.unidad_base||'';
+  const totalCalc=cant>0&&contCant>0?cant*contCant:(editHistItem.total_calculado||null);
+  const payload={nombre:nom,cantidad:cant,unidad:fmt,precio:pre,precio_total:pre,categoria:cat,urgencia:urg,responsable:resp,quien,tsComprado,ts:editHistItem.ts||tsComprado,compra:{cantidad:cant,formato:fmt},contenido_por_formato:{cantidad:contCant,unidad:contUnd},unidad_base:contUnd,total_calculado:totalCalc,variaciones:editHistItem.variaciones||[]};
   const _ref=editHistItem._tipo==='activo'?`faltantes/${editHistItem.fbKey}`:`archivo/${editHistItem.fbKey}`;
   if(editHistItem._tipo==='activo'){payload.comprado=true;}update(ref(db,_ref),payload);
   if(adminModeActive)modifiedInSession.add(editHistItem.fbKey);
@@ -1074,4 +1131,5 @@ if(Notification&&Notification.permission==='default')Notification.requestPermiss
 iniciarReminderLoop();
 </script>
 </body>
-</html>
+                                                               </html>
+  
