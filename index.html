@@ -1835,9 +1835,6 @@ window.guardarEditHist=function(){
   const contUndRaw=document.getElementById('he-cont-und')?.value||editHistItem.contenido_por_formato?.unidad||editHistItem.unidad_base||'';
   const normCH=normalizarUnidad(contCantRaw,contUndRaw);
   const contCant=normCH.valor;const contUnd=normCH.unidad;
-  const totalCalc=varsGuardadas.length>0
-    ?varsGuardadas.reduce((s,v)=>(v.cantidad||0)*(v.contenido?.cantidad||0)+s,0)
-    :cant>0&&contCant>0?cant*contCant:(editHistItem.total_calculado||null);
   // Leer variaciones editadas del modal (si existen los inputs hev-*)
   const nVars=editHistItem.variaciones?.length||0;
   const varsGuardadas=nVars>0?Array.from({length:nVars},(_,i)=>{
@@ -1848,6 +1845,9 @@ window.guardarEditHist=function(){
     const nv=normalizarUnidad(vcc,vund);
     return{cantidad:vc,formato:vfmt,contenido:{cantidad:nv.valor,unidad:nv.unidad}};
   }):[];
+  const totalCalc=varsGuardadas.length>0
+    ?varsGuardadas.reduce((s,v)=>(v.cantidad||0)*(v.contenido?.cantidad||0)+s,0)
+    :cant>0&&contCant>0?cant*contCant:(editHistItem.total_calculado||null);
   const payload={nombre:nom,cantidad:cant,unidad:fmt,precio:pre,precio_total:pre,categoria:cat,urgencia:urg,responsable:resp,quien,tsComprado,ts:editHistItem.ts||tsComprado,compra:{cantidad:cant,formato:fmt},contenido_por_formato:{cantidad:contCant,unidad:contUnd},unidad_base:contUnd,total_calculado:totalCalc,variaciones:varsGuardadas};
   const _ref=editHistItem._tipo==='activo'?`faltantes/${editHistItem.fbKey}`:`archivo/${editHistItem.fbKey}`;
   if(editHistItem._tipo==='activo'){payload.comprado=true;}update(ref(db,_ref),payload);
