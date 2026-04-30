@@ -1201,7 +1201,10 @@ const auth=getAuth(_app);
 const ADMIN_EMAIL='inicioapps18@gmail.com';
 const rAcceso=ref(db,'acceso'); // nodo donde se guardan correos autorizados
 let _correosAutorizados=new Set([ADMIN_EMAIL]); // admin siempre autorizado
-// Cargar lista de correos autorizados desde Firebase
+let _accesoListo=false;
+let _accesoResolvers=[];
+
+// Cargar lista y mantener actualizada en tiempo real
 onValue(rAcceso,snap=>{
   _correosAutorizados=new Set([ADMIN_EMAIL]);
   if(snap.val()){
@@ -1209,7 +1212,19 @@ onValue(rAcceso,snap=>{
       if(v&&v.email)_correosAutorizados.add(v.email.toLowerCase().trim());
     });
   }
+  // Resolver promesas pendientes (primer load)
+  if(!_accesoListo){
+    _accesoListo=true;
+    _accesoResolvers.forEach(r=>r());
+    _accesoResolvers=[];
+  }
 });
+
+// Devuelve una promesa que se resuelve cuando la lista ya cargó
+function _esperarAcceso(){
+  if(_accesoListo)return Promise.resolve();
+  return new Promise(r=>_accesoResolvers.push(r));
+}
 function _emailAutorizado(email){
   return _correosAutorizados.has((email||'').toLowerCase().trim());
 }
@@ -3410,13 +3425,19 @@ if(Notification&&Notification.permission==='default')Notification.requestPermiss
 iniciarReminderLoop();
 
 // ── FIREBASE AUTH ─────────────────────────────────────────────────────────────
+// Ocultar topbar inmediatamente mientras se verifica sesión
+(function(){const tb=document.querySelector('.topbar');if(tb)tb.style.display='none';})();
 function mostrarLogin(){
   document.getElementById('screen-login').style.display='flex';
   document.getElementById('screen-onboard').style.display='none';
-  document.querySelector('.app>.topbar') && (document.querySelector('.app>.topbar').style.display='none');
+  const tb=document.querySelector('.topbar');
+  if(tb)tb.style.display='none';
 }
 function ocultarLogin(){
   document.getElementById('screen-login').style.display='none';
+  // Asegurar que la topbar sea visible
+  const tb=document.querySelector('.topbar');
+  if(tb)tb.style.display='';
 }
 
 window.loginConGoogle=async function(){
@@ -3442,7 +3463,8 @@ window.cerrarSesion=async function(){
 
 onAuthStateChanged(auth,async user=>{
   if(user){
-    // Verificar si el correo está autorizado
+    // Esperar que la lista de accesos esté cargada antes de verificar
+    await _esperarAcceso();
     if(!_emailAutorizado(user.email)){
       await signOut(auth);
       // Resetear botón de login
