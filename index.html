@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Zumix Stock 🧃</title>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#D4A843">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Zumix Stock">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -3182,13 +3190,92 @@ window.limpiarAdminHist=function(){
 };
 
 // Estadísticas adicionales placeholder
-// RECORDATORIO
-const REM_KEY='zumix_reminder';let reminderInterval=null;
-window.openReminder=function(){const cfg=JSON.parse(localStorage.getItem(REM_KEY)||'{"active":false,"time":"21:00"}');document.getElementById('rem-active').checked=cfg.active;document.getElementById('rem-time').value=cfg.time||'21:00';document.getElementById('rem-time-wrap').style.display=cfg.active?'block':'none';document.getElementById('rem-label').textContent=cfg.active?`Activo a las ${cfg.time}`:'Desactivado';document.getElementById('overlay-reminder').classList.add('show');if(document.activeElement)document.activeElement.blur();};
+// ── RECORDATORIO + SERVICE WORKER ────────────────────────────────────────────
+const REM_KEY='zumix_reminder';
+let reminderInterval=null;
+
+// Registrar Service Worker (PWA)
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js',{scope:'/zumixapp/'})
+    .then(reg=>{
+      console.log('[SW] Registrado:',reg.scope);
+      // Escuchar mensajes del SW (recordatorio disparado desde el fondo)
+      navigator.serviceWorker.addEventListener('message',ev=>{
+        if(ev.data&&ev.data.type==='REMINDER_FIRE'){
+          localStorage.setItem('zumix_rem_fired',ev.data.todayKey);
+          _sonarRecordatorio();
+          showModal('⏰','Recordatorio diario','¡Es hora de revisar que todos los registros del día estén completos! 📋');
+        }
+      });
+    })
+    .catch(err=>console.warn('[SW] Error al registrar:',err));
+}
+
+function _sonarRecordatorio(){
+  try{
+    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    const osc=ac.createOscillator();const gain=ac.createGain();
+    osc.connect(gain);gain.connect(ac.destination);
+    osc.type='sine';osc.frequency.value=880;
+    gain.gain.setValueAtTime(0.5,ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+1.5);
+    osc.start(ac.currentTime);osc.stop(ac.currentTime+1.5);
+  }catch(e){}
+}
+
+window.openReminder=function(){
+  const cfg=JSON.parse(localStorage.getItem(REM_KEY)||'{"active":false,"time":"21:00"}');
+  document.getElementById('rem-active').checked=cfg.active;
+  document.getElementById('rem-time').value=cfg.time||'21:00';
+  document.getElementById('rem-time-wrap').style.display=cfg.active?'block':'none';
+  document.getElementById('rem-label').textContent=cfg.active?`Activo a las ${cfg.time}`:'Desactivado';
+  document.getElementById('overlay-reminder').classList.add('show');
+  if(document.activeElement)document.activeElement.blur();
+};
 window.closeReminder=function(){document.getElementById('overlay-reminder').classList.remove('show');};
-window.toggleReminder=function(){const active=document.getElementById('rem-active').checked;document.getElementById('rem-time-wrap').style.display=active?'block':'none';document.getElementById('rem-label').textContent=active?`Activo a las ${document.getElementById('rem-time').value}`:'Desactivado';guardarReminder();};
-window.guardarReminder=function(){const active=document.getElementById('rem-active').checked;const time=document.getElementById('rem-time').value;document.getElementById('rem-label').textContent=active?`Activo a las ${time}`:'Desactivado';localStorage.setItem(REM_KEY,JSON.stringify({active,time}));iniciarReminderLoop();};
-function iniciarReminderLoop(){if(reminderInterval)clearInterval(reminderInterval);reminderInterval=setInterval(()=>{const cfg=JSON.parse(localStorage.getItem(REM_KEY)||'{"active":false}');if(!cfg.active)return;const now=new Date();const[hh,mm]=(cfg.time||'21:00').split(':').map(Number);if(now.getHours()===hh&&now.getMinutes()===mm){const todayKey=`${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;if(localStorage.getItem('zumix_rem_fired')===todayKey)return;localStorage.setItem('zumix_rem_fired',todayKey);if(Notification&&Notification.permission==='granted')new Notification('🧃 Zumix Stock',{body:'¡Hora de revisar los registros del día!'});try{const ac=new(window.AudioContext||window.webkitAudioContext)();const osc=ac.createOscillator();const gain=ac.createGain();osc.connect(gain);gain.connect(ac.destination);osc.type='sine';osc.frequency.value=880;gain.gain.setValueAtTime(0.5,ac.currentTime);gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+1.5);osc.start(ac.currentTime);osc.stop(ac.currentTime+1.5);}catch(e){}showModal('⏰','Recordatorio diario','¡Es hora de revisar que todos los registros del día estén completos! 📋');}},30000);}
+window.toggleReminder=function(){
+  const active=document.getElementById('rem-active').checked;
+  document.getElementById('rem-time-wrap').style.display=active?'block':'none';
+  document.getElementById('rem-label').textContent=active?`Activo a las ${document.getElementById('rem-time').value}`:'Desactivado';
+  guardarReminder();
+};
+window.guardarReminder=function(){
+  const active=document.getElementById('rem-active').checked;
+  const time=document.getElementById('rem-time').value;
+  document.getElementById('rem-label').textContent=active?`Activo a las ${time}`:'Desactivado';
+  localStorage.setItem(REM_KEY,JSON.stringify({active,time}));
+  iniciarReminderLoop();
+};
+
+// Loop en pestaña activa (respaldo si el SW no está disponible)
+function iniciarReminderLoop(){
+  if(reminderInterval)clearInterval(reminderInterval);
+  reminderInterval=setInterval(()=>{
+    const cfg=JSON.parse(localStorage.getItem(REM_KEY)||'{"active":false}');
+    if(!cfg.active)return;
+    const now=new Date();
+    const[hh,mm]=(cfg.time||'21:00').split(':').map(Number);
+    const todayKey=`${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+    // Enviar al SW para que lo verifique (funciona en segundo plano)
+    if(navigator.serviceWorker&&navigator.serviceWorker.controller){
+      navigator.serviceWorker.controller.postMessage({
+        type:'CHECK_REMINDER',active:cfg.active,time:cfg.time,
+        firedKey:localStorage.getItem('zumix_rem_fired')||''
+      });
+    }
+    // Verificación local (si el SW no está activo)
+    if(now.getHours()===hh&&now.getMinutes()===mm){
+      if(localStorage.getItem('zumix_rem_fired')===todayKey)return;
+      localStorage.setItem('zumix_rem_fired',todayKey);
+      if(Notification&&Notification.permission==='granted'){
+        new Notification('🧃 Zumix Stock',{body:'¡Hora de revisar los registros del día!',icon:'icons/icon-192.png'});
+      }
+      _sonarRecordatorio();
+      showModal('⏰','Recordatorio diario','¡Es hora de revisar que todos los registros del día estén completos! 📋');
+    }
+  },30000);
+}
+
 if(Notification&&Notification.permission==='default')Notification.requestPermission();
 iniciarReminderLoop();
 </script>
