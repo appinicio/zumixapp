@@ -708,6 +708,27 @@ details summary::-webkit-details-marker{display:none;}
 </style>
 </head>
 <body>
+
+<!-- PANTALLA LOGIN -->
+<div id="screen-login" style="display:none;position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,#1a1a1a 0%,#2a2108 100%);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;font-family:'Sora',sans-serif;">
+  <div style="width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:0;">
+    <!-- Logo -->
+    <div style="font-size:64px;margin-bottom:8px;filter:drop-shadow(0 4px 16px rgba(212,168,67,0.4));">🧃</div>
+    <div style="font-size:28px;font-weight:800;color:#D4A843;letter-spacing:-0.5px;margin-bottom:4px;">Zumix <span style="color:#fff;font-weight:400;">Stock</span></div>
+    <div style="font-size:.78rem;color:#888;margin-bottom:40px;letter-spacing:.5px;">CONTROL DE COMPRAS</div>
+    <!-- Card -->
+    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(212,168,67,0.2);border-radius:20px;padding:28px 24px;width:100%;text-align:center;">
+      <div style="font-size:.88rem;color:#ccc;margin-bottom:20px;line-height:1.6;">Inicia sesión para acceder<br>al sistema de gestión</div>
+      <button id="btn-google-login" onclick="loginConGoogle()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1a1a1a;border:none;border-radius:12px;padding:14px 20px;font-size:.92rem;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer;transition:all .2s;box-shadow:0 2px 12px rgba(0,0,0,0.3);">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;">
+        Continuar con Google
+      </button>
+      <div style="font-size:.70rem;color:#555;margin-top:16px;line-height:1.5;">Solo cuentas autorizadas<br>pueden acceder</div>
+    </div>
+    <div style="font-size:.65rem;color:#444;margin-top:24px;">Zumix Stock · Uso interno</div>
+  </div>
+</div>
+
 <div class="app">
 
 <!-- ONBOARDING -->
@@ -780,6 +801,30 @@ details summary::-webkit-details-marker{display:none;}
     <div id="rem-time-wrap" style="display:none;">
       <div class="field-label" style="font-size:.72rem;margin-bottom:6px;">🕐 Hora</div>
       <input class="input-f" type="time" id="rem-time" value="21:00" onchange="guardarReminder()"/>
+
+      <!-- Música personalizada -->
+      <div class="field-label" style="font-size:.72rem;margin-top:14px;margin-bottom:6px;">🎵 Sonido de alarma</div>
+      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:10px 12px;">
+        <div style="font-size:.72rem;color:var(--text3);margin-bottom:8px;line-height:1.5;">
+          Elige un archivo de audio desde tu celular.<br>
+          <span style="color:var(--orange);font-weight:600;">⚠️ Debes volver a elegirlo cada vez que abres la app.</span>
+        </div>
+        <input type="file" id="rem-audio-file" accept="audio/*"
+          style="display:none;" onchange="cargarAudioPersonalizado(this)"/>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="mbtn secondary" style="flex:1;padding:9px;"
+            onclick="document.getElementById('rem-audio-file').click()">
+            📂 Elegir canción
+          </button>
+          <button class="mbtn secondary" style="flex:1;padding:9px;"
+            onclick="probarSonido()">
+            ▶️ Probar
+          </button>
+        </div>
+        <div id="rem-audio-nombre" style="font-size:.72rem;color:var(--text3);margin-top:7px;text-align:center;">
+          Usando sonido predeterminado
+        </div>
+      </div>
     </div>
     <div class="m-btns" style="margin-top:16px;"><button class="mbtn primary" onclick="closeReminder()">Listo</button></div>
   </div>
@@ -795,6 +840,7 @@ details summary::-webkit-details-marker{display:none;}
         <div class="brand-user-row">
           <span class="brand-user" id="brand-user">—</span>
           <button class="brand-edit-btn" onclick="pedirEditEmp()">✏️</button>
+          <button id="btn-logout" onclick="cerrarSesion()" title="Cerrar sesión" style="display:none;background:none;border:none;cursor:pointer;font-size:.75rem;color:#888;padding:2px 6px;border-radius:6px;">🚪</button>
         </div>
       </div>
     </div>
@@ -1114,8 +1160,14 @@ details summary::-webkit-details-marker{display:none;}
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,onValue,set,remove,update}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-const db=getDatabase(initializeApp({apiKey:"AIzaSyAwxVoWx1S9C9W-JbNeTGCm-SfCc4Sdlcc",authDomain:"jugeria-faltantes.firebaseapp.com",databaseURL:"https://jugeria-faltantes-default-rtdb.firebaseio.com",projectId:"jugeria-faltantes",storageBucket:"jugeria-faltantes.firebasestorage.app",messagingSenderId:"507586811385",appId:"1:507586811385:web:5bc8c9f7283c354e4f1928"}));
+import{getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+const _app=initializeApp({apiKey:"AIzaSyAwxVoWx1S9C9W-JbNeTGCm-SfCc4Sdlcc",authDomain:"jugeria-faltantes.firebaseapp.com",databaseURL:"https://jugeria-faltantes-default-rtdb.firebaseio.com",projectId:"jugeria-faltantes",storageBucket:"jugeria-faltantes.firebasestorage.app",messagingSenderId:"507586811385",appId:"1:507586811385:web:5bc8c9f7283c354e4f1928"});
+const db=getDatabase(_app);
+const auth=getAuth(_app);
+const ADMIN_EMAIL='inicioapps18@gmail.com';
 const rAct=ref(db,'faltantes'),rHist=ref(db,'archivo');
+// _listenersIniciados flag
+let _listenersIniciados=false;
 const EM={CARNES:'🥩',VERDURAS:'🥦',LACTEOS:'🥛',FRUTAS:'🍎',INSUMOS:'🧪',PREPARADOS:'🍱',BEBIDAS:'🥤',ENVASES:'📦',LIMPIEZA:'🧹',OTROS:'⚙️'};
 function normCat(c){if(!c)return'OTROS';if(c==='EMBALAJE')return'ENVASES';return c;}
 function normUrg(u){if(!u||u==='normal')return'baja';if(u==='urgente')return'alta';return u;}
@@ -1177,6 +1229,9 @@ window.switchLista=function(t){
 
 // FIREBASE
 const archivandoKeys=new Set();
+function iniciarListeners(){
+  if(_listenersIniciados)return;
+  _listenersIniciados=true;
 onValue(rAct,snap=>{
   const d=snap.val();activos=[];
   if(d){Object.entries(d).forEach(([k,v])=>{v.categoria=normCat(v.categoria);v.urgencia=normUrg(v.urgencia);activos.push({fbKey:k,...v});});activos.sort((a,b)=>(a.ts||0)-(b.ts||0));
@@ -1193,6 +1248,7 @@ onValue(rHist,snap=>{
   if(document.getElementById('pane-historial').classList.contains('active'))renderHist();
   if(document.getElementById('pane-stats').classList.contains('active'))renderStats();
 });
+} // fin iniciarListeners()
 function archivar(it){
   if(archivandoKeys.has(it.fbKey))return;archivandoKeys.add(it.fbKey);
   const archKey='arch_'+it.fbKey;
@@ -3211,7 +3267,33 @@ if('serviceWorker' in navigator){
     .catch(err=>console.warn('[SW] Error al registrar:',err));
 }
 
+// Audio personalizado (se carga en memoria, no persiste al cerrar)
+let _audioPersonalizado=null;
+
+window.cargarAudioPersonalizado=function(input){
+  const file=input.files[0];
+  if(!file)return;
+  const url=URL.createObjectURL(file);
+  _audioPersonalizado=new Audio(url);
+  _audioPersonalizado.volume=1;
+  document.getElementById('rem-audio-nombre').textContent='🎵 '+file.name;
+  document.getElementById('rem-audio-nombre').style.color='var(--green)';
+};
+
+window.probarSonido=function(){
+  _sonarRecordatorio();
+};
+
 function _sonarRecordatorio(){
+  if(_audioPersonalizado){
+    _audioPersonalizado.currentTime=0;
+    _audioPersonalizado.play().catch(()=>_sonarPitido());
+  }else{
+    _sonarPitido();
+  }
+}
+
+function _sonarPitido(){
   try{
     const ac=new(window.AudioContext||window.webkitAudioContext)();
     const osc=ac.createOscillator();const gain=ac.createGain();
@@ -3278,6 +3360,62 @@ function iniciarReminderLoop(){
 
 if(Notification&&Notification.permission==='default')Notification.requestPermission();
 iniciarReminderLoop();
+
+// ── FIREBASE AUTH ─────────────────────────────────────────────────────────────
+function mostrarLogin(){
+  document.getElementById('screen-login').style.display='flex';
+  document.getElementById('screen-onboard').style.display='none';
+  document.querySelector('.app>.topbar') && (document.querySelector('.app>.topbar').style.display='none');
+}
+function ocultarLogin(){
+  document.getElementById('screen-login').style.display='none';
+}
+
+window.loginConGoogle=async function(){
+  const btn=document.getElementById('btn-google-login');
+  btn.disabled=true;
+  btn.textContent='Conectando...';
+  try{
+    const provider=new GoogleAuthProvider();
+    await signInWithPopup(auth,provider);
+  }catch(e){
+    btn.disabled=false;
+    btn.innerHTML='<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px;vertical-align:middle;margin-right:8px;">Continuar con Google';
+    if(e.code!=='auth/popup-closed-by-user'){
+      showModal('❌','Error al iniciar sesión','No se pudo conectar con Google. Intenta de nuevo.');
+    }
+  }
+};
+
+window.cerrarSesion=async function(){
+  if(!confirm('¿Cerrar sesión?'))return;
+  await signOut(auth);
+};
+
+onAuthStateChanged(auth,user=>{
+  if(user){
+    ocultarLogin();
+    // Mostrar nombre en topbar
+    const brandUser=document.getElementById('brand-user');
+    if(brandUser){
+      const nombre=user.displayName?user.displayName.split(' ')[0]:user.email;
+      brandUser.textContent=nombre;
+    }
+    // Determinar si es admin
+    window._esAdmin=(user.email===ADMIN_EMAIL);
+    // Iniciar listeners de Firebase
+    iniciarListeners();
+    // Mostrar botón cerrar sesión si es admin
+    const btnLogout=document.getElementById('btn-logout');
+    if(btnLogout)btnLogout.style.display='flex';
+  }else{
+    mostrarLogin();
+    _listenersIniciados=false;
+    activos=[];historial=[];
+    const btnLogout=document.getElementById('btn-logout');
+    if(btnLogout)btnLogout.style.display='none';
+  }
+});
 </script>
 </body>
 </html>
