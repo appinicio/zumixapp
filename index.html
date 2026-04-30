@@ -725,7 +725,8 @@ details summary::-webkit-details-marker{display:none;}
       </button>
       <div style="font-size:.70rem;color:#555;margin-top:16px;line-height:1.5;">Solo cuentas autorizadas<br>pueden acceder</div>
     </div>
-    <div style="font-size:.65rem;color:#444;margin-top:24px;">Zumix Stock · Uso interno</div>
+    <div id="login-error" style="display:none;font-size:.75rem;color:#ff6b6b;margin-top:16px;text-align:center;background:rgba(255,50,50,0.1);border-radius:10px;padding:10px 14px;max-width:360px;"></div>
+    <div style="font-size:.65rem;color:#444;margin-top:16px;">Zumix Stock · Uso interno</div>
   </div>
 </div>
 
@@ -830,6 +831,37 @@ details summary::-webkit-details-marker{display:none;}
   </div>
 </div>
 
+<!-- MODAL GESTIÓN DE ACCESOS -->
+<div id="overlay-accesos" class="overlay">
+  <div class="modal-box">
+    <div class="m-head">
+      <span class="m-title">🔐 Gestión de Accesos</span>
+      <button class="m-close" onclick="cerrarGestionAccesos()">✕</button>
+    </div>
+    <div style="font-size:.75rem;color:var(--text3);margin-bottom:14px;">Solo tú (admin) puedes gestionar quién accede a Zumix.</div>
+    <!-- Agregar nuevo -->
+    <div class="field-label" style="font-size:.72rem;margin-bottom:6px;">➕ Agregar correo</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <input class="input-f" type="email" id="nuevo-acceso-email" placeholder="correo@gmail.com" style="flex:1;"/>
+      <button class="mbtn primary" style="padding:0 16px;" onclick="agregarAcceso()">Agregar</button>
+    </div>
+    <!-- Lista actual -->
+    <div class="field-label" style="font-size:.72rem;margin-bottom:8px;">👥 Usuarios con acceso</div>
+    <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:.82rem;font-weight:600;color:var(--text1);">inicioapps18@gmail.com</div>
+          <div style="font-size:.68rem;color:var(--accent);">Administrador · Acceso permanente</div>
+        </div>
+      </div>
+    </div>
+    <div id="lista-accesos"></div>
+    <div class="m-btns" style="margin-top:16px;">
+      <button class="mbtn primary" onclick="cerrarGestionAccesos()">Listo</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="topbar-head">
@@ -841,6 +873,7 @@ details summary::-webkit-details-marker{display:none;}
           <span class="brand-user" id="brand-user">—</span>
           <button class="brand-edit-btn" onclick="pedirEditEmp()">✏️</button>
           <button id="btn-logout" onclick="cerrarSesion()" title="Cerrar sesión" style="display:none;background:none;border:none;cursor:pointer;font-size:.75rem;color:#888;padding:2px 6px;border-radius:6px;">🚪</button>
+          <button id="btn-gestionar-accesos" onclick="abrirGestionAccesos()" title="Gestionar accesos" style="display:none;background:none;border:none;cursor:pointer;font-size:.75rem;color:#888;padding:2px 6px;border-radius:6px;">🔐</button>
         </div>
       </div>
     </div>
@@ -1165,6 +1198,20 @@ const _app=initializeApp({apiKey:"AIzaSyAwxVoWx1S9C9W-JbNeTGCm-SfCc4Sdlcc",authD
 const db=getDatabase(_app);
 const auth=getAuth(_app);
 const ADMIN_EMAIL='inicioapps18@gmail.com';
+const rAcceso=ref(db,'acceso'); // nodo donde se guardan correos autorizados
+let _correosAutorizados=new Set([ADMIN_EMAIL]); // admin siempre autorizado
+// Cargar lista de correos autorizados desde Firebase
+onValue(rAcceso,snap=>{
+  _correosAutorizados=new Set([ADMIN_EMAIL]);
+  if(snap.val()){
+    Object.values(snap.val()).forEach(v=>{
+      if(v&&v.email)_correosAutorizados.add(v.email.toLowerCase().trim());
+    });
+  }
+});
+function _emailAutorizado(email){
+  return _correosAutorizados.has((email||'').toLowerCase().trim());
+}
 const rAct=ref(db,'faltantes'),rHist=ref(db,'archivo');
 // _listenersIniciados flag
 let _listenersIniciados=false;
@@ -3392,8 +3439,16 @@ window.cerrarSesion=async function(){
   await signOut(auth);
 };
 
-onAuthStateChanged(auth,user=>{
+onAuthStateChanged(auth,async user=>{
   if(user){
+    // Verificar si el correo está autorizado
+    if(!_emailAutorizado(user.email)){
+      await signOut(auth);
+      document.getElementById('login-error').style.display='block';
+      document.getElementById('login-error').textContent='⛔ Tu cuenta no tiene acceso autorizado: '+user.email;
+      return;
+    }
+    document.getElementById('login-error').style.display='none';
     ocultarLogin();
     // Mostrar nombre en topbar
     const brandUser=document.getElementById('brand-user');
@@ -3402,20 +3457,65 @@ onAuthStateChanged(auth,user=>{
       brandUser.textContent=nombre;
     }
     // Determinar si es admin
-    window._esAdmin=(user.email===ADMIN_EMAIL);
+    window._esAdmin=(user.email.toLowerCase()===ADMIN_EMAIL.toLowerCase());
     // Iniciar listeners de Firebase
     iniciarListeners();
-    // Mostrar botón cerrar sesión si es admin
+    // Mostrar botón cerrar sesión
     const btnLogout=document.getElementById('btn-logout');
     if(btnLogout)btnLogout.style.display='flex';
+    // Mostrar panel de gestión de accesos si es admin
+    const btnAccesos=document.getElementById('btn-gestionar-accesos');
+    if(btnAccesos)btnAccesos.style.display=window._esAdmin?'flex':'none';
   }else{
     mostrarLogin();
     _listenersIniciados=false;
     activos=[];historial=[];
     const btnLogout=document.getElementById('btn-logout');
     if(btnLogout)btnLogout.style.display='none';
+    const btnAccesos=document.getElementById('btn-gestionar-accesos');
+    if(btnAccesos)btnAccesos.style.display='none';
   }
 });
+
+// ── GESTIÓN DE ACCESOS (solo admin) ──────────────────────────────────────────
+window.abrirGestionAccesos=function(){
+  if(!window._esAdmin)return;
+  renderListaAccesos();
+  document.getElementById('overlay-accesos').classList.add('show');
+};
+window.cerrarGestionAccesos=function(){
+  document.getElementById('overlay-accesos').classList.remove('show');
+};
+window.agregarAcceso=async function(){
+  const input=document.getElementById('nuevo-acceso-email');
+  const email=(input.value||'').toLowerCase().trim();
+  if(!email||!email.includes('@')){showModal('⚠️','Error','Ingresa un correo válido.');return;}
+  if(_correosAutorizados.has(email)){showModal('ℹ️','Ya existe','Ese correo ya tiene acceso.');return;}
+  const k=Date.now().toString();
+  await set(ref(db,`acceso/${k}`),{email,agregadoPor:auth.currentUser?.email||'',ts:Date.now()});
+  input.value='';
+  showModal('✅','Acceso otorgado',`${email} ya puede ingresar a Zumix.`);
+};
+window.quitarAcceso=async function(key){
+  if(!confirm('¿Quitar acceso a este correo?'))return;
+  await remove(ref(db,`acceso/${key}`));
+};
+function renderListaAccesos(){
+  const lista=document.getElementById('lista-accesos');
+  if(!lista)return;
+  // Leer desde Firebase para tener las keys
+  onValue(rAcceso,snap=>{
+    const d=snap.val()||{};
+    lista.innerHTML=Object.entries(d).map(([k,v])=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:10px;margin-bottom:8px;">
+        <div>
+          <div style="font-size:.82rem;font-weight:600;color:var(--text1);">${v.email}</div>
+          <div style="font-size:.68rem;color:var(--text3);">Agregado por ${v.agregadoPor||'admin'}</div>
+        </div>
+        <button onclick="quitarAcceso('${k}')" style="background:var(--red,#e53935);border:none;color:#fff;border-radius:8px;padding:6px 10px;font-size:.72rem;cursor:pointer;">Quitar</button>
+      </div>`).join('')||'<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:16px;">No hay usuarios adicionales</div>';
+  },{onlyOnce:true});
+}
 </script>
 </body>
 </html>
