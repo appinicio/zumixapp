@@ -1104,6 +1104,44 @@ details summary::-webkit-details-marker{display:none;}
 </div>
 </div>
 
+<script>
+(function(){
+  var EK='zumix_emp';
+  function mostrarApp(n){
+    var s=document.getElementById('screen-onboard');
+    var u=document.getElementById('brand-user');
+    if(s) s.style.display='none';
+    if(u) u.textContent='\u{1F464} '+n;
+  }
+  window.registrarNombre=function(){
+    var inp=document.getElementById('ob-input');
+    var v=inp?inp.value.trim().toUpperCase():'';
+    if(!v){
+      if(inp){
+        inp.style.borderColor='#C5382A';
+        inp.placeholder='\u26A0\uFE0F Escribe tu nombre primero';
+        setTimeout(function(){inp.style.borderColor='';inp.placeholder='Escribe tu nombre\u2026';},2000);
+      }
+      return;
+    }
+    try{localStorage.setItem(EK,v);}catch(e){}
+    mostrarApp(v);
+  };
+  function initOb(){
+    var saved='';
+    try{saved=localStorage.getItem(EK)||'';}catch(e){}
+    if(saved) mostrarApp(saved);
+    var inp=document.getElementById('ob-input');
+    if(inp) inp.addEventListener('keydown',function(e){if(e.key==='Enter') window.registrarNombre();});
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',initOb);
+  } else {
+    initOb();
+  }
+})();
+</script>
+
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,onValue,set,remove,update}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -1130,14 +1168,28 @@ aplicarTema(localStorage.getItem(TEMA_KEY)||'light');
 const EK='zumix_emp',EEK='zumix_emp_edit';
 function hoyKey(){const d=new Date();return`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;}
 function mostrarApp(n){document.getElementById('screen-onboard').style.display='none';document.getElementById('brand-user').textContent=`👤 ${n}`;}
-window.registrarNombre=function(){const v=document.getElementById('ob-input').value.trim().toUpperCase();if(!v)return;localStorage.setItem(EK,v);mostrarApp(v);};
-document.getElementById('ob-input').addEventListener('keydown',e=>{if(e.key==='Enter')window.registrarNombre();});
+window.registrarNombre=function(){
+  const inp=document.getElementById('ob-input');
+  const v=(inp?inp.value:'').trim().toUpperCase();
+  if(!v){
+    if(inp){inp.style.borderColor='var(--red)';inp.placeholder='⚠️ Escribe tu nombre primero';setTimeout(()=>{inp.style.borderColor='';inp.placeholder='Escribe tu nombre…';},2000);}
+    return;
+  }
+  try{localStorage.setItem(EK,v);}catch(e){}
+  mostrarApp(v);
+};
+// Asegurar que el evento keydown funcione aunque el módulo cargue tarde
+(function setupOb(){
+  const inp=document.getElementById('ob-input');
+  if(inp){inp.addEventListener('keydown',function(e){if(e.key==='Enter')window.registrarNombre();});}
+})();
 window.pedirEditEmp=function(){
   if(localStorage.getItem(EEK)===hoyKey()){showModal('🔒','No puedes editar más hoy','Solo puedes cambiar tu nombre una vez al día.');return;}
   showModal('✏️','Editar tu nombre','Escribe el nuevo nombre. Solo puedes hacerlo una vez al día.',
     [{txt:'Confirmar',cls:'accent',cb:()=>{const v=prompt('Nuevo nombre:');if(v===null||!v.trim())return;const u=v.trim().toUpperCase();localStorage.setItem(EK,u);localStorage.setItem(EEK,hoyKey());document.getElementById('brand-user').textContent=`👤 ${u}`;}},{txt:'Cancelar',cls:'secondary'}]);
 };
-const _savedName=localStorage.getItem(EK)||'';if(_savedName)mostrarApp(_savedName);
+const _savedName=(function(){try{return localStorage.getItem(EK)||'';}catch(e){return'';}})();
+if(_savedName)mostrarApp(_savedName);
 
 // MODAL
 function showModal(icon,title,msg,btns){
