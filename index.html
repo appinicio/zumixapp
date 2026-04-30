@@ -841,9 +841,9 @@ details summary::-webkit-details-marker{display:none;}
     <div style="font-size:.75rem;color:var(--text3);margin-bottom:14px;">Solo tú (admin) puedes gestionar quién accede a Zumix.</div>
     <!-- Agregar nuevo -->
     <div class="field-label" style="font-size:.72rem;margin-bottom:6px;">➕ Agregar correo</div>
-    <div style="display:flex;gap:8px;margin-bottom:16px;">
-      <input class="input-f" type="email" id="nuevo-acceso-email" placeholder="correo@gmail.com" style="flex:1;"/>
-      <button class="mbtn primary" style="padding:0 16px;" onclick="agregarAcceso()">Agregar</button>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+      <input class="input-f" type="email" id="nuevo-acceso-email" placeholder="correo@gmail.com" style="width:100%;font-size:.88rem;box-sizing:border-box;"/>
+      <button class="mbtn primary" style="width:100%;padding:12px;" onclick="agregarAcceso()">➕ Agregar acceso</button>
     </div>
     <!-- Lista actual -->
     <div class="field-label" style="font-size:.72rem;margin-bottom:8px;">👥 Usuarios con acceso</div>
@@ -856,7 +856,8 @@ details summary::-webkit-details-marker{display:none;}
       </div>
     </div>
     <div id="lista-accesos"></div>
-    <div class="m-btns" style="margin-top:16px;">
+    <div id="acceso-feedback" style="display:none;font-size:.78rem;color:#4caf50;background:rgba(76,175,80,0.12);border-radius:8px;padding:8px 12px;margin-bottom:8px;text-align:center;"></div>
+    <div class="m-btns" style="margin-top:8px;">
       <button class="mbtn primary" onclick="cerrarGestionAccesos()">Listo</button>
     </div>
   </div>
@@ -3444,18 +3445,21 @@ onAuthStateChanged(auth,async user=>{
     // Verificar si el correo está autorizado
     if(!_emailAutorizado(user.email)){
       await signOut(auth);
+      // Resetear botón de login
+      const btn=document.getElementById('btn-google-login');
+      if(btn){btn.disabled=false;btn.innerHTML='<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;">Continuar con Google';}
       document.getElementById('login-error').style.display='block';
       document.getElementById('login-error').textContent='⛔ Tu cuenta no tiene acceso autorizado: '+user.email;
       return;
     }
     document.getElementById('login-error').style.display='none';
     ocultarLogin();
-    // Mostrar nombre en topbar
+    // Ocultar onboarding y mostrar app completa con nombre de Google
+    const nombre=user.displayName?user.displayName.split(' ')[0]:user.email.split('@')[0];
+    mostrarApp(nombre.toUpperCase());
+    // También actualizar brand-user con nombre limpio
     const brandUser=document.getElementById('brand-user');
-    if(brandUser){
-      const nombre=user.displayName?user.displayName.split(' ')[0]:user.email;
-      brandUser.textContent=nombre;
-    }
+    if(brandUser)brandUser.textContent=nombre.toUpperCase();
     // Determinar si es admin
     window._esAdmin=(user.email.toLowerCase()===ADMIN_EMAIL.toLowerCase());
     // Iniciar listeners de Firebase
@@ -3494,7 +3498,9 @@ window.agregarAcceso=async function(){
   const k=Date.now().toString();
   await set(ref(db,`acceso/${k}`),{email,agregadoPor:auth.currentUser?.email||'',ts:Date.now()});
   input.value='';
-  showModal('✅','Acceso otorgado',`${email} ya puede ingresar a Zumix.`);
+  // Mostrar feedback inline dentro del modal (no detrás de él)
+  const fb=document.getElementById('acceso-feedback');
+  if(fb){fb.textContent='✅ '+email+' agregado correctamente';fb.style.display='block';setTimeout(()=>fb.style.display='none',3000);}
 };
 window.quitarAcceso=async function(key){
   if(!confirm('¿Quitar acceso a este correo?'))return;
