@@ -1402,8 +1402,19 @@ function getP(i){return Number(i.precio_total||i.precio||0);}
 function mostrarSug(q){
   const box=document.getElementById('sug-box');if(!q||q.length<2){box.classList.remove('show');return;}
   const pool=[...activos,...todosComp()];const seen=new Map();
-  pool.forEach(i=>{const nn=norm(i.nombre||'');const s=simil(q,i.nombre||'');if(s>=0.55&&!seen.has(nn)){const fr=pool.filter(x=>norm(x.nombre||'')===nn).length;seen.set(nn,{nombre:i.nombre,categoria:i.categoria,fr,s});}});
-  const matches=[...seen.values()].sort((a,b)=>b.s-a.s||b.fr-a.fr).slice(0,6);if(!matches.length){box.classList.remove('show');return;}
+  const qn=norm(q);
+  pool.forEach(i=>{
+    const nn=norm(i.nombre||'');
+    // Incluir si contiene el texto escrito (exacto) O si hay similitud suficiente
+    const contiene=nn.includes(qn);
+    const s=simil(q,i.nombre||'');
+    if((contiene||s>=0.55)&&!seen.has(nn)){
+      const fr=pool.filter(x=>norm(x.nombre||'')===nn).length;
+      seen.set(nn,{nombre:i.nombre,categoria:i.categoria,fr,s:contiene?1:s});
+    }
+  });
+  const matches=[...seen.values()].sort((a,b)=>b.s-a.s||b.fr-a.fr);
+  if(!matches.length){box.classList.remove('show');return;}
   const hayEx=matches.some(m=>norm(m.nombre)===norm(q)&&m.nombre!==q);
   let html=hayEx?`<div class="sug-warn">⚠️ Ya existe un producto similar</div>`:'';
   html+=matches.map(m=>`<div class="sug-item" onclick="usarSug('${m.nombre.replace(/'/g,"\\'")}','${m.categoria||''}')"><span class="sug-nom">${m.nombre}</span><span class="sug-tag">${EM[m.categoria]||'⚙️'} ${m.categoria||''}</span><span class="sug-tag">${m.fr}x</span></div>`).join('');
@@ -1533,7 +1544,9 @@ function recalcular(){
   }
 
   const prev=document.getElementById('calc-preview');const warnEl=document.getElementById('calc-warn');
-  if(total>0||cant>0){
+  // Solo mostrar preview si hay unidad base seleccionada (no antes)
+  const tieneUnidad=hayVars?(variaciones.some(v=>v.contUnd)):(contUnd&&contUnd!=='');
+  if((total>0||cant>0)&&tieneUnidad){
     prev.classList.add('vis');
     const undLabel=undBase||'unid';
     document.getElementById('calc-total').textContent=total>0?formatearUnidad(total,undLabel):'—';
@@ -1569,13 +1582,35 @@ window.eliminarVariacion=function(i){
 };
 window.updateVar=function(i,c,v){
   if(variaciones[i])variaciones[i][c]=v;
-  // Para cambios numéricos solo recalcular (que internamente llama validarSumaVariaciones)
-  // Para selector de unidad también solo recalcular
+  if(c==='contUnd')validarUnidadesVariaciones();
   recalcular();
 };
 
 function fmtOpts(sel){const fL={'bolsa':'Bolsa','paquete':'Paquete','caja':'Caja','sachet':'Sachet','sobre':'Sobre','botella':'Botella','lata':'Lata','frasco':'Frasco','rollo':'Rollo','java':'Java','unidad':'Unidad'};return Object.keys(fL).map(v=>`<option value="${v}"${sel===v?' selected':''}>${fL[v]}</option>`).join('');}
 function undOpts(sel){return[['g','Gramos (g)'],['kg','Kilogramos (kg)'],['ml','Mililitros (ml)'],['litros','Litros'],['unidades','Unidades'],['metros','Metros'],['cm','Centímetros (cm)']].map(([v,l])=>`<option value="${v}"${sel===v?' selected':''}>${l}</option>`).join('');}
+
+// Grupos de unidades compatibles entre variaciones
+function _grupoUnidad(u){
+  if(u==='g'||u==='kg')return'peso';
+  if(u==='ml'||u==='litros')return'volumen';
+  if(u==='metros'||u==='cm')return'longitud';
+  if(u==='unidades')return'unidades';
+  return u;
+}
+function validarUnidadesVariaciones(){
+  if(variaciones.length<2)return true;
+  const undsConValor=variaciones.map(v=>v.contUnd).filter(u=>u&&u!=='');
+  if(undsConValor.length<2)return true;
+  const grupos=undsConValor.map(_grupoUnidad);
+  const todosIguales=grupos.every(g=>g===grupos[0]);
+  if(!todosIguales){
+    const warn=document.getElementById('var-sum-warn');
+    if(warn){warn.style.display='block';warn.style.color='var(--red)';warn.textContent='⚠️ Las unidades base de las variaciones deben ser compatibles (ej: g y kg sí, pero g y ml no).';}
+    return false;
+  }
+  const warn=document.getElementById('var-sum-warn');if(warn)warn.style.color='';
+  return true;
+}
 
 function renderVariaciones(){
   const fmt=document.getElementById('ni-fmt').value||'';
@@ -1585,7 +1620,7 @@ function renderVariaciones(){
     <div style="font-size:.72rem;color:var(--text3);margin-bottom:6px;" data-var-label="cant">Cantidad de ${plural}</div>
     <div class="form-row" style="margin-bottom:8px"><input class="input-f input-num" type="number" placeholder="Ej: 3" value="${v.cant||''}" oninput="updateVar(${i},'cant',this.value)" min="0" step="any"/></div>
     <div style="font-size:.72rem;color:var(--text3);margin-bottom:6px;">Contenido de cada uno</div>
-    <div class="form-row"><input class="input-f input-num" type="number" placeholder="Cant." value="${v.contCant||''}" oninput="updateVar(${i},'contCant',this.value)" min="0" step="any"/><select class="select-f" onchange="updateVar(${i},'contUnd',this.value)"><option value="">— Unidad —</option>${undOpts(v.contUnd)}</select></div>
+    <div class="form-row"><input class="input-f input-num" type="number" placeholder="Cant." value="${v.contCant||''}" oninput="updateVar(${i},'contCant',this.value)" min="0" step="any"/><select class="select-f" onchange="updateVar(${i},'contUnd',this.value)"><option value="">— Unidad base —</option>${undOpts(v.contUnd)}</select></div>
   </div>`).join('');
   validarSumaVariaciones();
 }
@@ -1740,6 +1775,9 @@ window.agregarItem=function(){
       const sumaVars=variaciones.reduce((s,v)=>s+(parseFloat(v.cant)||0),0);
       showModal('⚠️','Suma de variaciones incorrecta',`La suma de variaciones (${sumaVars} ${plural}) debe ser igual a la cantidad total (${cant} ${plural}).`);return;
     }
+    if(hayVars&&!validarUnidadesVariaciones()){
+      showModal('⚠️','Unidades incompatibles',`Las unidades base de las variaciones no son compatibles entre sí. Deben ser del mismo tipo (peso, volumen o longitud).`);return;
+    }
     if(pre<=0){_sdErr('sd-pre');showModal('⚠️','Precio requerido','Ingresa el precio total de la compra.');return;}
     if(!cat){_sdErr('sd-cat-c');showModal('⚠️','Categoría requerida','Selecciona la categoría del producto.');return;}
     if(!urgA){_sdErr('sd-urg-c');showModal('⚠️','Falta la urgencia','Selecciona la urgencia del producto comprado.');return;}
@@ -1864,7 +1902,25 @@ function guardarItem(payload){
     ?`"${payload.nombre}" — ${payload.compra?.cantidad||payload.cantidad||1} ${payload.compra?.formato||payload.unidad||'und'} — S/ ${Number(payload.precio_total||0).toFixed(2)}`
     :`"${payload.nombre}" — pendiente`;
   limpiarForm();
-  showModal('✅','Producto registrado',resumen,[{txt:'✏️ Editar',cls:'secondary',cb:()=>{const k2=ultimoKey;const t=()=>{const it=activos.find(i=>i.fbKey===k2);if(it)window.editarItem(k2);else setTimeout(t,400);};t();}},{txt:'✓ Listo',cls:'primary'}]);
+  // Si es comprado, navegar a comprados hoy después de cerrar el modal
+  const _irAComprados=esComp;
+  showModal('✅','Producto registrado',resumen,[
+    {txt:'✏️ Editar',cls:'secondary',cb:()=>{
+      const k2=ultimoKey;
+      const t=()=>{const it=activos.find(i=>i.fbKey===k2);if(it)window.editarItem(k2);else setTimeout(t,400);};t();
+    }},
+    {txt:'✓ Listo',cls:'primary',cb:()=>{
+      if(_irAComprados){
+        switchLista('comp');
+        setTimeout(()=>{
+          const card=document.getElementById('card-'+ultimoKey);
+          if(card){card.scrollIntoView({behavior:'smooth',block:'center'});card.classList.add('highlight-pulse');setTimeout(()=>card.classList.remove('highlight-pulse'),2500);}
+        },200);
+      } else {
+        switchLista('pend');
+      }
+    }}
+  ]);
 }
 
 window.editarItem=function(key){
@@ -1885,6 +1941,17 @@ window.editarItem=function(key){
     document.getElementById('ni-fmt').value=item.compra?.formato||item.unidad||'';
     document.getElementById('ni-cont-cant').value=item.contenido_por_formato?.cantidad||'';
     document.getElementById('ni-cont-und').value=item.contenido_por_formato?.unidad||item.unidad_base||'';
+    // Si la unidad base es g/ml (normalizada), intentar mostrar la versión amigable (kg/litros)
+    // para que el usuario vea lo que registró, no la conversión interna
+    const _rawCantC=parseFloat(item.contenido_por_formato?.cantidad)||0;
+    const _rawUnd=item.contenido_por_formato?.unidad||item.unidad_base||'';
+    if(_rawUnd==='g'&&_rawCantC>=1000){
+      document.getElementById('ni-cont-cant').value=+(_rawCantC/1000).toFixed(6).replace(/\.?0+$/,'');
+      document.getElementById('ni-cont-und').value='kg';
+    }else if(_rawUnd==='ml'&&_rawCantC>=1000){
+      document.getElementById('ni-cont-cant').value=+(_rawCantC/1000).toFixed(6).replace(/\.?0+$/,'');
+      document.getElementById('ni-cont-und').value='litros';
+    }
     document.getElementById('ni-pre').value=item.precio_total||item.precio||'';
     document.getElementById('cat-c').value=item.categoria||'';
     // Restaurar urgencia del comprado
@@ -1916,13 +1983,34 @@ window.editarItem=function(key){
   if(respBtn)respBtn.classList.remove('sel');const rv=item.responsable||'nosotros';const rb=rv==='darlyn'?document.getElementById('btn-resp-dl'):document.getElementById('btn-resp-nos');rb.classList.add('sel');respBtn=rb;respA=rv;
   document.getElementById('btn-reg-txt').textContent='Guardar cambios';document.getElementById('btn-cancel').style.display='block';updSD();switchLista('reg');document.getElementById('ni-nom').focus();
 };
-window.cancelEdit=function(){editKey=null;document.getElementById('btn-reg-txt').textContent='Registrar producto';document.getElementById('btn-cancel').style.display='none';limpiarForm();};
+window.cancelEdit=function(){
+  // Si el item editado estaba en pendientes originalmente y se iba a marcar como comprado,
+  // al cancelar simplemente limpiar sin modificar nada en Firebase (el item queda como estaba)
+  editKey=null;
+  document.getElementById('btn-reg-txt').textContent='Registrar producto';
+  document.getElementById('btn-cancel').style.display='none';
+  limpiarForm();
+};
 window.eliminarItem=function(key){if(confirm('¿Eliminar este producto?'))remove(ref(db,`faltantes/${key}`));};
 
 // CAMBIAR A COMPRADO
 window.cambiarAComprado=function(key){
   const item=activos.find(i=>i.fbKey===key);if(!item)return;
-  window.editarItem(key);const eb=document.getElementById('btn-comp');if(eb&&estA!=='comp')window.setEst(eb,'comp');
+  window.editarItem(key);
+  const eb=document.getElementById('btn-comp');
+  if(eb&&estA!=='comp')window.setEst(eb,'comp');
+  // Pre-seleccionar urgencia del pendiente en el formulario de comprado
+  if(item.urgencia){
+    const _urgMapC={'alta':'btn-urg-c','media':'btn-med-c','baja':'btn-baj-c','urgente':'btn-urg-c','normal':'btn-baj-c'};
+    const _uv=item.urgencia==='urgente'?'alta':item.urgencia==='normal'?'baja':(item.urgencia||'baja');
+    ['btn-urg-c','btn-med-c','btn-baj-c'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('sel');});
+    const ubc=document.getElementById(_urgMapC[_uv]||'btn-baj-c');if(ubc){ubc.classList.add('sel');urgA=_uv;}
+  }
+  // Pre-seleccionar categoría
+  if(item.categoria){
+    const catC=document.getElementById('cat-c');if(catC)catC.value=item.categoria;
+  }
+  updSD();
   showModal('✅','Completar compra',`Completa los detalles de la compra de <strong>${item.nombre}</strong> y guarda.`,[{txt:'Entendido',cls:'primary'}]);
 };
 
@@ -1931,7 +2019,10 @@ function fmtR(ts){if(!ts)return'';const d=Math.floor((Date.now()-ts)/60000);if(d
 function mkCard(item,opts={}){
   const{esComp=false,esNuevo=false}=opts;
   const precio=getP(item);const precioStr=precio?`S/ ${precio.toFixed(2)}`:'—';
-  const cantStr=item.compra?.cantidad?`${item.compra.cantidad} ${item.compra.formato||''}`:`${item.cantidad||1} ${item.unidad||'und'}`;
+  // Para pendientes: solo mostrar cantidad si fue explícitamente ingresada
+  const _cantRef=esComp?(item.compra?.cantidad||item.cantidad):item.compra?.cantidad;
+  const _fmtRef=esComp?(item.compra?.formato||item.unidad):item.compra?.formato;
+  const cantStr=(_cantRef&&_fmtRef)?`${_cantRef} ${_fmtRef}`:esComp?`${item.compra?.cantidad||item.cantidad||1} ${item.compra?.formato||item.unidad||'und'}`:'—';
   const totalStr=item.total_calculado&&item.unidad_base?` · ${formatearUnidad(item.total_calculado,item.unidad_base)}`:'';
   const rel=fmtR(esComp?item.tsComprado:item.ts);const em=EM[item.categoria]||'⚙️';
   const _urgCls={alta:'alta',urgente:'alta',media:'media',normal:'baja',baja:'baja'};const _uc=_urgCls[item.urgencia||'baja']||'baja';
@@ -1941,7 +2032,7 @@ function mkCard(item,opts={}){
   const actions=esComp?`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>`:`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button><button class="ia-sm del" onclick="eliminarItem('${item.fbKey}')" title="Eliminar">🗑</button>`;
   const derecha=esComp?`<span class="item-precio">${precioStr}</span>`:`<button class="btn-comp-ahora" onclick="cambiarAComprado('${item.fbKey}')">☐ Marcar comprado</button>`;
   const quienTag=item.quien
-    ?`<span>·</span><span style="font-size:.65rem;font-weight:700;color:var(--text3);">👤 ${item.quien}</span>${item.quienEdito?`<span style="font-size:.6rem;color:var(--text3);margin-left:1px;" title="Editado por ${item.quienEdito}">✏️ ${item.quienEdito}</span>`:''}`
+    ?`<span>·</span><span style="font-size:.65rem;font-weight:700;color:var(--text3);">👤 ${nombreDeEmail(item.quien)}</span>${item.quienEdito?`<span style="font-size:.6rem;color:var(--text3);margin-left:1px;" title="Editado por ${nombreDeEmail(item.quienEdito)}">✏️ ${nombreDeEmail(item.quienEdito)}</span>`:''}`
     :'';
   return `<div class="${cls}" id="card-${item.fbKey}"><div class="item-icon">${em}</div><div class="item-body"><div class="item-nom">${item.nombre}${esNuevo&&!esComp?' ✦':''}</div><div class="item-sub"><span>${cantStr}${totalStr}</span><span>·</span><span>${item.categoria||''}</span>${rel?`<span>·</span><span>${rel}</span>`:''}${quienTag}</div></div><div class="item-right">${derecha}<div class="item-actions">${actions}</div></div></div>`;
 }
@@ -1950,7 +2041,7 @@ function renderLista(){
   const pend=activos.filter(i=>!i.comprado);const compHoy=activos.filter(i=>i.comprado&&(i.tsComprado||0)>=hT);
   const urgAlta=pend.filter(i=>i.urgencia==='alta'||i.urgencia==='urgente').length;const urgMedia=pend.filter(i=>i.urgencia==='media').length;const urg=urgAlta;const nor=pend.length-urgAlta-urgMedia;
   const bp=document.getElementById('badge-pend-tab'),bc=document.getElementById('badge-comp-tab');
-  bp.style.display=pend.length?'inline':'none';if(pend.length)bp.textContent=urgAlta>0?`🔴${urgAlta}`:pend.length;
+  bp.style.display=pend.length?'inline':'none';if(pend.length)bp.textContent=pend.length;
   bc.style.display=compHoy.length?'inline':'none';if(compHoy.length)bc.textContent=compHoy.length;
   document.getElementById('cnt-urg').textContent=urgAlta;const _cmdEl=document.getElementById('cnt-med');if(_cmdEl)_cmdEl.textContent=urgMedia;document.getElementById('cnt-nor').textContent=nor;
   const lp=document.getElementById('lista-pend');
@@ -1963,6 +2054,16 @@ function renderLista(){
       const gDL=ord.filter(i=>i.responsable==='darlyn');const gNos=ord.filter(i=>i.responsable==='nosotros'||!i.responsable);
       function rG(items,key,label,icon){if(!items.length)return'';const open=gruposOpen[key]!==false;return `<div class="grupo-header" onclick="toggleGrupo('${key}')"><span class="grupo-title">${icon} ${label}<span class="grupo-badge">${items.length}</span></span><span class="grupo-arrow${open?' open':''}" id="garr-${key}">▼</span></div><div id="gbody-${key}" style="${open?'':'display:none'}">${items.map(it=>mkCard(it,{esNuevo:it.fbKey===ultimoKey})).join('')}</div>`;}
       lp.innerHTML=rG(gDL,'darlyn','Darlyn y Luz','👑')+rG(gNos,'nosotros','Nosotros','👥');
+      // Si hay un ultimoKey reciente, resaltar brevemente y luego limpiar
+      if(ultimoKey){
+        setTimeout(()=>{
+          const card=document.getElementById('card-'+ultimoKey);
+          if(card&&card.classList.contains('nuevo')){
+            card.scrollIntoView({behavior:'smooth',block:'center'});
+            setTimeout(()=>{ultimoKey=null;renderLista();},2000);
+          }
+        },80);
+      }
     }
   }
   const lc=document.getElementById('lista-comp');const mmDiv=document.getElementById('minmax');const totEl=document.getElementById('comp-total-dia');const totVal=document.getElementById('comp-total-val');const resEl=document.getElementById('comp-resumen-users');
@@ -2396,9 +2497,14 @@ window.genWSP=function(tipo){
       let curUrg=null;
       sorted.forEach(i=>{
         const uKey=i.urgencia||'baja';const uNorm=(uKey==='urgente'?'alta':uKey==='normal'?'baja':uKey);
-        if(uNorm!==curUrg){curUrg=uNorm;L.push(`  ${_urgLbl[uKey]||'🟢 PUEDE ESPERAR'}`);}
-        const cv=i.compra?.cantidad||i.cantidad||1;const fv=i.compra?.formato||i.unidad||'und';
-        L.push(`    ${String(n++).padStart(2,'0')}. ${i.nombre} (${cv} ${fv})`);
+        if(uNorm!==curUrg){
+          if(curUrg!==null)L.push(''); // espacio entre secciones de urgencia
+          curUrg=uNorm;
+          L.push(`  ${_urgLbl[uKey]||'🟢 PUEDE ESPERAR'}`);
+        }
+        const cv=i.compra?.cantidad;const fv=i.compra?.formato;
+        const refStr=(cv&&fv)?` (${cv} ${fv})`:'';
+        L.push(`    ${String(n++).padStart(2,'0')}. ${i.nombre}${refStr}`);
       });
       L.push('');
     });
@@ -2423,11 +2529,22 @@ window.genWSP=function(tipo){
       let curUrg=null;
       sorted.forEach(i=>{
         const uKey=i.urgencia||'baja';const uKeyN=uKey==='urgente'?'alta':uKey==='normal'?'baja':uKey;
-        if(uKeyN!==curUrg){curUrg=uKeyN;L.push(`  ${_urgLblC[uKeyN]||'🟢 PUEDE ESPERAR'}`);}
+        if(uKeyN!==curUrg){
+          if(curUrg!==null)L.push(''); // espacio entre secciones urgencia
+          curUrg=uKeyN;
+          L.push(`  ${_urgLblC[uKeyN]||'🟢 PUEDE ESPERAR'}`);
+        }
         const c=i.compra?.cantidad||i.cantidad||1;const f=i.compra?.formato||i.unidad||'und';const p=getP(i);
         L.push(`    ${String(n++).padStart(2,'0')}. ${i.nombre} (${c} ${f})${p?` — S/ ${p.toFixed(2)}`:''}`);
       });
+      // Subtotal por responsable
       if(sub>0)L.push(`  💳 Subtotal: S/ ${sub.toFixed(2)}`);
+      // Subtotal por persona compradora dentro de este grupo responsable
+      const byQuien={};gitems.forEach(i=>{const q=i.quien||'';if(!byQuien[q])byQuien[q]=0;byQuien[q]+=getP(i);});
+      const quienEntries=Object.entries(byQuien).filter(([,v])=>v>0);
+      if(quienEntries.length>1){
+        quienEntries.sort((a,b)=>b[1]-a[1]).forEach(([q,v])=>{L.push(`     👤 ${nombreDeEmail(q)}: S/ ${v.toFixed(2)}`);});
+      }
       L.push('');
     });
     L.push(S);if(total>0)L.push(`💰 *Total gastado: S/ ${total.toFixed(2)}*`);L.push(`✅ *${comp.length} producto${comp.length>1?'s':''} comprado${comp.length>1?'s':''} hoy*`);if(nota){L.push('');L.push(`📝 _${nota}_`);}L.push(S2);L.push('_Enviado desde Zumix Stock_ ✅');
