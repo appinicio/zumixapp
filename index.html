@@ -1357,11 +1357,13 @@ const archivandoKeys=new Set();
 function iniciarListeners(){
   if(_listenersIniciados)return;
   _listenersIniciados=true;
+  // Timeout de conexión: si en 8s no responde Firebase, mostrar error
+  const connTimeout=setTimeout(()=>setConn('err','🔴 Sin conexión'),8000);
 onValue(rAct,snap=>{
   const d=snap.val();activos=[];
   if(d){Object.entries(d).forEach(([k,v])=>{v.categoria=normCat(v.categoria);v.urgencia=normUrg(v.urgencia);activos.push({fbKey:k,...v});});activos.sort((a,b)=>(a.ts||0)-(b.ts||0));
     const lim=Date.now()-ARCH_DIAS*864e5;const para=activos.filter(it=>it.comprado&&it.tsComprado&&it.tsComprado<lim&&!archivandoKeys.has(it.fbKey));if(para.length)setTimeout(()=>para.forEach(it=>archivar(it)),0);}
-  setConn('ok','🟢 En vivo');renderLista();
+  setConn('ok','🟢 En vivo');clearTimeout(connTimeout);renderLista();
   if(document.getElementById('pane-historial').classList.contains('active'))renderHist();
   if(document.getElementById('pane-stats').classList.contains('active'))renderStats();
 },()=>setConn('err','🔴 Sin conexión'));
@@ -3537,10 +3539,17 @@ onAuthStateChanged(auth,async user=>{
     // 1. Verificar acceso autorizado
     await _esperarAcceso();
     if(!_emailAutorizado(user.email)){
+      const emailNoAuth=user.email;
       await signOut(auth);
-      document.getElementById('login-error').style.display='block';
-      document.getElementById('login-error').textContent='⛔ Tu cuenta no tiene acceso autorizado: '+user.email;
-      mostrarLogin();
+      // mostrarLogin() ya fue llamado por el onAuthStateChanged del signOut
+      // Solo mostramos el error aquí, con pequeño delay para que el DOM esté listo
+      setTimeout(()=>{
+        const errEl=document.getElementById('login-error');
+        if(errEl){
+          errEl.style.display='block';
+          errEl.textContent='⛔ Esta cuenta no tiene acceso autorizado: '+emailNoAuth;
+        }
+      }, 100);
       return;
     }
     document.getElementById('login-error').style.display='none';
