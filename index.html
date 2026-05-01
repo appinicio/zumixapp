@@ -733,14 +733,14 @@ details summary::-webkit-details-marker{display:none;}
 <div class="app">
 
 <!-- ONBOARDING -->
-<div id="screen-onboard">
+<div id="screen-onboard" style="display:none;">
   <div class="ob-emblem">🧃</div>
   <div class="ob-title">Zumix <span>Stock</span></div>
   <div class="ob-sub">Sistema de gestión de compras<br>Jugería Fuente de Soda</div>
   <div class="ob-card">
     <div class="ob-label">Tu nombre para comenzar</div>
     <input class="ob-input" type="text" id="ob-input" placeholder="Escribe tu nombre…" maxlength="30" autocomplete="off"/>
-    <button class="ob-btn" onclick="registrarNombre()">Ingresar a la app →</button>
+    <button class="ob-btn" onclick="window.registrarNombre()">Ingresar a la app →</button>
     <div class="ob-hint">Tu nombre se guardará en este dispositivo.</div>
   </div>
 </div>
