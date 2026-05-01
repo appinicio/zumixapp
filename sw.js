@@ -79,7 +79,7 @@ self.addEventListener('message', event => {
       firedKey !== todayKey
     ) {
       // Notificar a la app que dispare el recordatorio y marque el día
-      event.source.postMessage({ type: 'REMINDER_FIRE', todayKey });
+      event.source?.postMessage({ type: 'REMINDER_FIRE', todayKey });
 
       // Mostrar notificación del sistema (funciona aunque la pestaña esté cerrada)
       self.registration.showNotification('🧃 Zumix Stock', {
