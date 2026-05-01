@@ -1193,12 +1193,18 @@ details summary::-webkit-details-marker{display:none;}
 
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getDatabase,ref,onValue,set,remove,update}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import{getDatabase,ref,onValue,set,remove,update,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import{getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 const _app=initializeApp({apiKey:"AIzaSyAwxVoWx1S9C9W-JbNeTGCm-SfCc4Sdlcc",authDomain:"jugeria-faltantes.firebaseapp.com",databaseURL:"https://jugeria-faltantes-default-rtdb.firebaseio.com",projectId:"jugeria-faltantes",storageBucket:"jugeria-faltantes.firebasestorage.app",messagingSenderId:"507586811385",appId:"1:507586811385:web:5bc8c9f7283c354e4f1928"});
 const db=getDatabase(_app);
 const auth=getAuth(_app);
 const ADMIN_EMAIL='inicioapps18@gmail.com';
+/* ── REGLAS FIREBASE (agregar en Realtime Database → Reglas) ─────────────────
+   "usuarios": {
+     ".read": "auth != null",
+     ".write": "auth != null"
+   }
+   ─────────────────────────────────────────────────────────────────────────── */
 const rAcceso=ref(db,'acceso'); // nodo donde se guardan correos autorizados
 let _correosAutorizados=new Set([ADMIN_EMAIL]); // admin siempre autorizado
 let _accesoListo=false;
@@ -1228,7 +1234,28 @@ function _esperarAcceso(){
 function _emailAutorizado(email){
   return _correosAutorizados.has((email||'').toLowerCase().trim());
 }
-const rAct=ref(db,'faltantes'),rHist=ref(db,'archivo');
+const rAct=ref(db,'faltantes'),rHist=ref(db,'archivo'),rUsuarios=ref(db,'usuarios');
+// Cache de nombres: { "correo@gmail.com": "NOMBRE" }
+let _usuariosCache={};
+// Escuchar cambios en nodo usuarios/ en tiempo real
+onValue(rUsuarios,snap=>{
+  _usuariosCache=snap.val()||{};
+  // Refrescar vistas si ya hay datos cargados
+  if(_listenersIniciados){
+    renderLista();
+    if(document.getElementById('pane-historial').classList.contains('active'))renderHist();
+    if(document.getElementById('pane-stats').classList.contains('active'))renderStats();
+  }
+});
+// Devuelve el nombre legible de un correo, con fallback al propio correo
+function nombreDeEmail(email){
+  if(!email)return'—';
+  const n=_usuariosCache[emailToKey(email)];
+  return n?n.toUpperCase():email.split('@')[0].toUpperCase();
+}
+// Firebase key no puede tener puntos — reemplazar por comas
+function emailToKey(email){return(email||'').toLowerCase().replace(/\./g,',');}
+function keyToEmail(key){return(key||'').replace(/,/g,'.');}
 // _listenersIniciados flag
 let _listenersIniciados=false;
 const EM={CARNES:'🥩',VERDURAS:'🥦',LACTEOS:'🥛',FRUTAS:'🍎',INSUMOS:'🧪',PREPARADOS:'🍱',BEBIDAS:'🥤',ENVASES:'📦',LIMPIEZA:'🧹',OTROS:'⚙️'};
@@ -1249,17 +1276,52 @@ window.toggleTheme=()=>aplicarTema(document.documentElement.getAttribute('data-t
 aplicarTema(localStorage.getItem(TEMA_KEY)||'light');
 
 // ONBOARDING
-const EK='zumix_emp',EEK='zumix_emp_edit';
+const EK='zumix_emp',EEK='zumix_emp_edit',EEK_EMAIL='zumix_onboard_done';
 function hoyKey(){const d=new Date();return`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;}
-function mostrarApp(n){document.getElementById('screen-onboard').style.display='none';document.getElementById('brand-user').textContent=`👤 ${n}`;}
-window.registrarNombre=function(){const v=document.getElementById('ob-input').value.trim().toUpperCase();if(!v)return;localStorage.setItem(EK,v);mostrarApp(v);};
+function mostrarApp(n){
+  document.getElementById('screen-onboard').style.display='none';
+  document.getElementById('brand-user').textContent=n;
+}
+window.registrarNombre=async function(){
+  const v=document.getElementById('ob-input').value.trim().toUpperCase();
+  if(!v){
+    document.getElementById('ob-input').style.borderColor='var(--orange)';
+    return;
+  }
+  document.getElementById('ob-input').style.borderColor='';
+  const user=auth.currentUser;
+  if(!user)return;
+  // Guardar nombre en Firebase: usuarios/{emailKey}/nombre
+  const eKey=emailToKey(user.email);
+  await set(ref(db,`usuarios/${eKey}/nombre`),v);
+  // También guardar en localStorage como caché local
+  localStorage.setItem(EK,v);
+  localStorage.setItem(EEK_EMAIL,'done'); // marcar que ya pasó onboarding
+  mostrarApp(v);
+};
 document.getElementById('ob-input').addEventListener('keydown',e=>{if(e.key==='Enter')window.registrarNombre();});
 window.pedirEditEmp=function(){
   if(localStorage.getItem(EEK)===hoyKey()){showModal('🔒','No puedes editar más hoy','Solo puedes cambiar tu nombre una vez al día.');return;}
-  showModal('✏️','Editar tu nombre','Escribe el nuevo nombre. Solo puedes hacerlo una vez al día.',
-    [{txt:'Confirmar',cls:'accent',cb:()=>{const v=prompt('Nuevo nombre:');if(v===null||!v.trim())return;const u=v.trim().toUpperCase();localStorage.setItem(EK,u);localStorage.setItem(EEK,hoyKey());document.getElementById('brand-user').textContent=`👤 ${u}`;}},{txt:'Cancelar',cls:'secondary'}]);
+  showModal('✏️','Editar tu nombre',
+    `<input id="edit-name-input" class="input-f" type="text" maxlength="30" placeholder="Nuevo nombre..." style="width:100%;margin-top:8px;" value="${localStorage.getItem(EK)||''}"/>
+    <div style="font-size:.72rem;color:var(--text3);margin-top:6px;">Solo puedes cambiarlo una vez al día.</div>`,
+    [{txt:'Confirmar',cls:'accent',cb:async()=>{
+      const el=document.getElementById('edit-name-input');
+      const v=el?el.value.trim():'';
+      if(!v)return;
+      const u=v.toUpperCase();
+      const user=auth.currentUser;
+      if(user){
+        // Guardar en Firebase
+        const eKey=emailToKey(user.email);
+        await set(ref(db,`usuarios/${eKey}/nombre`),u);
+      }
+      localStorage.setItem(EK,u);
+      localStorage.setItem(EEK,hoyKey());
+      document.getElementById('brand-user').textContent=u;
+    }},{txt:'Cancelar',cls:'secondary'}]);
 };
-const _savedName=localStorage.getItem(EK)||'';if(_savedName)mostrarApp(_savedName);
+// Nombre guardado: se maneja en onAuthStateChanged tras verificar auth
 
 // MODAL
 function showModal(icon,title,msg,btns){
@@ -1648,7 +1710,7 @@ function limpiarForm(){
 // AGREGAR
 window.agregarItem=function(){
   const nombre=document.getElementById('ni-nom').value.trim();
-  const quien=(localStorage.getItem(EK)||'LIAM').toUpperCase();
+  const quien=(auth.currentUser?.email||localStorage.getItem(EK)||'desconocido').toLowerCase();
   if(!nombre){_sdErr('sd-nom');showModal('⚠️','Falta el nombre','Escribe el nombre del producto.');return;}
   if(!estA){_sdErr('sd-est');showModal('⚠️','Falta el estado','Selecciona si el producto es Por comprar o Ya comprado.');return;}
   if(!respA){_sdErr('sd-resp');showModal('⚠️','Falta el responsable','Selecciona quién es responsable de la compra.');return;}
@@ -1769,7 +1831,7 @@ window.formatCostoUnitario=formatCostoUnitario;
 // ──────────────────────────────────────────────────────────────────────────────
 
 function _guardarComp({nombre,cat,cant,fmt,contCant,contUnd,pre,hayVars}){
-    const quien=(localStorage.getItem(EK)||'LIAM').toUpperCase();
+    const quien=(auth.currentUser?.email||localStorage.getItem(EK)||'desconocido').toLowerCase();
     // Normalizar contenido principal
     const normCont=normalizarUnidad(contCant,contUnd);
     const contCantN=normCont.valor;
@@ -1786,8 +1848,8 @@ function guardarItem(payload){
     payload.ts=original?.ts||Date.now();
     // Preservar quien original; registrar quien editó si es diferente
     if(original?.quien){payload.quien=original.quien;}
-    const quienActual=(localStorage.getItem(EK)||'').toUpperCase();
-    if(quienActual&&quienActual!==(payload.quien||'').toUpperCase()){
+    const quienActual=(auth.currentUser?.email||'').toLowerCase();
+    if(quienActual&&quienActual!==(payload.quien||'').toLowerCase()){
       payload.quienEdito=quienActual;payload.tsEdito=Date.now();
     }else{
       payload.quienEdito=null;payload.tsEdito=null;
@@ -1915,10 +1977,10 @@ function renderLista(){
       lc.innerHTML=rGC(gDLC,'c-darlyn','Darlyn y Luz','👑')+rGC(gNosC,'c-nosotros','Nosotros','👥');
     }
     const totalDia=compHoy.reduce((s,i)=>s+getP(i),0);totEl.style.display='block';totVal.textContent=`S/ ${totalDia.toFixed(2)}`;
-    const _fnb=(localStorage.getItem(EK)||'DESCONOCIDO').toUpperCase();
+    const _fnb=(auth.currentUser?.email||'desconocido').toLowerCase();
     const pu={};
     compHoy.forEach(i=>{
-      const u=(i.quien&&i.quien.trim()!==''?i.quien.trim():_fnb).toUpperCase();
+      const u=(i.quien&&i.quien.trim()!==''?i.quien.trim().toLowerCase():_fnb);
       if(!pu[u])pu[u]={alta:0,media:0,baja:0,g:0};
       const _uc=i.urgencia||'baja';
       const _buck=_uc==='alta'||_uc==='urgente'?'alta':_uc==='media'?'media':'baja';
@@ -1927,8 +1989,8 @@ function renderLista(){
     });
     const entries=Object.entries(pu).sort((a,b)=>b[1].g-a[1].g);
     const _dotStyle=(color)=>`display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:2px;flex-shrink:0;`;
-    resEl.innerHTML=entries.length?`<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 16px;box-shadow:var(--sh);margin-bottom:10px;"><div style="font-size:.68rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">👥 Por persona</div>${entries.map(([u,d])=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><div style="display:flex;align-items:center;gap:8px;min-width:0;"><span style="font-size:.84rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">👤 ${u}</span><span style="display:flex;align-items:center;gap:3px;flex-shrink:0;">${d.alta>0?`<span style="display:flex;align-items:center;gap:2px;"><span style="${_dotStyle('var(--red)')}"></span><span style="font-size:.7rem;font-weight:700;color:var(--red);">${d.alta}</span></span>`:''}${d.media>0?`<span style="display:flex;align-items:center;gap:2px;"><span style="${_dotStyle('var(--blue)')}"></span><span style="font-size:.7rem;font-weight:700;color:var(--blue);">${d.media}</span></span>`:''}${d.baja>0?`<span style="display:flex;align-items:center;gap:2px;"><span style="${_dotStyle('var(--green)')}"></span><span style="font-size:.7rem;font-weight:700;color:var(--green);">${d.baja}</span></span>`:''}</span></div><span style="font-size:.88rem;font-weight:700;color:var(--text);font-family:var(--ffmono);flex-shrink:0;">${d.g>0?`S/ ${d.g.toFixed(2)}`:'—'}</span></div>`).join('')}</div>`:'';    const conP=compHoy.filter(i=>getP(i)>0);
-    if(conP.length>=2){const mx=conP.reduce((a,b)=>getP(a)>getP(b)?a:b);const mn=conP.reduce((a,b)=>getP(a)<getP(b)?a:b);mmDiv.style.display='flex';mmDiv.innerHTML=`<div class="mm max"><div class="mm-lab">💚 Más caro</div><div class="mm-nom">${mx.nombre}</div><div class="mm-precio">S/ ${getP(mx).toFixed(2)}</div></div><div class="mm min"><div class="mm-lab">🔵 Más económico</div><div class="mm-nom">${mn.nombre}</div><div class="mm-precio">S/ ${getP(mn).toFixed(2)}</div></div>`;}
+    resEl.innerHTML=entries.length?`<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 16px;box-shadow:var(--sh);margin-bottom:10px;"><div style="font-size:.68rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">👥 Por persona</div>${entries.map(([u,d])=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><div style="display:flex;align-items:center;gap:8px;min-width:0;"><span style="font-size:.84rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">👤 ${nombreDeEmail(u)}</span><span style="display:flex;align-items:center;gap:3px;flex-shrink:0;">${d.alta>0?`<span style="display:flex;align-items:center;gap:2px;"><span style="${_dotStyle('var(--red)')}"></span><span style="font-size:.7rem;font-weight:700;color:var(--red);">${d.alta}</span></span>`:''}${d.media>0?`<span style="display:flex;align-items:center;gap:2px;"><span style="${_dotStyle('var(--blue)')}"></span><span style="font-size:.7rem;font-weight:700;color:var(--blue);">${d.media}</span></span>`:''}${d.baja>0?`<span style="display:flex;align-items:center;gap:2px;"><span style="${_dotStyle('var(--green)')}"></span><span style="font-size:.7rem;font-weight:700;color:var(--green);">${d.baja}</span></span>`:''}</span></div><span style="font-size:.88rem;font-weight:700;color:var(--text);font-family:var(--ffmono);flex-shrink:0;">${d.g>0?`S/ ${d.g.toFixed(2)}`:'—'}</span></div>`).join('')}</div>`:'';  
+    const conP=compHoy.filter(i=>getP(i)>0);const mx=conP.reduce((a,b)=>getP(a)>getP(b)?a:b);const mn=conP.reduce((a,b)=>getP(a)<getP(b)?a:b);mmDiv.style.display='flex';mmDiv.innerHTML=`<div class="mm max"><div class="mm-lab">💚 Más caro</div><div class="mm-nom">${mx.nombre}</div><div class="mm-precio">S/ ${getP(mx).toFixed(2)}</div></div><div class="mm min"><div class="mm-lab">🔵 Más económico</div><div class="mm-nom">${mn.nombre}</div><div class="mm-precio">S/ ${getP(mn).toFixed(2)}</div></div>`;}
     else mmDiv.style.display='none';
   }else{lc.innerHTML=`<div class="empty-s"><div class="ei">🛍️</div><div class="et">Nada comprado hoy aún</div></div>`;mmDiv.style.display='none';totEl.style.display='none';resEl.innerHTML='';}
 }
@@ -1942,7 +2004,7 @@ function poblarUsuariosHist(todos){
   const sel=document.getElementById('hist-filter-user');if(!sel)return;
   const actual=sel.value;
   const users=[...new Set(todos.map(i=>i.quien).filter(Boolean))].sort();
-  sel.innerHTML=`<option value="">— Todos —</option>`+users.map(u=>`<option value="${u}"${u===actual?' selected':''}>${u}</option>`).join('');
+  sel.innerHTML=`<option value="">— Todos —</option>`+users.map(u=>`<option value="${u}"${u===actual?' selected':''}>${nombreDeEmail(u)}</option>`).join('');
 }
 
 function renderHist(){
@@ -1974,8 +2036,8 @@ function renderHist(){
   if(adminModeActive&&searchAdminHist){const qa=norm(searchAdminHist);filFinal=fil.filter(i=>norm(i.nombre||'').includes(qa)||norm(i.categoria||'').includes(qa)||norm(i.quien||'').includes(qa));}
   const _urgDot=u=>u==='alta'||u==='urgente'?'urg':u==='media'?'med':u==='baja'?'baj':'nor';
   cont.innerHTML=filFinal.map(it=>{const d=new Date(it.tsComprado||it.ts||0);const fT=`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;const em=EM[it.categoria]||'⚙️';const dot=_urgDot(it.urgencia);const p=getP(it);const cantStr=it.compra?.cantidad?`${it.compra.cantidad} ${it.compra.formato||''}`:`${it.cantidad||1} ${it.unidad||'und'}`;const totalStr8=it.total_calculado&&it.unidad_base?` · ${formatearUnidad(it.total_calculado,it.unidad_base)}`:'';const cuStr=p&&it.total_calculado&&it.total_calculado>0?` · ${formatCostoUnitario(p,it.total_calculado,it.unidad_base)}`:'';
-  const quienHistStr=it.quien||'—';
-  const editadoPorStr=it.quienEdito?` <span title="Editado por ${it.quienEdito}" style="color:var(--orange);font-size:.62rem;">✏️ ${it.quienEdito}</span>`:'';
+  const quienHistStr=nombreDeEmail(it.quien);
+  const editadoPorStr=it.quienEdito?` <span title="Editado por ${nombreDeEmail(it.quienEdito)}" style="color:var(--orange);font-size:.62rem;">✏️ ${nombreDeEmail(it.quienEdito)}</span>`:'';
   const modBadge=adminModeActive&&modifiedInSession.has(it.fbKey)?'<span class="mod-badge">✏️ modificado recientemente</span>':'';const editBtn=adminModeActive?`<button class="ia-sm btn-hedit-admin" data-key="${it.fbKey}" data-tipo="hist" style="font-size:.7rem;padding:3px 7px;margin-top:4px;">✏️ Editar</button>`:'';return `<div class="arch-item"><div class="ai-dot ${dot}"></div><div class="ai-body"><div class="ai-nom">${em} ${it.nombre}</div><div class="ai-sub">${cantStr}${totalStr8}${cuStr} · ${it.categoria||'—'} · 👤 ${quienHistStr}${editadoPorStr}</div>${modBadge}</div><div class="ai-right"><div class="ai-precio">${p?`S/ ${p.toFixed(2)}`:'—'}</div><div class="ai-fecha">${fT}</div>${editBtn}</div></div>`;}).join('');
 }
 
@@ -2039,7 +2101,7 @@ window.exportarExcel=function(){
   if(!todos.length){showModal('📊','Sin datos','No hay registros para exportar con el filtro actual.');return;}
   const cols=['Nombre','Cantidad','Formato','Contenido/formato','Unidad base','Total calculado','Categoría','Urgencia','Precio total','Costo unitario','Quién','Responsable','Fecha compra'];
   const esc=v=>'"'+(String(v||'').replace(/"/g,'""'))+'"';
-  const rows=todos.map(it=>{const d=new Date(it.tsComprado||it.ts||0);const fT=`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;const cant=it.compra?.cantidad||it.cantidad||1;const fmt=it.compra?.formato||it.unidad||'und';const cc=parseFloat(it.contenido_por_formato?.cantidad)||0;const cu2=it.contenido_por_formato?.unidad||it.unidad_base||'';const total=parseFloat(it.total_calculado)||0;const p=getP(it);const cunit=p&&total?formatCostoUnitario(p,total,cu2):'';const ccDisp=cc&&cu2?formatearUnidad(cc,cu2):'';const totalDisp=total&&cu2?formatearUnidad(total,cu2):'';return [it.nombre,cant,fmt,ccDisp,cu2,totalDisp,it.categoria||'',it.urgencia||'normal',p?`S/ ${p.toFixed(2)}`:'',cunit,it.quien||'',it.responsable||'',fT].map(esc).join(',');});
+  const rows=todos.map(it=>{const d=new Date(it.tsComprado||it.ts||0);const fT=`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;const cant=it.compra?.cantidad||it.cantidad||1;const fmt=it.compra?.formato||it.unidad||'und';const cc=parseFloat(it.contenido_por_formato?.cantidad)||0;const cu2=it.contenido_por_formato?.unidad||it.unidad_base||'';const total=parseFloat(it.total_calculado)||0;const p=getP(it);const cunit=p&&total?formatCostoUnitario(p,total,cu2):'';const ccDisp=cc&&cu2?formatearUnidad(cc,cu2):'';const totalDisp=total&&cu2?formatearUnidad(total,cu2):'';return [it.nombre,cant,fmt,ccDisp,cu2,totalDisp,it.categoria||'',it.urgencia||'normal',p?`S/ ${p.toFixed(2)}`:'',cunit,nombreDeEmail(it.quien),it.responsable||'',fT].map(esc).join(',');});
   const csv='\uFEFF'+cols.map(esc).join(',')+'\n'+rows.join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');const now=new Date();const M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];a.href=url;a.download=`zumix_${now.getDate()}${M[now.getMonth()]}${now.getFullYear()}.csv`;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
 };
 
@@ -2245,7 +2307,7 @@ window.abrirEditHist=function(fbKey,tipo){
     `<div class="hedit-field"><div class="hedit-label">👥 Responsable</div><select class="select-f" id="he-resp"><option value="darlyn"${respVal==='darlyn'?' selected':''}>👑 Darlyn y Luz</option><option value="nosotros"${respVal==='nosotros'?' selected':''}>👥 Nosotros</option></select></div>`+
 
     // Quién registró
-    `<div class="hedit-field"><div class="hedit-label">👤 Registrado por <span style="font-size:.62rem;color:var(--text3);font-weight:500;text-transform:none;">(responsable de la compra — afecta estadísticas)</span></div><input class="input-f" id="he-quien" value="${(it.quien||'').replace(/"/g,'&quot;')}" placeholder="Nombre en mayúsculas"/><div style="font-size:.67rem;color:var(--orange);margin-top:3px;">⚠️ Quien edita este campo en el panel admin queda registrado como editor, no como comprador.</div></div>`+
+    `<div class="hedit-field"><div class="hedit-label">👤 Registrado por <span style="font-size:.62rem;color:var(--text3);font-weight:500;text-transform:none;">(correo del responsable — afecta estadísticas)</span></div><input class="input-f" id="he-quien" value="${(it.quien||'').replace(/"/g,'&quot;')}" placeholder="correo@gmail.com"/><div style="font-size:.67rem;color:var(--text3);margin-top:3px;">Nombre actual: <strong>${nombreDeEmail(it.quien)}</strong> · Quien edita queda registrado como editor.</div></div>`+
 
     // Fecha y hora
     `<div class="hedit-field"><div class="hedit-label">📅 Fecha y hora de compra</div><input class="input-f" id="he-fecha" type="datetime-local" value="${dtStr}"/><div style="font-size:.68rem;color:var(--text3);margin-top:3px;">Modifica si se registró en fecha u hora incorrecta.</div></div>`;
@@ -2288,11 +2350,11 @@ window.guardarEditHist=function(){
   const totalCalc = hayVarsHE
     ? varsGuardadas.reduce((s,v)=>(v.cantidad||0)*(v.contenido?.cantidad||0)+s, 0)
     : cant>0&&contCant>0 ? cant*contCant : (editHistItem.total_calculado||null);
-  const quienAdminActual=(localStorage.getItem(EK)||'').toUpperCase();
+  const quienAdminActual=(auth.currentUser?.email||'').toLowerCase();
   let quienEditoVal=null;let tsEditoVal=null;
   // Si el admin cambió el campo quien, eso es la corrección del registrado-por
   // Si además el admin es diferente al registrado-por resultante, guardar quienEdito
-  if(quienAdminActual&&quienAdminActual!==quien){quienEditoVal=quienAdminActual;tsEditoVal=Date.now();}
+  if(quienAdminActual&&quienAdminActual!==quien.toLowerCase()){quienEditoVal=quienAdminActual;tsEditoVal=Date.now();}
   const payload={nombre:nom,cantidad:cant,unidad:fmt,precio:pre,precio_total:pre,categoria:cat,urgencia:urg,responsable:resp,quien,quienEdito:quienEditoVal,tsEdito:tsEditoVal,tsComprado,ts:editHistItem.ts||tsComprado,compra:{cantidad:cant,formato:fmt},contenido_por_formato:{cantidad:contCant,unidad:contUnd},unidad_base:contUnd,total_calculado:totalCalc,variaciones:varsGuardadas};
   const _ref=editHistItem._tipo==='activo'?`faltantes/${editHistItem.fbKey}`:`archivo/${editHistItem.fbKey}`;
   if(editHistItem._tipo==='activo'){payload.comprado=true;}update(ref(db,_ref),payload);
@@ -2490,7 +2552,7 @@ window.generarReportePDF=function(){
   const tCat=Object.entries(gC).sort((a,b)=>b[1].gasto-a[1].gasto);
 
   // Por persona
-  const gE={};todos.forEach(i=>{const e=(i.quien||'SIN ASIGNAR').toUpperCase();if(!gE[e])gE[e]={t:0,g:0,u:0};gE[e].t++;gE[e].g+=getP(i);if(i.urgencia==='alta'||i.urgencia==='urgente')gE[e].u++;});
+  const gE={};todos.forEach(i=>{const e=(i.quien||'desconocido').toLowerCase();if(!gE[e])gE[e]={t:0,g:0,u:0};gE[e].t++;gE[e].g+=getP(i);if(i.urgencia==='alta'||i.urgencia==='urgente')gE[e].u++;});
   const tE=Object.entries(gE).sort((a,b)=>b[1].t-a[1].t);
 
   // Ticket
@@ -2556,7 +2618,7 @@ window.generarReportePDF=function(){
     });
     return`<svg viewBox="0 0 ${totalW} ${totalH}" width="100%" height="${totalH}" xmlns="http://www.w3.org/2000/svg">${rows}</svg>`;
   })();
-  const hbarPers=svgHBar(tE.map(([e,d])=>({l:e,v:d.t,color:'#6FABD6'})),{barW:180,rowH:20,suffix:' comp.',nameW:150});
+  const hbarPers=svgHBar(tE.map(([e,d])=>({l:nombreDeEmail(e),v:d.t,color:'#6FABD6'})),{barW:180,rowH:20,suffix:' comp.',nameW:150});
 
   /* ─── CSS & HTML ─── */
   const CSS=`
@@ -2973,10 +3035,10 @@ ${secHeader('👤','Actividad por persona','Distribución de registros y gasto e
   <table class="person-table">
     ${tE.map(([e,d],i)=>`<tr>
       <td style="width:28pt;padding-right:8pt;">
-        <div class="person-avatar">${e.charAt(0)}</div>
+        <div class="person-avatar">${nombreDeEmail(e).charAt(0)}</div>
       </td>
       <td>
-        <div class="person-name">${e}</div>
+        <div class="person-name">${nombreDeEmail(e)}</div>
         <div class="person-meta">
           ${d.u>0?`<span class="badge b-red">🔴 ${d.u} alta prioridad</span> `:''}
           <span class="badge b-blue">${d.t} compras</span>
@@ -3079,7 +3141,7 @@ ${secHeader('🕐','Compras recientes del período',`Últimas ${Math.min(10,todo
           <td class="date-cell">${fT}</td>
           <td style="font-weight:600;">${it.nombre||'—'}</td>
           <td class="cat-cell">${it.categoria||'—'}</td>
-          <td style="font-size:8pt;">${it.quien||'—'}</td>
+          <td style="font-size:8pt;">${nombreDeEmail(it.quien)}</td>
           <td class="td-mono" style="text-align:right;">${p?'S/ '+p.toFixed(2):'—'}</td>
           <td style="text-align:center;">${urgBadge(it.urgencia)}</td>
         </tr>`;
@@ -3142,9 +3204,9 @@ function renderStats(){
   const gC={};todos.forEach(i=>{const c=i.categoria||'OTROS';if(!gC[c])gC[c]={gasto:0,cantidad:0};gC[c].cantidad++;const p=getP(i);if(p>0)gC[c].gasto+=p;});
   const tCat=Object.entries(gC).sort((a,b)=>b[1].gasto-a[1].gasto||b[1].cantidad-a[1].cantidad);const mCat=tCat[0]?.[1].gasto||1;
   document.getElementById('st-cat').innerHTML=tCat.length?tCat.map(([c,d])=>`<div class="sr"><span class="sr-n">${EM[c]||'⚙️'} ${c}</span><div class="sr-bg"><div class="sr-bar" style="width:${mCat>0?Math.round(d.gasto/mCat*100):0}%"></div></div><span class="sr-v">S/ ${d.gasto.toFixed(2)}</span><span class="sr-e">${d.cantidad}x</span></div>`).join(''):nd;
-  const _fallbackNombre=(localStorage.getItem(EK)||'DESCONOCIDO').toUpperCase();const gE={};todos.forEach(i=>{const raw=(i.quien&&i.quien.trim()!==''?i.quien.trim():_fallbackNombre).toUpperCase();const e=(raw===''||raw==='SIN NOMBRE')?_fallbackNombre:raw;if(!gE[e])gE[e]={t:0,u:0,g:0};gE[e].t++;if(i.urgencia==='alta'||i.urgencia==='urgente')gE[e].u++;const p=getP(i);if(p>0)gE[e].g+=p;});
-  const tE=Object.entries(gE).sort((a,b)=>b[1].t-a[1].t);const mE=tE[0]?.[1].t||1;
-  document.getElementById('st-emp').innerHTML=tE.length?tE.map(([e,d])=>`<div class="sr"><span class="sr-n">👤 ${e}</span><div class="sr-bg"><div class="sr-bar" style="width:${Math.round(d.t/mE*100)}%"></div></div><span class="sr-v">${d.t}</span><span class="sr-e">${d.g>0?`S/ ${d.g.toFixed(2)}`:''}${d.u>0?` 🔴${d.u}`:''}</span></div>`).join(''):nd;
+  const _fallbackEmail=(auth.currentUser?.email||'desconocido').toLowerCase();const gE2={};todos.forEach(i=>{const e=(i.quien&&i.quien.trim()!==''?i.quien.trim().toLowerCase():_fallbackEmail);if(!gE2[e])gE2[e]={t:0,u:0,g:0};gE2[e].t++;if(i.urgencia==='alta'||i.urgencia==='urgente')gE2[e].u++;const p=getP(i);if(p>0)gE2[e].g+=p;});
+  const tEst=Object.entries(gE2).sort((a,b)=>b[1].t-a[1].t);const mE=tEst[0]?.[1].t||1;
+  document.getElementById('st-emp').innerHTML=tEst.length?tEst.map(([e,d])=>`<div class="sr"><span class="sr-n">👤 ${nombreDeEmail(e)}</span><div class="sr-bg"><div class="sr-bar" style="width:${Math.round(d.t/mE*100)}%"></div></div><span class="sr-v">${d.t}</span><span class="sr-e">${d.g>0?`S/ ${d.g.toFixed(2)}`:''}${d.u>0?` 🔴${d.u}`:''}</span></div>`).join(''):nd;
 
   // Ticket promedio y dispersión
   const conPrecio=todos.filter(i=>getP(i)>0);if(conPrecio.length){
@@ -3432,6 +3494,13 @@ function mostrarLogin(){
   document.getElementById('screen-onboard').style.display='none';
   const tb=document.querySelector('.topbar');
   if(tb)tb.style.display='none';
+  // Siempre resetear el botón de Google al mostrar login
+  const btn=document.getElementById('btn-google-login');
+  if(btn){
+    btn.disabled=false;
+    btn.innerHTML='<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;">Continuar con Google';
+  }
+  document.getElementById('login-error').style.display='none';
 }
 function ocultarLogin(){
   document.getElementById('screen-login').style.display='none';
@@ -3467,31 +3536,50 @@ onAuthStateChanged(auth,async user=>{
     await _esperarAcceso();
     if(!_emailAutorizado(user.email)){
       await signOut(auth);
-      // Resetear botón de login
-      const btn=document.getElementById('btn-google-login');
-      if(btn){btn.disabled=false;btn.innerHTML='<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;">Continuar con Google';}
+      // mostrarLogin() ya resetea el botón — solo mostrar error
       document.getElementById('login-error').style.display='block';
       document.getElementById('login-error').textContent='⛔ Tu cuenta no tiene acceso autorizado: '+user.email;
       return;
     }
     document.getElementById('login-error').style.display='none';
     ocultarLogin();
-    // Ocultar onboarding y mostrar app completa con nombre de Google
-    const nombre=user.displayName?user.displayName.split(' ')[0]:user.email.split('@')[0];
-    mostrarApp(nombre.toUpperCase());
-    // También actualizar brand-user con nombre limpio
-    const brandUser=document.getElementById('brand-user');
-    if(brandUser)brandUser.textContent=nombre.toUpperCase();
     // Determinar si es admin
     window._esAdmin=(user.email.toLowerCase()===ADMIN_EMAIL.toLowerCase());
     // Iniciar listeners de Firebase
     iniciarListeners();
-    // Mostrar botón cerrar sesión
+    // Mostrar botones según rol
     const btnLogout=document.getElementById('btn-logout');
     if(btnLogout)btnLogout.style.display='flex';
-    // Mostrar panel de gestión de accesos si es admin
     const btnAccesos=document.getElementById('btn-gestionar-accesos');
     if(btnAccesos)btnAccesos.style.display=window._esAdmin?'flex':'none';
+    // Verificar si el usuario ya tiene nombre en Firebase
+    const eKey=emailToKey(user.email);
+    try{
+      const snap=await get(ref(db,`usuarios/${eKey}/nombre`));
+      if(snap.exists()){
+        // Usuario conocido — entrar directo
+        const nombre=snap.val();
+        localStorage.setItem(EK,nombre);
+        mostrarApp(nombre);
+      }else{
+        // Usuario nuevo — mostrar onboarding para que elija su nombre
+        // Pre-llenar con el primer nombre de Google como sugerencia
+        const sugerencia=user.displayName?user.displayName.split(' ')[0]:user.email.split('@')[0];
+        const obInput=document.getElementById('ob-input');
+        if(obInput)obInput.value=sugerencia;
+        document.getElementById('screen-onboard').style.display='flex';
+      }
+    }catch(e){
+      // Fallback a localStorage si falla la lectura
+      const nombreGuardado=localStorage.getItem(EK)||'';
+      if(nombreGuardado){mostrarApp(nombreGuardado);}
+      else{
+        const sugerencia=user.displayName?user.displayName.split(' ')[0]:user.email.split('@')[0];
+        const obInput=document.getElementById('ob-input');
+        if(obInput)obInput.value=sugerencia;
+        document.getElementById('screen-onboard').style.display='flex';
+      }
+    }
   }else{
     mostrarLogin();
     _listenersIniciados=false;
@@ -3511,6 +3599,8 @@ window.abrirGestionAccesos=function(){
 };
 window.cerrarGestionAccesos=function(){
   document.getElementById('overlay-accesos').classList.remove('show');
+  // Cancelar listener reactivo al cerrar
+  if(_unsubAccesos){_unsubAccesos();_unsubAccesos=null;}
 };
 window.agregarAcceso=async function(){
   const input=document.getElementById('nuevo-acceso-email');
@@ -3528,11 +3618,15 @@ window.quitarAcceso=async function(key){
   if(!confirm('¿Quitar acceso a este correo?'))return;
   await remove(ref(db,`acceso/${key}`));
 };
+// Listener reactivo para la lista de accesos (se activa al abrir el modal)
+let _unsubAccesos=null;
 function renderListaAccesos(){
   const lista=document.getElementById('lista-accesos');
   if(!lista)return;
-  // Leer desde Firebase para tener las keys
-  onValue(rAcceso,snap=>{
+  // Cancelar listener previo si existe
+  if(_unsubAccesos){_unsubAccesos();_unsubAccesos=null;}
+  // Suscribir listener en tiempo real
+  _unsubAccesos=onValue(rAcceso,snap=>{
     const d=snap.val()||{};
     lista.innerHTML=Object.entries(d).map(([k,v])=>`
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:10px;margin-bottom:8px;">
@@ -3542,7 +3636,7 @@ function renderListaAccesos(){
         </div>
         <button onclick="quitarAcceso('${k}')" style="background:var(--red,#e53935);border:none;color:#fff;border-radius:8px;padding:6px 10px;font-size:.72rem;cursor:pointer;">Quitar</button>
       </div>`).join('')||'<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:16px;">No hay usuarios adicionales</div>';
-  },{onlyOnce:true});
+  });
 }
 </script>
 </body>
