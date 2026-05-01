@@ -1235,16 +1235,16 @@ function _emailAutorizado(email){
   return _correosAutorizados.has((email||'').toLowerCase().trim());
 }
 const rAct=ref(db,'faltantes'),rHist=ref(db,'archivo'),rUsuarios=ref(db,'usuarios');
-// Cache de nombres: { "correo@gmail.com": "NOMBRE" }
+// Cache de nombres: { "correo,gmail,com": "NOMBRE" }
 let _usuariosCache={};
 // Escuchar cambios en nodo usuarios/ en tiempo real
 onValue(rUsuarios,snap=>{
   _usuariosCache=snap.val()||{};
-  // Refrescar vistas si ya hay datos cargados
+  // Solo refrescar vistas si los listeners ya están activos y hay datos
   if(_listenersIniciados){
     renderLista();
-    if(document.getElementById('pane-historial').classList.contains('active'))renderHist();
-    if(document.getElementById('pane-stats').classList.contains('active'))renderStats();
+    if(document.getElementById('pane-historial')?.classList.contains('active'))renderHist();
+    if(document.getElementById('pane-stats')?.classList.contains('active'))renderStats();
   }
 });
 // Devuelve el nombre legible de un correo, con fallback al propio correo
@@ -2075,7 +2075,8 @@ window.actualizarDotHFilt=function(){
   if(hayFecha) document.querySelectorAll('#filt-hist .fbtn').forEach(b=>b.classList.remove('active'));
 };
 window.renderHist=renderHist;
-window.renderStats=renderStats;
+window.renderStats=function(){renderStats();};
+window.renderLista=function(){renderLista();};
 
 // BÚSQUEDA
 window.filtrarLista=function(tipo){const inp=document.getElementById(`search-${tipo}`);const clr=document.getElementById(`search-${tipo}-clear`);if(tipo==='pend'){searchPend=inp.value;clr.classList.toggle('show',!!inp.value);renderLista();}else{searchComp=inp.value;clr.classList.toggle('show',!!inp.value);renderLista();}};
@@ -3532,53 +3533,55 @@ window.cerrarSesion=async function(){
 
 onAuthStateChanged(auth,async user=>{
   if(user){
-    // Esperar que la lista de accesos esté cargada antes de verificar
+    // 1. Verificar acceso autorizado
     await _esperarAcceso();
     if(!_emailAutorizado(user.email)){
       await signOut(auth);
-      // mostrarLogin() ya resetea el botón — solo mostrar error
       document.getElementById('login-error').style.display='block';
       document.getElementById('login-error').textContent='⛔ Tu cuenta no tiene acceso autorizado: '+user.email;
+      mostrarLogin();
       return;
     }
     document.getElementById('login-error').style.display='none';
-    ocultarLogin();
-    // Determinar si es admin
+
+    // 2. Determinar rol
     window._esAdmin=(user.email.toLowerCase()===ADMIN_EMAIL.toLowerCase());
-    // Iniciar listeners de Firebase
-    iniciarListeners();
-    // Mostrar botones según rol
+
+    // 3. Obtener nombre desde Firebase (con fallback a localStorage)
+    const eKey=emailToKey(user.email);
+    let nombreResuelto='';
+    try{
+      const snap=await get(ref(db,`usuarios/${eKey}/nombre`));
+      if(snap.exists()){
+        nombreResuelto=snap.val();
+        localStorage.setItem(EK,nombreResuelto);
+      }
+    }catch(e){
+      // Si falla Firebase, usar caché local
+      nombreResuelto=localStorage.getItem(EK)||'';
+    }
+
+    // 4. Ocultar login y mostrar interfaz
+    ocultarLogin();
+
+    // 5. Mostrar botones según rol
     const btnLogout=document.getElementById('btn-logout');
     if(btnLogout)btnLogout.style.display='flex';
     const btnAccesos=document.getElementById('btn-gestionar-accesos');
     if(btnAccesos)btnAccesos.style.display=window._esAdmin?'flex':'none';
-    // Verificar si el usuario ya tiene nombre en Firebase
-    const eKey=emailToKey(user.email);
-    try{
-      const snap=await get(ref(db,`usuarios/${eKey}/nombre`));
-      if(snap.exists()){
-        // Usuario conocido — entrar directo
-        const nombre=snap.val();
-        localStorage.setItem(EK,nombre);
-        mostrarApp(nombre);
-      }else{
-        // Usuario nuevo — mostrar onboarding para que elija su nombre
-        // Pre-llenar con el primer nombre de Google como sugerencia
-        const sugerencia=user.displayName?user.displayName.split(' ')[0]:user.email.split('@')[0];
-        const obInput=document.getElementById('ob-input');
-        if(obInput)obInput.value=sugerencia;
-        document.getElementById('screen-onboard').style.display='flex';
-      }
-    }catch(e){
-      // Fallback a localStorage si falla la lectura
-      const nombreGuardado=localStorage.getItem(EK)||'';
-      if(nombreGuardado){mostrarApp(nombreGuardado);}
-      else{
-        const sugerencia=user.displayName?user.displayName.split(' ')[0]:user.email.split('@')[0];
-        const obInput=document.getElementById('ob-input');
-        if(obInput)obInput.value=sugerencia;
-        document.getElementById('screen-onboard').style.display='flex';
-      }
+
+    // 6. Iniciar listeners de Firebase ANTES de mostrar app
+    iniciarListeners();
+
+    // 7. Decidir: onboarding o app directa
+    if(nombreResuelto){
+      mostrarApp(nombreResuelto);
+    }else{
+      // Usuario nuevo — onboarding
+      const sugerencia=user.displayName?user.displayName.split(' ')[0]:user.email.split('@')[0];
+      const obInput=document.getElementById('ob-input');
+      if(obInput)obInput.value=sugerencia.toUpperCase();
+      document.getElementById('screen-onboard').style.display='flex';
     }
   }else{
     mostrarLogin();
