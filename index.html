@@ -1218,6 +1218,12 @@ onValue(rAcceso,snap=>{
     _accesoListo=true;
     _accesoResolvers.forEach(r=>r());
     _accesoResolvers=[];
+  }else{
+    // Lista actualizada en tiempo real: verificar si el usuario activo sigue autorizado
+    const usuarioActivo=auth.currentUser;
+    if(usuarioActivo&&!_correosAutorizados.has((usuarioActivo.email||'').toLowerCase().trim())){
+      signOut(auth);
+    }
   }
 });
 
