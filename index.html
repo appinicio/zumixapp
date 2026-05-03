@@ -3635,11 +3635,17 @@ window.agregarAcceso=async function(){
   const input=document.getElementById('nuevo-acceso-email');
   const email=(input.value||'').toLowerCase().trim();
   if(!email||!email.includes('@')){showModal('⚠️','Error','Ingresa un correo válido.');return;}
-  if(_correosAutorizados.has(email)){showModal('ℹ️','Ya existe','Ese correo ya tiene acceso.');return;}
-  const k=Date.now().toString();
+  // Verificar contra Firebase directamente, no el cache (evita falsos 'ya existe')
+  const snapCheck=await get(rAcceso);
+  const yaExiste=snapCheck.val()&&Object.values(snapCheck.val()).some(v=>v&&(v.email||'').toLowerCase().trim()===email);
+  if(yaExiste||email===ADMIN_EMAIL.toLowerCase()){
+    showModal('ℹ️','Ya existe','Ese correo ya tiene acceso.');
+    return;
+  }
+  // Usar push-style key: timestamp + random para evitar colisiones
+  const k=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   await set(ref(db,`acceso/${k}`),{email,agregadoPor:auth.currentUser?.email||'',ts:Date.now()});
   input.value='';
-  // Mostrar feedback inline dentro del modal (no detrás de él)
   const fb=document.getElementById('acceso-feedback');
   if(fb){fb.textContent='✅ '+email+' agregado correctamente';fb.style.display='block';setTimeout(()=>fb.style.display='none',3000);}
 };
@@ -3657,14 +3663,21 @@ function renderListaAccesos(){
   // Suscribir listener en tiempo real
   _unsubAccesos=onValue(rAcceso,snap=>{
     const d=snap.val()||{};
-    lista.innerHTML=Object.entries(d).map(([k,v])=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:10px;margin-bottom:8px;">
-        <div>
-          <div style="font-size:.82rem;font-weight:600;color:var(--text1);">${v.email}</div>
-          <div style="font-size:.68rem;color:var(--text3);">Agregado por ${v.agregadoPor||'admin'}</div>
-        </div>
-        <button onclick="quitarAcceso('${k}')" style="background:var(--red,#e53935);border:none;color:#fff;border-radius:8px;padding:6px 10px;font-size:.72rem;cursor:pointer;">Quitar</button>
-      </div>`).join('')||'<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:16px;">No hay usuarios adicionales</div>';
+    // Filtrar entradas válidas (con email) y ordenar por ts
+    const entradas=Object.entries(d)
+      .filter(([k,v])=>v&&v.email)
+      .sort((a,b)=>(a[1].ts||0)-(b[1].ts||0));
+    lista.innerHTML=entradas.map(([k,v])=>{
+      const emailSafe=(v.email||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const porSafe=(v.agregadoPor||'admin').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:10px;margin-bottom:8px;">`+
+        `<div>`+
+        `<div style="font-size:.82rem;font-weight:600;color:var(--text);">${emailSafe}</div>`+
+        `<div style="font-size:.68rem;color:var(--text3);">Agregado por ${porSafe}</div>`+
+        `</div>`+
+        `<button onclick="quitarAcceso('${k}')" style="background:var(--red,#e53935);border:none;color:#fff;border-radius:8px;padding:6px 10px;font-size:.72rem;cursor:pointer;">Quitar</button>`+
+        `</div>`;
+    }).join('')||'<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:16px;">No hay usuarios adicionales</div>';
   });
 }
 </script>
