@@ -733,7 +733,7 @@ details summary::-webkit-details-marker{display:none;}
 <div class="app">
 
 <!-- ONBOARDING -->
-<div id="screen-onboard">
+<div id="screen-onboard" style="display:none;">
   <div class="ob-emblem">🧃</div>
   <div class="ob-title">Zumix <span>Stock</span></div>
   <div class="ob-sub">Sistema de gestión de compras<br>Jugería Fuente de Soda</div>
@@ -1223,7 +1223,10 @@ onValue(rAcceso,snap=>{
 // Devuelve una promesa que se resuelve cuando la lista ya cargó
 function _esperarAcceso(){
   if(_accesoListo)return Promise.resolve();
-  return new Promise(r=>_accesoResolvers.push(r));
+  return new Promise(r=>{
+    _accesoResolvers.push(r);
+    setTimeout(()=>{if(!_accesoListo){_accesoListo=true;_accesoResolvers.forEach(fn=>fn());_accesoResolvers=[];}},5000);
+  });
 }
 function _emailAutorizado(email){
   return _correosAutorizados.has((email||'').toLowerCase().trim());
@@ -1333,6 +1336,7 @@ window.switchLista=function(t){
   ['reg','pend','comp'].forEach(id=>{document.getElementById(`lstab-${id}`).classList.toggle('active',id===t);document.getElementById(`lsp-${id}`).classList.toggle('active',id===t);});
   // Limpiar formulario al volver a Registrar si no hay edición activa
   if(t==='reg'&&!editKey){limpiarForm();}
+  if(t==='pend'||t==='comp'){ultimoKey=null;renderLista();}
 };
 
 // FIREBASE
@@ -1914,7 +1918,7 @@ function fmtR(ts){if(!ts)return'';const d=Math.floor((Date.now()-ts)/60000);if(d
 function mkCard(item,opts={}){
   const{esComp=false,esNuevo=false}=opts;
   const precio=getP(item);const precioStr=precio?`S/ ${precio.toFixed(2)}`:'—';
-  const cantStr=item.compra?.cantidad?`${item.compra.cantidad} ${item.compra.formato||''}`:`${item.cantidad||1} ${item.unidad||'und'}`;
+  const _cRef=item.compra?.cantidad||item.cantidad;const _fRef=item.compra?.formato||item.unidad;const cantStr=(_cRef&&_fRef)?`${_cRef} ${_fRef}`:(_cRef?`${_cRef}`:(item.comprado?`${item.cantidad||1} ${item.unidad||'und'}`:'-'));
   const totalStr=item.total_calculado&&item.unidad_base?` · ${formatearUnidad(item.total_calculado,item.unidad_base)}`:'';
   const rel=fmtR(esComp?item.tsComprado:item.ts);const em=EM[item.categoria]||'⚙️';
   const _urgCls={alta:'alta',urgente:'alta',media:'media',normal:'baja',baja:'baja'};const _uc=_urgCls[item.urgencia||'baja']||'baja';
@@ -1933,7 +1937,7 @@ function renderLista(){
   const pend=activos.filter(i=>!i.comprado);const compHoy=activos.filter(i=>i.comprado&&(i.tsComprado||0)>=hT);
   const urgAlta=pend.filter(i=>i.urgencia==='alta'||i.urgencia==='urgente').length;const urgMedia=pend.filter(i=>i.urgencia==='media').length;const urg=urgAlta;const nor=pend.length-urgAlta-urgMedia;
   const bp=document.getElementById('badge-pend-tab'),bc=document.getElementById('badge-comp-tab');
-  bp.style.display=pend.length?'inline':'none';if(pend.length)bp.textContent=urgAlta>0?`🔴${urgAlta}`:pend.length;
+  bp.style.display=pend.length?'inline':'none';if(pend.length)bp.textContent=urgAlta>0?`🔴${pend.length}`:pend.length;
   bc.style.display=compHoy.length?'inline':'none';if(compHoy.length)bc.textContent=compHoy.length;
   document.getElementById('cnt-urg').textContent=urgAlta;const _cmdEl=document.getElementById('cnt-med');if(_cmdEl)_cmdEl.textContent=urgMedia;document.getElementById('cnt-nor').textContent=nor;
   const lp=document.getElementById('lista-pend');
@@ -2374,12 +2378,15 @@ window.genWSP=function(tipo){
       L.push(`${grpLbl}`);
       const ordUrgG={alta:0,urgente:0,media:1,normal:2,baja:2};
       const sorted=[...gitems].sort((a,b)=>(ordUrgG[a.urgencia]??2)-(ordUrgG[b.urgencia]??2));
-      let curUrg=null;
+      let curUrg=null;let curUrgPrev=null;
       sorted.forEach(i=>{
         const uKey=i.urgencia||'baja';const uNorm=(uKey==='urgente'?'alta':uKey==='normal'?'baja':uKey);
         if(uNorm!==curUrg){curUrg=uNorm;L.push(`  ${_urgLbl[uKey]||'🟢 PUEDE ESPERAR'}`);}
-        const cv=i.compra?.cantidad||i.cantidad||1;const fv=i.compra?.formato||i.unidad||'und';
-        L.push(`    ${String(n++).padStart(2,'0')}. ${i.nombre} (${cv} ${fv})`);
+        if(uNorm!==curUrgPrev&&curUrgPrev!==null)L.push('');
+        const cv=i.compra?.cantidad||i.cantidad;const fv=i.compra?.formato||i.unidad;
+        const _cantWsp=cv&&fv?` (${cv} ${fv})`:(cv?` (${cv})`:'');
+        L.push(`     ${String(n++).padStart(2,'0')}. ${i.nombre}${_cantWsp}`);
+        curUrgPrev=uNorm;
       });
       L.push('');
     });
@@ -3503,8 +3510,8 @@ window.loginConGoogle=async function(){
     await signInWithPopup(auth,provider);
   }catch(e){
     btn.disabled=false;
-    btn.innerHTML='<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px;vertical-align:middle;margin-right:8px;">Continuar con Google';
-    if(e.code!=='auth/popup-closed-by-user'){
+    btn.innerHTML='<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;">Continuar con Google';
+    if(e.code!=='auth/popup-closed-by-user'&&e.code!=='auth/cancelled-popup-request'){
       showModal('❌','Error al iniciar sesión','No se pudo conectar con Google. Intenta de nuevo.');
     }
   }
