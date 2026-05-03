@@ -1855,6 +1855,14 @@ function guardarItem(payload){
   showModal('✅','Producto registrado',resumen,[{txt:'✏️ Editar',cls:'secondary',cb:()=>{const k2=ultimoKey;const t=()=>{const it=activos.find(i=>i.fbKey===k2);if(it)window.editarItem(k2);else setTimeout(t,400);};t();}},{txt:'✓ Listo',cls:'primary'}]);
 }
 
+// Convierte unidad interna canónica → unidad amigable para mostrar en el formulario
+function desnormalizarUnidad(valor, unidad){
+  const v=parseFloat(valor)||0;
+  if(unidad==='ml'&&v>=1000)return{valor:parseFloat((v/1000).toFixed(6)),unidad:'litros'};
+  if(unidad==='g'&&v>=1000)return{valor:parseFloat((v/1000).toFixed(6)),unidad:'kg'};
+  if(unidad==='metros'&&v<1&&v>0)return{valor:parseFloat((v*100).toFixed(6)),unidad:'cm'};
+  return{valor:v,unidad};
+}
 window.editarItem=function(key){
   const item=activos.find(i=>i.fbKey===key);if(!item)return;editKey=key;
   document.getElementById('ni-nom').value=item.nombre;
@@ -1871,8 +1879,10 @@ window.editarItem=function(key){
     // Cargar datos
     document.getElementById('ni-cant').value=item.compra?.cantidad||item.cantidad||'';
     document.getElementById('ni-fmt').value=item.compra?.formato||item.unidad||'';
-    document.getElementById('ni-cont-cant').value=item.contenido_por_formato?.cantidad||'';
-    document.getElementById('ni-cont-und').value=item.contenido_por_formato?.unidad||item.unidad_base||'';
+    // Desnormalizar para mostrar en la unidad que el usuario ingresó (no la canónica)
+    const _desnorm=desnormalizarUnidad(item.contenido_por_formato?.cantidad||0, item.contenido_por_formato?.unidad||item.unidad_base||'');
+    document.getElementById('ni-cont-cant').value=_desnorm.valor||'';
+    document.getElementById('ni-cont-und').value=_desnorm.unidad||item.unidad_base||'';
     document.getElementById('ni-pre').value=item.precio_total||item.precio||'';
     document.getElementById('cat-c').value=item.categoria||'';
     // Restaurar urgencia del comprado
@@ -1910,7 +1920,18 @@ window.eliminarItem=function(key){if(confirm('¿Eliminar este producto?'))remove
 // CAMBIAR A COMPRADO
 window.cambiarAComprado=function(key){
   const item=activos.find(i=>i.fbKey===key);if(!item)return;
-  window.editarItem(key);const eb=document.getElementById('btn-comp');if(eb&&estA!=='comp')window.setEst(eb,'comp');
+  window.editarItem(key);
+  const eb=document.getElementById('btn-comp');
+  if(eb&&estA!=='comp')window.setEst(eb,'comp');
+  // Pre-llenar urgencia y categoría desde el registro pendiente (setEst las limpia)
+  if(item.urgencia){
+    const _urgMapC={'alta':'btn-urg-c','media':'btn-med-c','baja':'btn-baj-c','urgente':'btn-urg-c','normal':'btn-baj-c'};
+    const _uv=item.urgencia==='urgente'?'alta':item.urgencia==='normal'?'baja':(item.urgencia||'baja');
+    ['btn-urg-c','btn-med-c','btn-baj-c'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('sel');});
+    const ubc=document.getElementById(_urgMapC[_uv]||'btn-baj-c');if(ubc){ubc.classList.add('sel');urgA=_uv;}
+  }
+  if(item.categoria){const cc=document.getElementById('cat-c');if(cc)cc.value=item.categoria;}
+  updSD();
   showModal('✅','Completar compra',`Completa los detalles de la compra de <strong>${item.nombre}</strong> y guarda.`,[{txt:'Entendido',cls:'primary'}]);
 };
 
@@ -3512,10 +3533,22 @@ window.loginConGoogle=async function(){
   const btn=document.getElementById('btn-google-login');
   btn.disabled=true;
   btn.textContent='Conectando...';
+  // Detectar cuando el usuario cierra/cancela el popup por foco de ventana
+  let _popupDone=false;
+  function _onFocus(){
+    window.removeEventListener('focus',_onFocus);
+    // Si el foco volvió y el popup no terminó → restaurar botón de inmediato
+    setTimeout(()=>{if(!_popupDone)_resetBtnGoogle();},300);
+  }
+  window.addEventListener('focus',_onFocus);
   try{
     const provider=new GoogleAuthProvider();
     await signInWithPopup(auth,provider);
+    _popupDone=true;
+    window.removeEventListener('focus',_onFocus);
   }catch(e){
+    _popupDone=true;
+    window.removeEventListener('focus',_onFocus);
     _resetBtnGoogle();
     if(e.code!=='auth/popup-closed-by-user'&&e.code!=='auth/cancelled-popup-request'){
       showModal('❌','Error al iniciar sesión','No se pudo conectar con Google. Intenta de nuevo.');
@@ -3532,16 +3565,20 @@ onAuthStateChanged(auth,async user=>{
   if(user){
     // Esperar que la lista de accesos esté cargada antes de verificar
     await _esperarAcceso();
-    // Si la lista solo tiene al admin, puede que Firebase aún no respondió — esperar un tick
-    if(_correosAutorizados.size<=1&&!_emailAutorizado(user.email)){
-      await new Promise(r=>setTimeout(r,1500));
-    }
+    // Verificación definitiva: si no está autorizado, hacer get() directo para no depender del cache
     if(!_emailAutorizado(user.email)){
-      await signOut(auth);
-      _resetBtnGoogle();
-      document.getElementById('login-error').style.display='block';
-      document.getElementById('login-error').textContent='⛔ Tu cuenta no tiene acceso autorizado: '+user.email;
-      return;
+      const snapAcc=await get(rAcceso);
+      const emailsDirectos=new Set([ADMIN_EMAIL]);
+      if(snapAcc.val())Object.values(snapAcc.val()).forEach(v=>{if(v&&v.email)emailsDirectos.add(v.email.toLowerCase().trim());});
+      // Actualizar cache también
+      _correosAutorizados=emailsDirectos;
+      if(!emailsDirectos.has((user.email||"").toLowerCase().trim())){
+        await signOut(auth);
+        _resetBtnGoogle();
+        document.getElementById('login-error').style.display='block';
+        document.getElementById('login-error').textContent='⛔ Tu cuenta no tiene acceso autorizado: '+user.email;
+        return;
+      }
     }
     document.getElementById('login-error').style.display='none';
     ocultarLogin();
