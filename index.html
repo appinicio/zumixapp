@@ -219,6 +219,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
   font-family:var(--ffmono);
 }
 .lstab-badge.green{background:var(--green);}
+.lstab-badge.yellow{background:var(--accent);color:#1a1814;}
 
 /* ─── LISTA SUBPANES ─────────────────────────────────── */
 .lista-subpane{display:none;}
@@ -1937,8 +1938,8 @@ function renderLista(){
   const pend=activos.filter(i=>!i.comprado);const compHoy=activos.filter(i=>i.comprado&&(i.tsComprado||0)>=hT);
   const urgAlta=pend.filter(i=>i.urgencia==='alta'||i.urgencia==='urgente').length;const urgMedia=pend.filter(i=>i.urgencia==='media').length;const urg=urgAlta;const nor=pend.length-urgAlta-urgMedia;
   const bp=document.getElementById('badge-pend-tab'),bc=document.getElementById('badge-comp-tab');
-  bp.style.display=pend.length?'inline':'none';if(pend.length)bp.textContent=urgAlta>0?`🔴${pend.length}`:pend.length;
-  bc.style.display=compHoy.length?'inline':'none';if(compHoy.length)bc.textContent=compHoy.length;
+  bp.style.display=pend.length?'inline':'none';if(pend.length){bp.textContent=urgAlta>0?`🔴${pend.length}`:pend.length;bp.className='lstab-badge yellow';}
+  bc.style.display=compHoy.length?'inline':'none';if(compHoy.length){bc.textContent=compHoy.length;bc.className='lstab-badge yellow';}
   document.getElementById('cnt-urg').textContent=urgAlta;const _cmdEl=document.getElementById('cnt-med');if(_cmdEl)_cmdEl.textContent=urgMedia;document.getElementById('cnt-nor').textContent=nor;
   const lp=document.getElementById('lista-pend');
   if(!pend.length){lp.innerHTML=`<div class="empty-s"><div class="ei">🎉</div><div class="et">¡Sin pendientes!</div></div>`;}
@@ -2378,15 +2379,19 @@ window.genWSP=function(tipo){
       L.push(`${grpLbl}`);
       const ordUrgG={alta:0,urgente:0,media:1,normal:2,baja:2};
       const sorted=[...gitems].sort((a,b)=>(ordUrgG[a.urgencia]??2)-(ordUrgG[b.urgencia]??2));
-      let curUrg=null;let curUrgPrev=null;
+      let curUrg=null;
       sorted.forEach(i=>{
         const uKey=i.urgencia||'baja';const uNorm=(uKey==='urgente'?'alta':uKey==='normal'?'baja':uKey);
-        if(uNorm!==curUrg){curUrg=uNorm;L.push(`  ${_urgLbl[uKey]||'🟢 PUEDE ESPERAR'}`);}
-        if(uNorm!==curUrgPrev&&curUrgPrev!==null)L.push('');
+        if(uNorm!==curUrg){
+          if(curUrg!==null)L.push('');
+          curUrg=uNorm;
+          L.push('');
+          L.push(`  ${_urgLbl[uKey]||'🟢 PUEDE ESPERAR'}`);
+          L.push('');
+        }
         const cv=i.compra?.cantidad||i.cantidad;const fv=i.compra?.formato||i.unidad;
         const _cantWsp=cv&&fv?` (${cv} ${fv})`:(cv?` (${cv})`:'');
         L.push(`     ${String(n++).padStart(2,'0')}. ${i.nombre}${_cantWsp}`);
-        curUrgPrev=uNorm;
       });
       L.push('');
     });
@@ -3487,11 +3492,7 @@ function mostrarLogin(){
   const tb=document.querySelector('.topbar');
   if(tb)tb.style.display='none';
   // Siempre resetear el botón de Google al mostrar login
-  const btn=document.getElementById('btn-google-login');
-  if(btn){
-    btn.disabled=false;
-    btn.innerHTML='<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;">Continuar con Google';
-  }
+  _resetBtnGoogle();
   document.getElementById('login-error').style.display='none';
 }
 function ocultarLogin(){
@@ -3501,6 +3502,12 @@ function ocultarLogin(){
   if(tb)tb.style.display='';
 }
 
+function _resetBtnGoogle(){
+  const btn=document.getElementById('btn-google-login');
+  if(!btn)return;
+  btn.disabled=false;
+  btn.innerHTML='<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;">Continuar con Google';
+}
 window.loginConGoogle=async function(){
   const btn=document.getElementById('btn-google-login');
   btn.disabled=true;
@@ -3509,8 +3516,7 @@ window.loginConGoogle=async function(){
     const provider=new GoogleAuthProvider();
     await signInWithPopup(auth,provider);
   }catch(e){
-    btn.disabled=false;
-    btn.innerHTML='<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;">Continuar con Google';
+    _resetBtnGoogle();
     if(e.code!=='auth/popup-closed-by-user'&&e.code!=='auth/cancelled-popup-request'){
       showModal('❌','Error al iniciar sesión','No se pudo conectar con Google. Intenta de nuevo.');
     }
@@ -3526,9 +3532,13 @@ onAuthStateChanged(auth,async user=>{
   if(user){
     // Esperar que la lista de accesos esté cargada antes de verificar
     await _esperarAcceso();
+    // Si la lista solo tiene al admin, puede que Firebase aún no respondió — esperar un tick
+    if(_correosAutorizados.size<=1&&!_emailAutorizado(user.email)){
+      await new Promise(r=>setTimeout(r,1500));
+    }
     if(!_emailAutorizado(user.email)){
       await signOut(auth);
-      // mostrarLogin() ya resetea el botón — solo mostrar error
+      _resetBtnGoogle();
       document.getElementById('login-error').style.display='block';
       document.getElementById('login-error').textContent='⛔ Tu cuenta no tiene acceso autorizado: '+user.email;
       return;
