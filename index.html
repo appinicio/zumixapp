@@ -1226,11 +1226,28 @@ import{getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged}fro
 const _app=initializeApp({apiKey:"AIzaSyAwxVoWx1S9C9W-JbNeTGCm-SfCc4Sdlcc",authDomain:"jugeria-faltantes.firebaseapp.com",databaseURL:"https://jugeria-faltantes-default-rtdb.firebaseio.com",projectId:"jugeria-faltantes",storageBucket:"jugeria-faltantes.firebasestorage.app",messagingSenderId:"507586811385",appId:"1:507586811385:web:5bc8c9f7283c354e4f1928"});
 const db=getDatabase(_app);
 const auth=getAuth(_app);
-const ADMIN_EMAIL='inicioapps18@gmail.com';
+// ADMIN_EMAIL se carga dinámicamente desde Firebase (config/adminEmail)
+// El valor hardcodeado es el admin original / fallback
+const ADMIN_EMAIL_ORIGINAL='inicioapps18@gmail.com';
+let ADMIN_EMAIL=ADMIN_EMAIL_ORIGINAL;
 const rAcceso=ref(db,'acceso'); // nodo donde se guardan correos autorizados
 let _correosAutorizados=new Set([ADMIN_EMAIL]); // admin siempre autorizado
 let _accesoListo=false;
 let _accesoResolvers=[];
+// Escuchar cambios en config/adminEmail en tiempo real
+onValue(ref(db,'config/adminEmail'),snap=>{
+  const nuevoAdmin=(snap.val()||ADMIN_EMAIL_ORIGINAL).toLowerCase().trim();
+  ADMIN_EMAIL=nuevoAdmin;
+  // Actualizar set de autorizados para incluir al nuevo admin
+  _correosAutorizados.add(nuevoAdmin);
+  // Recalcular visibilidad del botón de gestión de accesos si ya hay sesión
+  const usuarioActivo=auth.currentUser;
+  if(usuarioActivo){
+    window._esAdmin=(usuarioActivo.email.toLowerCase()===ADMIN_EMAIL.toLowerCase());
+    const btnAccesos=document.getElementById('btn-gestionar-accesos');
+    if(btnAccesos)btnAccesos.style.display=window._esAdmin?'flex':'none';
+  }
+});
 
 // Cargar lista y mantener actualizada en tiempo real
 onValue(rAcceso,snap=>{
@@ -3929,7 +3946,12 @@ window.cederAdmin=async function(){
   await set(ref(db,'config/adminEmail'),email);
   // Marcar al usuario como nuevo admin en su entrada de acceso
   await update(ref(db,`acceso/${entry[0]}`),{esAdmin:true,adminDesde:Date.now(),promovidoPor:auth.currentUser?.email||''});
-  if(fb){fb.style.display='block';fb.style.color='var(--green)';fb.style.background='var(--green-bg)';fb.textContent=`✅ Admin transferido a ${email}. La app se recargará.`;setTimeout(()=>location.reload(),2500);}
+  if(fb){fb.style.display='block';fb.style.color='var(--green)';fb.style.background='var(--green-bg)';fb.textContent=`✅ Admin transferido a ${email}. Cerrando tu sesión...`;}
+  // Cerrar sesión del admin actual para que vuelva como usuario normal
+  setTimeout(async()=>{
+    document.getElementById('overlay-accesos').classList.remove('show');
+    await signOut(auth);
+  },2000);
 };
 </script>
 </body>
