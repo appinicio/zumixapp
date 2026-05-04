@@ -1353,10 +1353,15 @@ window.switchST=function(t){
   document.querySelectorAll('.subpane').forEach(p=>p.classList.remove('active'));
   document.getElementById(`sp-${t}`).classList.add('active');
 };
+let _skipLimpiarForm=false;
 window.switchLista=function(t){
   ['reg','pend','comp'].forEach(id=>{document.getElementById(`lstab-${id}`).classList.toggle('active',id===t);document.getElementById(`lsp-${id}`).classList.toggle('active',id===t);});
-  // Limpiar formulario al volver a Registrar si no hay edición activa
-  if(t==='reg'&&!editKey){limpiarForm();}
+  // Limpiar formulario al volver a Registrar si no hay edición activa y no hay flag de skip
+  if(t==='reg'&&!editKey&&!_skipLimpiarForm){limpiarForm();}
+  _skipLimpiarForm=false;
+  // Cerrar previews de WhatsApp al cambiar de subtab
+  if(t!=='pend'){document.getElementById('prev-pend').classList.remove('show');}
+  if(t!=='comp'){document.getElementById('prev-comp').classList.remove('show');}
   if(t==='pend'||t==='comp'){ultimoKey=null;renderLista();}
 };
 
@@ -2001,7 +2006,7 @@ function guardarItem(payload){
         document.getElementById('ref-fmt').value=sp.compra?.formato||sp.unidad||'';
       }
       document.getElementById('btn-cancel-nuevo').style.display='none';
-      switchLista('reg');updSD();
+      _skipLimpiarForm=true;switchLista('reg');updSD();
     }
   },{
     txt:'✓ Listo',cls:'primary',
