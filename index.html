@@ -926,7 +926,7 @@ details summary::-webkit-details-marker{display:none;}
    <div class="form-card">
     <div class="field">
       <div class="field-label"><span class="sdot" id="sd-nom">●</span> Nombre del producto <span class="req">*</span></div>
-      <input class="input-f" type="text" id="ni-nom" placeholder="Ej: Piña, Plátanos, Detergente…" autocomplete="off" oninput="debounceDupCheck()"/>
+      <input class="input-f" type="text" id="ni-nom" placeholder="Ej: Piña, Plátanos, Detergente…" autocomplete="off" oninput="debounceDupCheck();_toggleCancelNuevo()"/>
       <div class="sug-box" id="sug-box"></div>
     </div>
     <div class="field">
@@ -1025,6 +1025,7 @@ details summary::-webkit-details-marker{display:none;}
     <div id="form-warn"></div>
     <button class="btn-primary" id="btn-reg" onclick="agregarItem()"><span>📤</span><span id="btn-reg-txt">Registrar producto</span></button>
     <button class="btn-ghost" id="btn-cancel" onclick="cancelEdit()" style="display:none">Cancelar edición</button>
+    <button class="btn-ghost" id="btn-cancel-nuevo" onclick="cancelarNuevo()" style="display:none;margin-top:8px;">Cancelar</button>
    </div>
   </div>
 
@@ -1587,17 +1588,29 @@ window.eliminarVariacion=function(i){
 const _gruposUnidad={g:'peso',kg:'peso',ml:'volumen',litros:'volumen',cm:'longitud',metros:'longitud',unidades:'conteo'};
 window.updateVar=function(i,c,v){
   if(variaciones[i])variaciones[i][c]=v;
-  // Validar compatibilidad de unidad base entre variaciones
-  if(c==='contUnd'&&v&&variaciones.length>1){
-    const ref0=variaciones.find(vr=>vr.contUnd)?.contUnd;
-    if(ref0&&_gruposUnidad[v]&&_gruposUnidad[ref0]&&_gruposUnidad[v]!==_gruposUnidad[ref0]){
-      showModal('⚠️','Unidades incompatibles',
-        `No puedes mezclar unidades de distinto tipo entre variaciones.<br><br>`+
-        `<strong>Variación 1 usa:</strong> ${ref0} (${_gruposUnidad[ref0]})<br>`+
-        `<strong>Esta variación:</strong> ${v} (${_gruposUnidad[v]})<br><br>`+
-        `Deben ser del mismo grupo: gramos/kg, ml/litros, cm/metros.`,
-        [{txt:'Entendido',cls:'primary',cb:()=>{variaciones[i].contUnd='';renderVariaciones();}}]);
-      return;
+  // Validar compatibilidad de unidad base entre TODAS las variaciones (arriba-abajo y abajo-arriba)
+  if(c==='contUnd'){
+    const todasConUnidad=variaciones.map((vr,idx)=>({idx,und:vr.contUnd})).filter(x=>x.und);
+    if(todasConUnidad.length>1){
+      // Buscar si hay alguna inconsistencia entre cualquier par de variaciones
+      let conflicto=null;
+      for(let a=0;a<todasConUnidad.length&&!conflicto;a++){
+        for(let b=a+1;b<todasConUnidad.length&&!conflicto;b++){
+          const ua=todasConUnidad[a];const ub=todasConUnidad[b];
+          if(_gruposUnidad[ua.und]&&_gruposUnidad[ub.und]&&_gruposUnidad[ua.und]!==_gruposUnidad[ub.und]){
+            conflicto={idxA:ua.idx,undA:ua.und,idxB:ub.idx,undB:ub.und};
+          }
+        }
+      }
+      if(conflicto){
+        showModal('⚠️','Unidades incompatibles',
+          `No puedes mezclar unidades de distinto tipo entre variaciones.<br><br>`+
+          `<strong>Variación ${conflicto.idxA+1} usa:</strong> ${conflicto.undA} (${_gruposUnidad[conflicto.undA]})<br>`+
+          `<strong>Variación ${conflicto.idxB+1} usa:</strong> ${conflicto.undB} (${_gruposUnidad[conflicto.undB]})<br><br>`+
+          `Deben ser del mismo grupo: gramos/kg, ml/litros, cm/metros.`,
+          [{txt:'Entendido',cls:'primary',cb:()=>{variaciones[i].contUnd='';renderVariaciones();}}]);
+        return;
+      }
     }
   }
   recalcular();
@@ -1736,6 +1749,7 @@ function limpiarForm(){
   if(respBtn){respBtn.classList.remove('sel');respBtn=null;}respA=null;
   ['sd-nom','sd-est','sd-resp','sd-cat-p','sd-urg','sd-pre','sd-cat-c','sd-urg-c'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('ok','err');});
   document.getElementById('form-warn').style.display='none';const _nomFocus=document.getElementById('ni-nom');if(_nomFocus)_nomFocus.focus();
+  const _bcn=document.getElementById('btn-cancel-nuevo');if(_bcn)_bcn.style.display='none';
 }
 
 // AGREGAR
@@ -1931,11 +1945,11 @@ function guardarItem(payload){
   const resumen=esComp
     ?`"${payload.nombre}" — ${payload.compra?.cantidad||payload.cantidad||1} ${payload.compra?.formato||payload.unidad||'und'} — S/ ${Number(payload.precio_total||0).toFixed(2)}`
     :`"${payload.nombre}" — pendiente`;
-  limpiarForm();
   const _tabDestino=esComp?'comp':'pend';
 
   function _confirmarYNavegar(){
     const k=_commitStaging();
+    limpiarForm();
     switchLista(_tabDestino);
     setTimeout(()=>{
       const card=document.getElementById(`card-${k}`);
@@ -1965,7 +1979,28 @@ function guardarItem(payload){
         const _dn=desnormalizarUnidad(sp.contenido_por_formato?.cantidad||0,sp.contenido_por_formato?.unidad||'');
         document.getElementById('ni-cont-cant').value=_dn.valor||'';
         document.getElementById('ni-cont-und').value=_dn.unidad||'';
+        // Restaurar variaciones
+        if(sp.variaciones&&sp.variaciones.length>0){
+          variaciones=sp.variaciones.map(v=>{const dn=desnormalizarUnidad(v.contenido?.cantidad||0,v.contenido?.unidad||'');return{cant:v.cantidad,contCant:dn.valor,contUnd:dn.unidad};});
+          renderVariaciones();
+          document.getElementById('sec-contenido').style.display='none';
+          document.getElementById('sec-variaciones').style.display='block';
+        }else{
+          variaciones=[];
+          document.getElementById('lista-variaciones').innerHTML='';
+          document.getElementById('sec-contenido').style.display='block';
+        }
+        actualizarFmtEcho();recalcular();
       }
+      // Restaurar urgencia para pendientes
+      if(!sp.comprado){
+        const _umP={'alta':'btn-urg','media':'btn-med','baja':'btn-baj'};
+        ['btn-urg','btn-med','btn-baj'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('sel');});
+        const _ubP=document.getElementById(_umP[sp.urgencia]||'btn-baj');if(_ubP){_ubP.classList.add('sel');urgA=sp.urgencia||'baja';}
+        document.getElementById('ref-cant').value=sp.compra?.cantidad||sp.cantidad||'';
+        document.getElementById('ref-fmt').value=sp.compra?.formato||sp.unidad||'';
+      }
+      document.getElementById('btn-cancel-nuevo').style.display='none';
       switchLista('reg');updSD();
     }
   },{
@@ -2036,10 +2071,22 @@ window.cancelEdit=function(){
   editKey=null;
   document.getElementById('btn-reg-txt').textContent='Registrar producto';
   document.getElementById('btn-cancel').style.display='none';
+  document.getElementById('btn-cancel-nuevo').style.display='none';
   limpiarForm();
   // Descartar staging — el producto NO se escribe en Firebase
   window._stagingPayload=null;window._stagingEditKey=null;
 };
+window.cancelarNuevo=function(){
+  limpiarForm();
+  document.getElementById('btn-cancel-nuevo').style.display='none';
+};
+// Muestra/oculta el botón Cancelar del formulario nuevo (solo cuando no hay edición activa)
+function _toggleCancelNuevo(){
+  if(editKey)return; // en edición, el botón Cancelar edición ya se muestra
+  const nom=(document.getElementById('ni-nom').value||'').trim();
+  const btn=document.getElementById('btn-cancel-nuevo');
+  if(btn)btn.style.display=nom.length>0?'block':'none';
+}
 window.eliminarItem=function(key){if(confirm('¿Eliminar este producto?'))remove(ref(db,`faltantes/${key}`));};
 
 // CAMBIAR A COMPRADO
