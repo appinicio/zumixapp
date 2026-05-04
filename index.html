@@ -1241,15 +1241,10 @@ onValue(ref(db,'config/adminEmail'),snap=>{
   // Actualizar set de autorizados para incluir al nuevo admin
   _correosAutorizados.add(nuevoAdmin);
   // Recalcular visibilidad del botón de gestión de accesos si ya hay sesión
-  const usuarioActivo=auth.currentUser;
-  if(usuarioActivo){
-    window._esAdmin=(usuarioActivo.email.toLowerCase()===ADMIN_EMAIL.toLowerCase());
-    const btnAccesos=document.getElementById('btn-gestionar-accesos');
-    if(btnAccesos)btnAccesos.style.display=window._esAdmin?'flex':'none';
-  }
+  _recalcularRolAdmin();
 });
 
-// Cargar lista y mantener actualizada en tiempo real
+// Escuchar cambios en acceso/ para detectar co-admins en tiempo real
 onValue(rAcceso,snap=>{
   _correosAutorizados=new Set([ADMIN_EMAIL]);
   if(snap.val()){
@@ -1267,9 +1262,33 @@ onValue(rAcceso,snap=>{
     const usuarioActivo=auth.currentUser;
     if(usuarioActivo&&!_correosAutorizados.has((usuarioActivo.email||'').toLowerCase().trim())){
       signOut(auth);
+      return;
     }
   }
+  // Recalcular rol admin (puede haber cambiado esAdmin de algún usuario)
+  _recalcularRolAdmin();
 });
+
+// Función centralizada para recalcular el rol admin del usuario activo
+function _recalcularRolAdmin(){
+  const usuarioActivo=auth.currentUser;
+  if(!usuarioActivo)return;
+  const emailActual=(usuarioActivo.email||'').toLowerCase().trim();
+  // Es admin principal si su email coincide con ADMIN_EMAIL
+  const esAdminPrincipal=(emailActual===ADMIN_EMAIL.toLowerCase());
+  // Es co-admin si tiene esAdmin:true en acceso/ Y no es el admin principal
+  // (se verifica leyendo el cache de acceso que ya está en memoria vía onValue)
+  let esCoAdmin=false;
+  get(rAcceso).then(snapAcc=>{
+    const d=snapAcc.val()||{};
+    esCoAdmin=Object.values(d).some(v=>v&&(v.email||'').toLowerCase().trim()===emailActual&&v.esAdmin===true);
+    window._esAdmin=esAdminPrincipal||esCoAdmin;
+    const btnAccesos=document.getElementById('btn-gestionar-accesos');
+    if(btnAccesos)btnAccesos.style.display=window._esAdmin?'flex':'none';
+  });
+}
+
+// (onValue de rAcceso movido arriba junto con config/adminEmail)
 
 // Devuelve una promesa que se resuelve cuando la lista ya cargó
 function _esperarAcceso(){
@@ -3817,8 +3836,14 @@ onAuthStateChanged(auth,async user=>{
     }
     document.getElementById('login-error').style.display='none';
     ocultarLogin();
-    // Determinar si es admin
-    window._esAdmin=(user.email.toLowerCase()===ADMIN_EMAIL.toLowerCase());
+    // Determinar si es admin principal o co-admin
+    const emailActual=(user.email||'').toLowerCase().trim();
+    const esAdminPrincipal=(emailActual===ADMIN_EMAIL.toLowerCase());
+    // Verificar si es co-admin (tiene esAdmin:true en el nodo acceso/)
+    const snapAccAdmin=await get(rAcceso);
+    const dAccAdmin=snapAccAdmin.val()||{};
+    const esCoAdmin=Object.values(dAccAdmin).some(v=>v&&(v.email||'').toLowerCase().trim()===emailActual&&v.esAdmin===true);
+    window._esAdmin=esAdminPrincipal||esCoAdmin;
     // Iniciar listeners de Firebase
     iniciarListeners();
     // Mostrar botones según rol
@@ -3908,11 +3933,12 @@ function renderListaAccesos(){
         `<button onclick="quitarAcceso('${k}')" style="background:var(--red,#e53935);border:none;color:#fff;border-radius:8px;padding:6px 10px;font-size:.72rem;cursor:pointer;">Quitar</button>`+
         `</div>`;
     }).join('')||'<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:16px;">No hay usuarios adicionales</div>';
-    // Poblar select de transferencia con los usuarios autorizados (excluye al admin actual)
+    // Poblar select de transferencia con los usuarios autorizados (excluye al admin actual y ya co-admins)
     const sel=document.getElementById('admin-transfer-email');
     if(sel){
       const currentAdmin=ADMIN_EMAIL.toLowerCase();
-      const opts=entradas.filter(([k,v])=>(v.email||'').toLowerCase()!==currentAdmin)
+      const opts=entradas
+        .filter(([k,v])=>(v.email||'').toLowerCase()!==currentAdmin && !v.esAdmin)
         .map(([k,v])=>`<option value="${(v.email||'').replace(/"/g,'&quot;')}">${v.email}</option>`).join('');
       sel.innerHTML='<option value="">— Selecciona un usuario autorizado —</option>'+opts;
     }
@@ -3928,6 +3954,11 @@ window.compartirAdmin=async function(){
   const snap=await get(rAcceso);const d=snap.val()||{};
   const entry=Object.entries(d).find(([k,v])=>(v.email||'').toLowerCase().trim()===email);
   if(!entry){if(fb){fb.style.display='block';fb.style.color='var(--red)';fb.style.background='var(--red-bg)';fb.textContent='❌ Usuario no encontrado.';}return;}
+  // Validar si ya es co-admin
+  if(entry[1].esAdmin===true){
+    if(fb){fb.style.display='block';fb.style.color='var(--orange)';fb.style.background='var(--orange-bg)';fb.textContent=`ℹ️ ${email} ya es co-administrador.`;setTimeout(()=>fb.style.display='none',4000);}
+    return;
+  }
   await update(ref(db,`acceso/${entry[0]}`),{esAdmin:true,adminDesde:Date.now(),promovidoPor:auth.currentUser?.email||''});
   if(fb){fb.style.display='block';fb.style.color='var(--green)';fb.style.background='var(--green-bg)';fb.textContent=`✅ ${email} ahora es co-administrador.`;setTimeout(()=>fb.style.display='none',4000);}
 };
@@ -3942,12 +3973,20 @@ window.cederAdmin=async function(){
   const snap=await get(rAcceso);const d=snap.val()||{};
   const entry=Object.entries(d).find(([k,v])=>(v.email||'').toLowerCase().trim()===email);
   if(!entry){if(fb){fb.style.display='block';fb.style.color='var(--red)';fb.style.background='var(--red-bg)';fb.textContent='❌ Usuario no encontrado.';}return;}
+  const emailActualAdmin=(auth.currentUser?.email||'').toLowerCase().trim();
   // Guardar el nuevo admin en Firebase (nodo adminEmail)
   await set(ref(db,'config/adminEmail'),email);
-  // Marcar al usuario como nuevo admin en su entrada de acceso
-  await update(ref(db,`acceso/${entry[0]}`),{esAdmin:true,adminDesde:Date.now(),promovidoPor:auth.currentUser?.email||''});
+  // Marcar al nuevo usuario como admin en su entrada de acceso
+  await update(ref(db,`acceso/${entry[0]}`),{esAdmin:true,adminDesde:Date.now(),promovidoPor:emailActualAdmin});
+  // Si el admin actual tenía una entrada en acceso/, quitarle esAdmin
+  const entryActual=Object.entries(d).find(([k,v])=>(v.email||'').toLowerCase().trim()===emailActualAdmin);
+  if(entryActual){
+    await update(ref(db,`acceso/${entryActual[0]}`),{esAdmin:false});
+  }
+  // Actualizar estado local para evitar que el listener reactivo lo restaure como admin
+  window._esAdmin=false;
   if(fb){fb.style.display='block';fb.style.color='var(--green)';fb.style.background='var(--green-bg)';fb.textContent=`✅ Admin transferido a ${email}. Cerrando tu sesión...`;}
-  // Cerrar sesión del admin actual para que vuelva como usuario normal
+  // Cerrar el modal y hacer signOut del admin actual
   setTimeout(async()=>{
     document.getElementById('overlay-accesos').classList.remove('show');
     await signOut(auth);
