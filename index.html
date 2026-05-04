@@ -373,7 +373,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 .sug-box{
   background:var(--surface);border:1.5px solid var(--accent);
   border-top:none;border-radius:0 0 var(--rmd) var(--rmd);
-  display:none;max-height:190px;overflow-y:auto;box-shadow:var(--shmd);
+  display:none;max-height:280px;overflow-y:auto;box-shadow:var(--shmd);
 }
 .sug-box.show{display:block;}
 .sug-warn{
@@ -1408,7 +1408,7 @@ function mostrarSug(q){
   const box=document.getElementById('sug-box');if(!q||q.length<2){box.classList.remove('show');return;}
   const pool=[...activos,...todosComp()];const seen=new Map();
   pool.forEach(i=>{const nn=norm(i.nombre||'');const s=simil(q,i.nombre||'');if(s>=0.55&&!seen.has(nn)){const fr=pool.filter(x=>norm(x.nombre||'')===nn).length;seen.set(nn,{nombre:i.nombre,categoria:i.categoria,fr,s});}});
-  const matches=[...seen.values()].sort((a,b)=>b.s-a.s||b.fr-a.fr).slice(0,6);if(!matches.length){box.classList.remove('show');return;}
+  const matches=[...seen.values()].sort((a,b)=>b.s-a.s||b.fr-a.fr);if(!matches.length){box.classList.remove('show');return;}
   const hayEx=matches.some(m=>norm(m.nombre)===norm(q)&&m.nombre!==q);
   let html=hayEx?`<div class="sug-warn">⚠️ Ya existe un producto similar</div>`:'';
   html+=matches.map(m=>`<div class="sug-item" onclick="usarSug('${m.nombre.replace(/'/g,"\\'")}','${m.categoria||''}')"><span class="sug-nom">${m.nombre}</span><span class="sug-tag">${EM[m.categoria]||'⚙️'} ${m.categoria||''}</span><span class="sug-tag">${m.fr}x</span></div>`).join('');
@@ -1549,7 +1549,7 @@ function recalcular(){
 
   const prev=document.getElementById('calc-preview');const warnEl=document.getElementById('calc-warn');
   // Solo mostrar total si hay unidad base seleccionada (no mostrar si el usuario aún no eligió)
-  const hayUndBase=hayVars?(variaciones.some(v=>v.contUnd)):(contUndEl.value&&contUndEl.value!=='');
+  const hayUndBase=hayVars?(variaciones.length>0&&variaciones.every(v=>v.contUnd)):(contUndEl.value&&contUndEl.value!=='');
   if((total>0||cant>0)&&hayUndBase){
     prev.classList.add('vis');
     const undLabel=undBase||'unid';
@@ -1880,65 +1880,99 @@ function _guardarComp({nombre,cat,cant,fmt,contCant,contUnd,pre,hayVars}){
     guardarItem({nombre,categoria:cat,urgencia:normUrg(urgA),responsable:respA,quien,quien_id,comprado:true,tsComprado:Date.now(),estado:'comprado',compra:{cantidad:cant,formato:fmt},contenido_por_formato:{cantidad:contCantN,unidad:contUndN},unidad_base:contUndN,precio_total:pre,precio:pre,variaciones:vars,total_calculado:totalCalc,cantidad:cant,unidad:fmt});
 }
 
+// Staging — payload en memoria pendiente de confirmar (no escribe en Firebase hasta Listo)
+window._stagingPayload=null;
+window._stagingEditKey=null;
+
+function _commitStaging(){
+  if(!window._stagingPayload)return null;
+  const payload=window._stagingPayload;
+  const origKey=window._stagingEditKey;
+  window._stagingPayload=null;window._stagingEditKey=null;
+  if(origKey){
+    update(ref(db,`faltantes/${origKey}`),payload);ultimoKey=origKey;return origKey;
+  }else{
+    const k=Date.now().toString();const _p={...payload,ts:Date.now()};
+    if(_p.quienEdito===null)delete _p.quienEdito;if(_p.tsEdito===null)delete _p.tsEdito;
+    set(ref(db,`faltantes/${k}`),_p);ultimoKey=k;return k;
+  }
+}
+
 function guardarItem(payload){
+  let _origEditKey=null;
   if(editKey){
     const original=activos.find(i=>i.fbKey===editKey);
     payload.ts=original?.ts||Date.now();
-    // Preservar quien_id y quien original; registrar quien editó si es diferente
-    if(original?.quien){payload.quien=original.quien;}
-    if(original?.quien_id){payload.quien_id=original.quien_id;}
-    const quienActual=window._nombreActual||'';
-    const quienActual_id=_uid()||'';
-    if(quienActual_id&&quienActual_id!==(payload.quien_id||'')){
-      payload.quienEdito=quienActual;payload.quienEdito_id=quienActual_id;payload.tsEdito=Date.now();
+    if(payload.comprado&&!original?.comprado){
+      // Pendiente → Comprado: quien lo marca es el comprador
+      payload.quien=window._nombreActual||'';payload.quien_id=_uid()||'';
+      payload.quienEdito=null;payload.quienEdito_id=null;payload.tsEdito=null;
+    }else if(payload.comprado&&original?.comprado){
+      // Edición de comprado: preservar comprador, anotar editor
+      if(original?.quien){payload.quien=original.quien;}if(original?.quien_id){payload.quien_id=original.quien_id;}
+      const _qaid=_uid()||'';
+      if(_qaid&&_qaid!==(payload.quien_id||'')){
+        payload.quienEdito=window._nombreActual||'';payload.quienEdito_id=_qaid;payload.tsEdito=Date.now();
+      }else{payload.quienEdito=null;payload.quienEdito_id=null;payload.tsEdito=null;}
     }else{
+      // Edición de pendiente: el editor pasa a ser el responsable del registro
+      payload.quien=window._nombreActual||'';payload.quien_id=_uid()||'';
       payload.quienEdito=null;payload.quienEdito_id=null;payload.tsEdito=null;
     }
-    update(ref(db,`faltantes/${editKey}`),payload);ultimoKey=editKey;editKey=null;document.getElementById('btn-reg-txt').textContent='Registrar producto';document.getElementById('btn-cancel').style.display='none';
+    _origEditKey=editKey;editKey=null;
+    document.getElementById('btn-reg-txt').textContent='Registrar producto';
+    document.getElementById('btn-cancel').style.display='none';
   }
-  else{const k=Date.now().toString();const _p={...payload,ts:Date.now()};if(_p.quienEdito===null)delete _p.quienEdito;if(_p.tsEdito===null)delete _p.tsEdito;set(ref(db,`faltantes/${k}`),_p);ultimoKey=k;}
+  // Guardar en staging — NO escribir en Firebase todavía
+  window._stagingPayload={...payload};
+  window._stagingEditKey=_origEditKey;
+
   const esComp=payload.comprado;
   const resumen=esComp
     ?`"${payload.nombre}" — ${payload.compra?.cantidad||payload.cantidad||1} ${payload.compra?.formato||payload.unidad||'und'} — S/ ${Number(payload.precio_total||0).toFixed(2)}`
     :`"${payload.nombre}" — pendiente`;
   limpiarForm();
-  // Snapshot y key para uso en botones del modal
-  const _k2=ultimoKey;
   const _tabDestino=esComp?'comp':'pend';
-  const _payloadSnapshot={...payload};
-  // Función para navegar y resaltar el item guardado
-  function _irYResaltar(){
+
+  function _confirmarYNavegar(){
+    const k=_commitStaging();
     switchLista(_tabDestino);
     setTimeout(()=>{
-      const card=document.getElementById(`card-${_k2}`);
-      if(card){
-        card.scrollIntoView({behavior:'smooth',block:'center'});
-        card.classList.add('highlight-pulse');
-        setTimeout(()=>card.classList.remove('highlight-pulse'),2500);
-      }
-    },300);
+      const card=document.getElementById(`card-${k}`);
+      if(card){card.scrollIntoView({behavior:'smooth',block:'center'});card.classList.add('highlight-pulse');setTimeout(()=>card.classList.remove('highlight-pulse'),2500);}
+    },400);
   }
+
   showModal('✅','Producto registrado',resumen,[{
     txt:'✏️ Editar',cls:'secondary',cb:()=>{
-      // Esperar a que Firebase confirme el item antes de editar
-      const t=()=>{
-        const it=activos.find(i=>i.fbKey===_k2);
-        if(it){
-          window.editarItem(_k2);
-          window._editRevertSnapshot={key:_k2,payload:_payloadSnapshot};
-        }else setTimeout(t,300);
-      };
-      t();
+      const sp=window._stagingPayload;const sk=window._stagingEditKey;
+      if(!sp)return;
+      if(sk){editKey=sk;document.getElementById('btn-reg-txt').textContent='Guardar cambios';document.getElementById('btn-cancel').style.display='block';}
+      document.getElementById('ni-nom').value=sp.nombre||'';
+      if(sp.comprado){window.setEst(document.getElementById('btn-comp'),'comp');}else{window.setEst(document.getElementById('btn-pc'),'pc');}
+      const _um={'alta':'btn-urg-c','media':'btn-med-c','baja':'btn-baj-c'};
+      ['btn-urg-c','btn-med-c','btn-baj-c'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('sel');});
+      const _ub2=document.getElementById(_um[sp.urgencia]||'btn-baj-c');if(_ub2){_ub2.classList.add('sel');urgA=sp.urgencia||'baja';}
+      if(respBtn)respBtn.classList.remove('sel');
+      const _rv2=sp.responsable||'nosotros';
+      const _rb2=_rv2==='darlyn'?document.getElementById('btn-resp-dl'):document.getElementById('btn-resp-nos');
+      if(_rb2){_rb2.classList.add('sel');respBtn=_rb2;respA=_rv2;}
+      const _catEl=sp.comprado?document.getElementById('cat-c'):document.getElementById('cat-p');if(_catEl)_catEl.value=sp.categoria||'';
+      if(sp.comprado){
+        document.getElementById('ni-cant').value=sp.compra?.cantidad||sp.cantidad||'';
+        document.getElementById('ni-fmt').value=sp.compra?.formato||sp.unidad||'';
+        document.getElementById('ni-pre').value=sp.precio_total||sp.precio||'';
+        const _dn=desnormalizarUnidad(sp.contenido_por_formato?.cantidad||0,sp.contenido_por_formato?.unidad||'');
+        document.getElementById('ni-cont-cant').value=_dn.valor||'';
+        document.getElementById('ni-cont-und').value=_dn.unidad||'';
+      }
+      switchLista('reg');updSD();
     }
   },{
     txt:'✓ Listo',cls:'primary',
-    cb:()=>{
-      window._editRevertSnapshot=null;
-      _irYResaltar(); // Navegar y resaltar SOLO al dar Listo
-    }
+    cb:()=>{_confirmarYNavegar();}
   }]);
 }
-
 // Convierte unidad interna canónica → unidad amigable para mostrar en el formulario
 function desnormalizarUnidad(valor, unidad){
   const v=parseFloat(valor)||0;
@@ -1999,17 +2033,12 @@ window.editarItem=function(key){
   document.getElementById('btn-reg-txt').textContent='Guardar cambios';document.getElementById('btn-cancel').style.display='block';updSD();switchLista('reg');document.getElementById('ni-nom').focus();
 };
 window.cancelEdit=function(){
-  const keyAntes=editKey;
   editKey=null;
   document.getElementById('btn-reg-txt').textContent='Registrar producto';
   document.getElementById('btn-cancel').style.display='none';
   limpiarForm();
-  // Si venía de un modal post-registro → revertir el item a su estado anterior
-  if(window._editRevertSnapshot&&window._editRevertSnapshot.key===keyAntes){
-    const {key,payload}=window._editRevertSnapshot;
-    window._editRevertSnapshot=null;
-    update(ref(db,`faltantes/${key}`),payload);
-  }
+  // Descartar staging — el producto NO se escribe en Firebase
+  window._stagingPayload=null;window._stagingEditKey=null;
 };
 window.eliminarItem=function(key){if(confirm('¿Eliminar este producto?'))remove(ref(db,`faltantes/${key}`));};
 
@@ -2046,7 +2075,7 @@ function mkCard(item,opts={}){
   const actions=esComp?`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>`:`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button><button class="ia-sm del" onclick="eliminarItem('${item.fbKey}')" title="Eliminar">🗑</button>`;
   const derecha=esComp?`<span class="item-precio">${precioStr}</span>`:`<button class="btn-comp-ahora" onclick="cambiarAComprado('${item.fbKey}')">☐ Marcar comprado</button>`;
   const quienTag=item.quien
-    ?`<span>·</span><span style="font-size:.65rem;font-weight:700;color:var(--text3);">👤 ${item.quien}</span>${item.quienEdito?`<span style="font-size:.6rem;color:var(--text3);margin-left:1px;" title="Editado por ${item.quienEdito}">✏️ ${item.quienEdito}</span>`:''}`
+    ?`<span>·</span><span style="font-size:.65rem;font-weight:700;color:var(--text3);">👤 ${item.quien}</span>${(esComp&&item.quienEdito)?`<span style="font-size:.6rem;color:var(--text3);margin-left:3px;">· ✏️ ${item.quienEdito}</span>`:''}`
     :'';
   return `<div class="${cls}" id="card-${item.fbKey}"><div class="item-icon">${em}</div><div class="item-body"><div class="item-nom">${item.nombre}${esNuevo&&!esComp?' ✦':''}</div><div class="item-sub"><span>${cantStr}${totalStr}</span><span>·</span><span>${item.categoria||''}</span>${rel?`<span>·</span><span>${rel}</span>`:''}${quienTag}</div></div><div class="item-right">${derecha}<div class="item-actions">${actions}</div></div></div>`;
 }
@@ -2521,23 +2550,41 @@ window.genWSP=function(tipo){
     const hI=new Date();hI.setHours(0,0,0,0);const comp=activos.filter(i=>i.comprado&&(i.tsComprado||0)>=hI.getTime());if(!comp.length){showModal('📋','Sin compras hoy','No hay productos comprados hoy.');return;}
     const nota=document.getElementById('nota-comp').value.trim();const total=comp.reduce((s,i)=>s+getP(i),0);
     let L=[`🧃 *JUGERÍA ZUMIX*`,S2,`✅ *COMPRADO HOY*`,`📅 ${fd}   🕐 ${fh}`,S,''];
-    const _urgLblC={alta:'🔴 ALTA',media:'🔵 MEDIA',baja:'🟢 PUEDE ESPERAR'};
-    const grupos={darlyn:comp.filter(i=>i.responsable==='darlyn'),nosotros:comp.filter(i=>i.responsable==='nosotros'||!i.responsable)};
+    const _urgLblC={alta:'🔴 ALTA PRIORIDAD',media:'🔵 PRIORIDAD MEDIA',baja:'🟢 PUEDE ESPERAR'};
+    // Agrupar por quien (comprador real), ordenado por subtotal desc
+    const _fallbackNombreWSP=(window._nombreActual||'DESCONOCIDO').toUpperCase();
+    const gruposPorComprador={};
+    comp.forEach(i=>{
+      const comprador=(i.quien&&i.quien.trim()!==''?i.quien.trim():_fallbackNombreWSP).toUpperCase();
+      if(!gruposPorComprador[comprador])gruposPorComprador[comprador]=[];
+      gruposPorComprador[comprador].push(i);
+    });
+    const compradorOrden=Object.entries(gruposPorComprador)
+      .sort((a,b)=>b[1].reduce((s,i)=>s+getP(i),0)-a[1].reduce((s,i)=>s+getP(i),0));
     let n=1;
-    [['darlyn','👑 DARLYN Y LUZ'],['nosotros','👥 NOSOTROS']].forEach(([grpKey,grpLbl])=>{
-      const gitems=grupos[grpKey];if(!gitems||!gitems.length)return;
+    compradorOrden.forEach(([comprador,gitems])=>{
       const ordUrgG={alta:0,urgente:0,media:1,normal:2,baja:2};
       const sorted=[...gitems].sort((a,b)=>(ordUrgG[a.urgencia||'baja']??2)-(ordUrgG[b.urgencia||'baja']??2));
       const sub=gitems.reduce((s,i)=>s+getP(i),0);
-      L.push(`${grpLbl}`);
+      L.push(`👤 ${comprador}`);
       let curUrg=null;
       sorted.forEach(i=>{
         const uKey=i.urgencia||'baja';const uKeyN=uKey==='urgente'?'alta':uKey==='normal'?'baja':uKey;
-        if(uKeyN!==curUrg){curUrg=uKeyN;L.push(`  ${_urgLblC[uKeyN]||'🟢 PUEDE ESPERAR'}`);}
-        const c=i.compra?.cantidad||i.cantidad||1;const f=i.compra?.formato||i.unidad||'und';const p=getP(i);
-        L.push(`    ${String(n++).padStart(2,'0')}. ${i.nombre} (${c} ${f})${p?` — S/ ${p.toFixed(2)}`:''}`);
+        if(uKeyN!==curUrg){
+          if(curUrg!==null)L.push('');
+          curUrg=uKeyN;
+          L.push('');
+          L.push(`  ${_urgLblC[uKeyN]||'🟢 PUEDE ESPERAR'}`);
+          L.push('');
+        }
+        const c=i.compra?.cantidad||i.cantidad;const f=i.compra?.formato||i.unidad;
+        const _cantWsp2=c&&f?` (${c} ${f})`:(c?` (${c})`:'');
+        const p=getP(i);
+        const _editTag=i.quienEdito?` ✏️${i.quienEdito}`:'';
+        L.push(`     ${String(n++).padStart(2,'0')}. ${i.nombre}${_cantWsp2}${p?` — S/ ${p.toFixed(2)}`:''}${_editTag}`);
       });
-      if(sub>0)L.push(`  💳 Subtotal: S/ ${sub.toFixed(2)}`);
+      L.push('');
+      if(sub>0)L.push(`  💳 Subtotal ${comprador}: S/ ${sub.toFixed(2)}`);
       L.push('');
     });
     L.push(S);if(total>0)L.push(`💰 *Total gastado: S/ ${total.toFixed(2)}*`);L.push(`✅ *${comp.length} producto${comp.length>1?'s':''} comprado${comp.length>1?'s':''} hoy*`);if(nota){L.push('');L.push(`📝 _${nota}_`);}L.push(S2);L.push('_Enviado desde Zumix Stock_ ✅');
@@ -3630,6 +3677,8 @@ function _resetBtnGoogle(){
   btn.innerHTML='<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;">Continuar con Google';
 }
 window.loginConGoogle=async function(){
+  const errEl=document.getElementById('login-error');
+  if(errEl)errEl.style.display='none';
   const btn=document.getElementById('btn-google-login');
   btn.disabled=true;
   btn.textContent='Conectando...';
