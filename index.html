@@ -132,6 +132,17 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
   max-height:88vh;overflow-y:auto;
 }
 .overlay.show .modal{transform:translateY(0);}
+.modal-box{
+  background:var(--surface);
+  border-radius:20px 20px 0 0;
+  padding:24px 20px 32px;
+  width:100%;max-width:430px;
+  max-height:85vh;overflow-y:auto;
+  box-shadow:var(--shlg);
+  transform:translateY(24px);
+  transition:transform .3s cubic-bezier(.34,1.3,.64,1);
+}
+.overlay.show .modal-box{transform:translateY(0);}
 .modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 20px;}
 .m-icon{font-size:2.2rem;text-align:center;margin-bottom:10px;}
 .m-title{font-size:1rem;font-weight:800;color:var(--text);text-align:center;margin-bottom:6px;letter-spacing:-.02em;}
@@ -1513,17 +1524,27 @@ function recalcular(){
   const contUnd=contUndEl.value||'unidades';
   const precio=parseFloat(document.getElementById('ni-pre').value)||0;
 
-  // Determinar total y unidad base efectiva
+  // Determinar total y unidad base efectiva — normalizar a unidad canónica antes de sumar
   let total=0;
   let undBase=contUnd;
   if(hayVars){
-    total=variaciones.reduce((s,v)=>(parseFloat(v.cant)||0)*(parseFloat(v.contCant)||0)+s,0);
+    // Normalizar cada variación a unidad canónica y sumar
     const primeraUnd=variaciones.find(v=>v.contUnd)?.contUnd;
-    if(primeraUnd)undBase=primeraUnd;
+    if(primeraUnd){
+      const normRef=normalizarUnidad(0,primeraUnd);
+      undBase=normRef.unidad; // unidad canónica (ml, g, metros, unidades)
+      total=variaciones.reduce((s,v)=>{
+        const cant_v=parseFloat(v.cant)||0;
+        const norm_v=normalizarUnidad(parseFloat(v.contCant)||0,v.contUnd||primeraUnd);
+        return s+(cant_v*norm_v.valor);
+      },0);
+    }
     validarSumaVariaciones();
   }else if(cant>0&&contCant>0){
-    total=cant*contCant;
-    undBase=contUnd;
+    // Normalizar contenido por formato también
+    const normC=normalizarUnidad(contCant,contUnd);
+    total=cant*normC.valor;
+    undBase=normC.unidad;
   }
 
   const prev=document.getElementById('calc-preview');const warnEl=document.getElementById('calc-warn');
@@ -1841,6 +1862,13 @@ window.formatCostoUnitario=formatCostoUnitario;
 // ──────────────────────────────────────────────────────────────────────────────
 
 function _guardarComp({nombre,cat,cant,fmt,contCant,contUnd,pre,hayVars}){
+    if(hayVars){
+      const incompleta=variaciones.findIndex(v=>!(parseFloat(v.cant)>0)||!(parseFloat(v.contCant)>0)||!v.contUnd);
+      if(incompleta>=0){
+        showModal('⚠️','Variación incompleta',`La variación ${incompleta+1} tiene campos vacíos. Completa cantidad, contenido y unidad base de todas las variaciones antes de registrar.`,[{txt:'Entendido',cls:'primary'}]);
+        return;
+      }
+    }
     const quien=window._nombreActual||'';const quien_id=_uid()||'';
     // Normalizar contenido principal
     const normCont=normalizarUnidad(contCant,contUnd);
@@ -1874,34 +1902,41 @@ function guardarItem(payload){
     ?`"${payload.nombre}" — ${payload.compra?.cantidad||payload.cantidad||1} ${payload.compra?.formato||payload.unidad||'und'} — S/ ${Number(payload.precio_total||0).toFixed(2)}`
     :`"${payload.nombre}" — pendiente`;
   limpiarForm();
-  // Navegar al tab correspondiente y resaltar el item recién guardado
-  const _tabDestino=esComp?'comp':'pend';
-  switchLista(_tabDestino);
-  const _resaltarKey=ultimoKey;
-  setTimeout(()=>{
-    const card=document.getElementById(`card-${_resaltarKey}`);
-    if(card){
-      card.scrollIntoView({behavior:'smooth',block:'center'});
-      card.classList.add('highlight-pulse');
-      setTimeout(()=>card.classList.remove('highlight-pulse'),2500);
-    }
-  },400);
-  // Guardar snapshot del estado anterior para poder revertir si el usuario cancela la edición
+  // Snapshot y key para uso en botones del modal
   const _k2=ultimoKey;
+  const _tabDestino=esComp?'comp':'pend';
   const _payloadSnapshot={...payload};
+  // Función para navegar y resaltar el item guardado
+  function _irYResaltar(){
+    switchLista(_tabDestino);
+    setTimeout(()=>{
+      const card=document.getElementById(`card-${_k2}`);
+      if(card){
+        card.scrollIntoView({behavior:'smooth',block:'center'});
+        card.classList.add('highlight-pulse');
+        setTimeout(()=>card.classList.remove('highlight-pulse'),2500);
+      }
+    },300);
+  }
   showModal('✅','Producto registrado',resumen,[{
     txt:'✏️ Editar',cls:'secondary',cb:()=>{
+      // Esperar a que Firebase confirme el item antes de editar
       const t=()=>{
         const it=activos.find(i=>i.fbKey===_k2);
         if(it){
           window.editarItem(_k2);
-          // Marcar que esta edición tiene un estado anterior al que volver si se cancela
           window._editRevertSnapshot={key:_k2,payload:_payloadSnapshot};
-        }else setTimeout(t,400);
+        }else setTimeout(t,300);
       };
       t();
     }
-  },{txt:'✓ Listo',cls:'primary',cb:()=>{window._editRevertSnapshot=null;}}]);
+  },{
+    txt:'✓ Listo',cls:'primary',
+    cb:()=>{
+      window._editRevertSnapshot=null;
+      _irYResaltar(); // Navegar y resaltar SOLO al dar Listo
+    }
+  }]);
 }
 
 // Convierte unidad interna canónica → unidad amigable para mostrar en el formulario
