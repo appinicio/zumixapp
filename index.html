@@ -852,7 +852,7 @@ details summary::-webkit-details-marker{display:none;}
       <span class="m-title">🔐 Gestión de Accesos</span>
       <button class="m-close" onclick="cerrarGestionAccesos()">✕</button>
     </div>
-    <div style="font-size:.75rem;color:var(--text3);margin-bottom:14px;">Solo tú (admin) puedes gestionar quién accede a Zumix.</div>
+    <div style="font-size:.75rem;color:var(--text3);margin-bottom:14px;">Gestiona quién puede acceder a Zumix Stock.</div>
     <!-- Agregar nuevo -->
     <div class="field-label" style="font-size:.72rem;margin-bottom:6px;">➕ Agregar correo</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
@@ -861,11 +861,12 @@ details summary::-webkit-details-marker{display:none;}
     </div>
     <!-- Lista actual -->
     <div class="field-label" style="font-size:.72rem;margin-bottom:8px;">👥 Usuarios con acceso</div>
-    <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+    <!-- Fila del Admin Supremo — se renderiza dinámicamente desde Firebase -->
+    <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:8px;" id="admin-supremo-row">
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <div>
-          <div style="font-size:.82rem;font-weight:600;color:var(--text1);">inicioapps18@gmail.com</div>
-          <div style="font-size:.68rem;color:var(--accent);">Administrador · Acceso permanente</div>
+          <div style="font-size:.82rem;font-weight:600;color:var(--text1);">Cargando…</div>
+          <div style="font-size:.68rem;color:var(--accent);">Admin Supremo · Acceso permanente</div>
         </div>
       </div>
     </div>
@@ -874,13 +875,13 @@ details summary::-webkit-details-marker{display:none;}
     <!-- Ceder / compartir admin -->
     <div style="margin-top:14px;border-top:1.5px solid var(--border);padding-top:14px;">
       <div class="field-label" style="font-size:.72rem;margin-bottom:6px;">🔑 Ceder o compartir administración</div>
-      <div style="font-size:.75rem;color:var(--text3);margin-bottom:10px;line-height:1.5;">Puedes <strong>compartir</strong> el rol admin con otro correo autorizado (ambos tendrán control total) o <strong>transferir</strong> el rol completo a otra persona y quedar tú como usuario normal.</div>
+      <div style="font-size:.75rem;color:var(--text3);margin-bottom:10px;line-height:1.5;">Puedes <strong>compartir</strong> el rol Admin con otro correo autorizado o <strong>transferir</strong> el rol de Super Admin a otra persona.<br><span style="color:var(--orange);font-weight:600;">⚠️ El Admin Supremo no puede ser modificado desde aquí.</span></div>
       <select class="select-f" id="admin-transfer-email" style="margin-bottom:8px;font-size:.85rem;">
         <option value="">— Selecciona un usuario autorizado —</option>
       </select>
       <div style="display:flex;gap:8px;">
-        <button class="mbtn secondary" style="flex:1;padding:10px;font-size:.8rem;" onclick="compartirAdmin()">🤝 Compartir admin</button>
-        <button class="mbtn danger" style="flex:1;padding:10px;font-size:.8rem;" onclick="cederAdmin()">🔄 Transferir (yo quedo normal)</button>
+        <button class="mbtn secondary" style="flex:1;padding:10px;font-size:.8rem;" onclick="compartirAdmin()">🤝 Promover a Admin</button>
+        <button class="mbtn danger" style="flex:1;padding:10px;font-size:.8rem;" onclick="cederAdmin()">🔄 Transferir Super Admin</button>
       </div>
       <div id="admin-transfer-feedback" style="display:none;font-size:.78rem;border-radius:8px;padding:8px 12px;margin-top:8px;text-align:center;"></div>
     </div>
@@ -1226,69 +1227,107 @@ import{getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged}fro
 const _app=initializeApp({apiKey:"AIzaSyAwxVoWx1S9C9W-JbNeTGCm-SfCc4Sdlcc",authDomain:"jugeria-faltantes.firebaseapp.com",databaseURL:"https://jugeria-faltantes-default-rtdb.firebaseio.com",projectId:"jugeria-faltantes",storageBucket:"jugeria-faltantes.firebasestorage.app",messagingSenderId:"507586811385",appId:"1:507586811385:web:5bc8c9f7283c354e4f1928"});
 const db=getDatabase(_app);
 const auth=getAuth(_app);
-// ADMIN_EMAIL se carga dinámicamente desde Firebase (config/adminEmail)
-// El valor hardcodeado es el admin original / fallback
-const ADMIN_EMAIL_ORIGINAL='inicioapps18@gmail.com';
-let ADMIN_EMAIL=ADMIN_EMAIL_ORIGINAL;
-const rAcceso=ref(db,'acceso'); // nodo donde se guardan correos autorizados
-let _correosAutorizados=new Set([ADMIN_EMAIL]); // admin siempre autorizado
+// ── SISTEMA DE ROLES (4 niveles) ─────────────────────────────────────────────
+// Roles: "admin_supremo" | "super_admin" | "admin" | "usuario"
+// NUNCA hardcodeado en el cliente — se carga desde Firebase config/ y roles/
+let ADMIN_SUPREMO_EMAIL=''; // se carga desde config/adminSupremoEmail
+let ADMIN_EMAIL='';         // legado: apunta al email del admin activo (super_admin o admin_supremo)
+window._rol=null;           // rol del usuario actual
+window._esAdminSupremo=false;
+window._esSuperAdmin=false;
+window._esAdmin=false;      // true si es admin, super_admin o admin_supremo
+const rAcceso=ref(db,'acceso'); // nodo legado (compatibilidad)
+const rRoles=ref(db,'roles');   // nodo nuevo con estructura de 4 niveles
+let _correosAutorizados=new Set();
 let _accesoListo=false;
 let _accesoResolvers=[];
-// Escuchar cambios en config/adminEmail en tiempo real
+
+// Cargar email del Admin Supremo desde Firebase (protegido; solo lectura para autenticados)
+onValue(ref(db,'config/adminSupremoEmail'),snap=>{
+  if(snap.val()){
+    ADMIN_SUPREMO_EMAIL=snap.val().toLowerCase().trim();
+    _correosAutorizados.add(ADMIN_SUPREMO_EMAIL);
+  }
+});
+// Compatibilidad: listener del nodo legado config/adminEmail
 onValue(ref(db,'config/adminEmail'),snap=>{
-  const nuevoAdmin=(snap.val()||ADMIN_EMAIL_ORIGINAL).toLowerCase().trim();
-  ADMIN_EMAIL=nuevoAdmin;
-  // Actualizar set de autorizados para incluir al nuevo admin
-  _correosAutorizados.add(nuevoAdmin);
-  // Recalcular visibilidad del botón de gestión de accesos si ya hay sesión
+  if(snap.val()){
+    ADMIN_EMAIL=snap.val().toLowerCase().trim();
+    _correosAutorizados.add(ADMIN_EMAIL);
+  }
   _recalcularRolAdmin();
 });
 
-// Escuchar cambios en acceso/ para detectar co-admins en tiempo real
+// Escuchar cambios en acceso/ (nodo legado) para compatibilidad
 onValue(rAcceso,snap=>{
-  _correosAutorizados=new Set([ADMIN_EMAIL]);
+  _correosAutorizados=new Set();
+  if(ADMIN_SUPREMO_EMAIL)_correosAutorizados.add(ADMIN_SUPREMO_EMAIL);
+  if(ADMIN_EMAIL)_correosAutorizados.add(ADMIN_EMAIL);
   if(snap.val()){
     Object.values(snap.val()).forEach(v=>{
       if(v&&v.email)_correosAutorizados.add(v.email.toLowerCase().trim());
     });
   }
-  // Resolver promesas pendientes (primer load)
   if(!_accesoListo){
     _accesoListo=true;
     _accesoResolvers.forEach(r=>r());
     _accesoResolvers=[];
   }else{
-    // Lista actualizada en tiempo real: verificar si el usuario activo sigue autorizado
     const usuarioActivo=auth.currentUser;
     if(usuarioActivo&&!_correosAutorizados.has((usuarioActivo.email||'').toLowerCase().trim())){
-      signOut(auth);
-      return;
+      signOut(auth);return;
     }
   }
-  // Recalcular rol admin (puede haber cambiado esAdmin de algún usuario)
   _recalcularRolAdmin();
 });
 
-// Función centralizada para recalcular el rol admin del usuario activo
+// Escuchar cambios en roles/ (estructura nueva de 4 niveles)
+// También incorpora los correos del nuevo nodo como autorizados
+onValue(rRoles,snap=>{
+  if(snap.val()){
+    Object.values(snap.val()).forEach(v=>{
+      if(v&&v.email)_correosAutorizados.add(v.email.toLowerCase().trim());
+    });
+  }
+  _recalcularRolAdmin();
+});
+
+// Función centralizada para recalcular el rol del usuario activo
 function _recalcularRolAdmin(){
   const usuarioActivo=auth.currentUser;
   if(!usuarioActivo)return;
   const emailActual=(usuarioActivo.email||'').toLowerCase().trim();
-  // Es admin principal si su email coincide con ADMIN_EMAIL
-  const esAdminPrincipal=(emailActual===ADMIN_EMAIL.toLowerCase());
-  // Es co-admin si tiene esAdmin:true en acceso/ Y no es el admin principal
-  // (se verifica leyendo el cache de acceso que ya está en memoria vía onValue)
-  let esCoAdmin=false;
-  get(rAcceso).then(snapAcc=>{
-    const d=snapAcc.val()||{};
-    esCoAdmin=Object.values(d).some(v=>v&&(v.email||'').toLowerCase().trim()===emailActual&&v.esAdmin===true);
-    window._esAdmin=esAdminPrincipal||esCoAdmin;
-    const btnAccesos=document.getElementById('btn-gestionar-accesos');
-    if(btnAccesos)btnAccesos.style.display=window._esAdmin?'flex':'none';
+  const uid=usuarioActivo.uid;
+  // Primero verificar en el nodo roles/ (nuevo sistema)
+  get(ref(db,'roles/'+uid)).then(snapRol=>{
+    let rol='usuario';
+    if(snapRol.exists()&&snapRol.val().rol){
+      rol=snapRol.val().rol;
+    }else{
+      // Fallback al sistema legado (acceso/ + config/adminEmail)
+      const esAdminPrincipal=(ADMIN_EMAIL&&emailActual===ADMIN_EMAIL)||(ADMIN_SUPREMO_EMAIL&&emailActual===ADMIN_SUPREMO_EMAIL);
+      if(esAdminPrincipal){
+        rol=ADMIN_SUPREMO_EMAIL&&emailActual===ADMIN_SUPREMO_EMAIL?'admin_supremo':'super_admin';
+      }else{
+        // Verificar esAdmin en nodo legado acceso/
+        return get(rAcceso).then(snapAcc=>{
+          const d=snapAcc.val()||{};
+          const esCoAdmin=Object.values(d).some(v=>v&&(v.email||'').toLowerCase().trim()===emailActual&&v.esAdmin===true);
+          _aplicarRol(esCoAdmin?'admin':'usuario');
+        });
+      }
+    }
+    _aplicarRol(rol);
   });
 }
-
-// (onValue de rAcceso movido arriba junto con config/adminEmail)
+function _aplicarRol(rol){
+  window._rol=rol;
+  window._esAdminSupremo=(rol==='admin_supremo');
+  window._esSuperAdmin=(rol==='super_admin');
+  window._esAdmin=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo');
+  const btnAccesos=document.getElementById('btn-gestionar-accesos');
+  if(btnAccesos)btnAccesos.style.display=window._esAdmin?'flex':'none';
+}
 
 // Devuelve una promesa que se resuelve cuando la lista ya cargó
 function _esperarAcceso(){
@@ -3762,7 +3801,9 @@ function mostrarLogin(){
   if(tb)tb.style.display='none';
   // Resetear cache de accesos para que la próxima sesión siempre verifique Firebase fresco
   _accesoListo=false;
-  _correosAutorizados=new Set([ADMIN_EMAIL]);
+  _correosAutorizados=new Set();
+  if(ADMIN_SUPREMO_EMAIL)_correosAutorizados.add(ADMIN_SUPREMO_EMAIL);
+  if(ADMIN_EMAIL)_correosAutorizados.add(ADMIN_EMAIL);
   _accesoResolvers=[];
   // Siempre resetear el botón de Google al mostrar login
   _resetBtnGoogle();
@@ -3822,8 +3863,13 @@ onAuthStateChanged(auth,async user=>{
     // Verificación definitiva: si no está autorizado, hacer get() directo para no depender del cache
     if(!_emailAutorizado(user.email)){
       const snapAcc=await get(rAcceso);
-      const emailsDirectos=new Set([ADMIN_EMAIL]);
+      const emailsDirectos=new Set();
+      if(ADMIN_SUPREMO_EMAIL)emailsDirectos.add(ADMIN_SUPREMO_EMAIL);
+      if(ADMIN_EMAIL)emailsDirectos.add(ADMIN_EMAIL);
       if(snapAcc.val())Object.values(snapAcc.val()).forEach(v=>{if(v&&v.email)emailsDirectos.add(v.email.toLowerCase().trim());});
+      // También verificar en el nuevo nodo roles/
+      const snapRoles=await get(rRoles);
+      if(snapRoles.val())Object.values(snapRoles.val()).forEach(v=>{if(v&&v.email)emailsDirectos.add(v.email.toLowerCase().trim());});
       // Actualizar cache también
       _correosAutorizados=emailsDirectos;
       if(!emailsDirectos.has((user.email||"").toLowerCase().trim())){
@@ -3836,14 +3882,39 @@ onAuthStateChanged(auth,async user=>{
     }
     document.getElementById('login-error').style.display='none';
     ocultarLogin();
-    // Determinar si es admin principal o co-admin
+    // Determinar rol completo (4 niveles)
     const emailActual=(user.email||'').toLowerCase().trim();
-    const esAdminPrincipal=(emailActual===ADMIN_EMAIL.toLowerCase());
-    // Verificar si es co-admin (tiene esAdmin:true en el nodo acceso/)
-    const snapAccAdmin=await get(rAcceso);
-    const dAccAdmin=snapAccAdmin.val()||{};
-    const esCoAdmin=Object.values(dAccAdmin).some(v=>v&&(v.email||'').toLowerCase().trim()===emailActual&&v.esAdmin===true);
-    window._esAdmin=esAdminPrincipal||esCoAdmin;
+    const uid=user.uid;
+    // Verificar en nodo roles/ primero (nuevo sistema)
+    const snapRolUsuario=await get(ref(db,'roles/'+uid));
+    let rolDetectado='usuario';
+    if(snapRolUsuario.exists()&&snapRolUsuario.val().rol){
+      rolDetectado=snapRolUsuario.val().rol;
+    }else{
+      // Fallback: sistema legado (acceso/ + config/adminEmail)
+      const esAdminPrincipal=(ADMIN_EMAIL&&emailActual===ADMIN_EMAIL)||(ADMIN_SUPREMO_EMAIL&&emailActual===ADMIN_SUPREMO_EMAIL);
+      if(esAdminPrincipal){
+        rolDetectado=ADMIN_SUPREMO_EMAIL&&emailActual===ADMIN_SUPREMO_EMAIL?'admin_supremo':'super_admin';
+      }else{
+        const snapAccAdmin=await get(rAcceso);
+        const dAccAdmin=snapAccAdmin.val()||{};
+        const esCoAdmin=Object.values(dAccAdmin).some(v=>v&&(v.email||'').toLowerCase().trim()===emailActual&&v.esAdmin===true);
+        rolDetectado=esCoAdmin?'admin':'usuario';
+      }
+    }
+    _aplicarRol(rolDetectado);
+    // Listener en tiempo real: si el rol cambia, forzar logout
+    onValue(ref(db,'roles/'+uid),snap=>{
+      if(!auth.currentUser)return;
+      if(!snap.exists()||snap.val()===null){
+        // Puede que aún esté en el nodo legado — no forzar logout inmediato
+        return;
+      }
+      const nuevoRol=snap.val().rol;
+      if(nuevoRol&&nuevoRol!==window._rol){
+        signOut(auth);
+      }
+    });
     // Iniciar listeners de Firebase
     iniciarListeners();
     // Mostrar botones según rol
@@ -3891,8 +3962,9 @@ window.agregarAcceso=async function(){
   if(!email||!email.includes('@')){showModal('⚠️','Error','Ingresa un correo válido.');return;}
   // Verificar contra Firebase directamente, no el cache (evita falsos 'ya existe')
   const snapCheck=await get(rAcceso);
+  const adminProtegidos=new Set([ADMIN_SUPREMO_EMAIL,ADMIN_EMAIL].filter(Boolean));
   const yaExiste=snapCheck.val()&&Object.values(snapCheck.val()).some(v=>v&&(v.email||'').toLowerCase().trim()===email);
-  if(yaExiste||email===ADMIN_EMAIL.toLowerCase()){
+  if(yaExiste||adminProtegidos.has(email)){
     showModal('ℹ️','Ya existe','Ese correo ya tiene acceso.');
     return;
   }
@@ -3904,6 +3976,22 @@ window.agregarAcceso=async function(){
   if(fb){fb.textContent='✅ '+email+' agregado correctamente';fb.style.display='block';setTimeout(()=>fb.style.display='none',3000);}
 };
 window.quitarAcceso=async function(key){
+  // Protección: verificar que no sea el Admin Supremo ni el Super Admin
+  const snapCheck=await get(ref(db,`acceso/${key}`));
+  if(snapCheck.exists()){
+    const emailObjetivo=(snapCheck.val().email||'').toLowerCase().trim();
+    const protegidos=new Set([ADMIN_SUPREMO_EMAIL,ADMIN_EMAIL].filter(Boolean));
+    if(protegidos.has(emailObjetivo)){
+      showModal('🔒','Protegido','No se puede quitar el acceso al Admin Supremo o Super Admin.');
+      return;
+    }
+  }
+  // Solo Super Admin o Admin Supremo pueden quitar a otros Admins
+  const snapEntrada=snapCheck.exists()?snapCheck:await get(ref(db,`acceso/${key}`));
+  if(snapEntrada.exists()&&snapEntrada.val().esAdmin===true&&!window._esSuperAdmin&&!window._esAdminSupremo){
+    showModal('🔒','Sin permisos','Solo el Super Admin puede quitar acceso a un Administrador.');
+    return;
+  }
   if(!confirm('¿Quitar acceso a este correo?'))return;
   await remove(ref(db,`acceso/${key}`));
 };
@@ -3912,33 +4000,53 @@ let _unsubAccesos=null;
 function renderListaAccesos(){
   const lista=document.getElementById('lista-accesos');
   if(!lista)return;
+  // Actualizar dinámicamente el email del Admin Supremo en la cabecera del modal
+  const adminSupremoRow=document.getElementById('admin-supremo-row');
+  if(adminSupremoRow){
+    const emailMostrar=ADMIN_SUPREMO_EMAIL||ADMIN_EMAIL||'—';
+    const labelRol=window._esAdminSupremo&&ADMIN_SUPREMO_EMAIL?'Admin Supremo · Acceso permanente':(ADMIN_EMAIL?'Super Admin · Acceso permanente':'Administrador · Acceso permanente');
+    adminSupremoRow.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;">`+
+      `<div><div style="font-size:.82rem;font-weight:600;color:var(--text1);">${emailMostrar}</div>`+
+      `<div style="font-size:.68rem;color:var(--accent);">${labelRol}</div></div></div>`;
+  }
   // Cancelar listener previo si existe
   if(_unsubAccesos){_unsubAccesos();_unsubAccesos=null;}
   // Suscribir listener en tiempo real
   _unsubAccesos=onValue(rAcceso,snap=>{
     const d=snap.val()||{};
+    const adminProtegidos=new Set([ADMIN_SUPREMO_EMAIL,ADMIN_EMAIL].filter(Boolean));
     // Filtrar entradas válidas (con email) y ordenar por ts
     const entradas=Object.entries(d)
-      .filter(([k,v])=>v&&v.email)
+      .filter(([k,v])=>v&&v.email&&!adminProtegidos.has((v.email||'').toLowerCase().trim()))
       .sort((a,b)=>(a[1].ts||0)-(b[1].ts||0));
+    // Badge de rol visual
+    function rolBadge(v){
+      if(v.esAdmin){
+        const rolLabel=v.rol==='super_admin'?'SUPER ADMIN':v.rol==='admin_supremo'?'ADMIN SUPREMO':'CO-ADMIN';
+        const color=v.rol==='admin_supremo'?'#8B0000':v.rol==='super_admin'?'var(--blue)':'var(--accent)';
+        return` <span style="font-size:.65rem;background:${color};color:#fff;padding:2px 7px;border-radius:20px;font-weight:700;vertical-align:middle;">${rolLabel}</span>`;
+      }
+      return'';
+    }
     lista.innerHTML=entradas.map(([k,v])=>{
       const emailSafe=(v.email||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const porSafe=(v.agregadoPor||'admin').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const esCoAdmin=!!(v.esAdmin);
+      // Solo Admin Supremo y Super Admin pueden ver el botón Quitar en admins
+      const puedeQuitar=!v.esAdmin||(window._esSuperAdmin||window._esAdminSupremo);
       return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:10px;margin-bottom:8px;">`+
         `<div>`+
-        `<div style="font-size:.82rem;font-weight:600;color:var(--text);">${emailSafe}${esCoAdmin?' <span style="font-size:.65rem;background:var(--accent);color:#111;padding:2px 7px;border-radius:20px;font-weight:700;vertical-align:middle;">CO-ADMIN</span>':''}</div>`+
+        `<div style="font-size:.82rem;font-weight:600;color:var(--text);">${emailSafe}${rolBadge(v)}</div>`+
         `<div style="font-size:.68rem;color:var(--text3);">Agregado por ${porSafe}</div>`+
         `</div>`+
-        `<button onclick="quitarAcceso('${k}')" style="background:var(--red,#e53935);border:none;color:#fff;border-radius:8px;padding:6px 10px;font-size:.72rem;cursor:pointer;">Quitar</button>`+
+        (puedeQuitar?`<button onclick="quitarAcceso('${k}')" style="background:var(--red,#e53935);border:none;color:#fff;border-radius:8px;padding:6px 10px;font-size:.72rem;cursor:pointer;">Quitar</button>`:'<span style="font-size:.65rem;color:var(--text3);padding:4px 8px;">🔒</span>')+
         `</div>`;
     }).join('')||'<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:16px;">No hay usuarios adicionales</div>';
     // Poblar select de transferencia con los usuarios autorizados (excluye al admin actual y ya co-admins)
     const sel=document.getElementById('admin-transfer-email');
     if(sel){
-      const currentAdmin=ADMIN_EMAIL.toLowerCase();
+      const currentUserEmail=(auth.currentUser?.email||'').toLowerCase();
       const opts=entradas
-        .filter(([k,v])=>(v.email||'').toLowerCase()!==currentAdmin && !v.esAdmin)
+        .filter(([k,v])=>(v.email||'').toLowerCase()!==currentUserEmail && !v.esAdmin)
         .map(([k,v])=>`<option value="${(v.email||'').replace(/"/g,'&quot;')}">${v.email}</option>`).join('');
       sel.innerHTML='<option value="">— Selecciona un usuario autorizado —</option>'+opts;
     }
@@ -3947,6 +4055,10 @@ function renderListaAccesos(){
 
 // Compartir admin: marca al usuario seleccionado como co-admin en Firebase
 window.compartirAdmin=async function(){
+  if(!window._esSuperAdmin&&!window._esAdminSupremo){
+    showModal('🔒','Sin permisos','Solo el Super Admin o Admin Supremo puede compartir el rol de administrador.');
+    return;
+  }
   const email=(document.getElementById('admin-transfer-email')?.value||'').trim().toLowerCase();
   const fb=document.getElementById('admin-transfer-feedback');
   if(!email){if(fb){fb.style.display='block';fb.style.color='var(--red)';fb.style.background='var(--red-bg)';fb.textContent='⚠️ Selecciona un usuario primero.';}return;}
@@ -3956,37 +4068,52 @@ window.compartirAdmin=async function(){
   if(!entry){if(fb){fb.style.display='block';fb.style.color='var(--red)';fb.style.background='var(--red-bg)';fb.textContent='❌ Usuario no encontrado.';}return;}
   // Validar si ya es co-admin
   if(entry[1].esAdmin===true){
-    if(fb){fb.style.display='block';fb.style.color='var(--orange)';fb.style.background='var(--orange-bg)';fb.textContent=`ℹ️ ${email} ya es co-administrador.`;setTimeout(()=>fb.style.display='none',4000);}
+    if(fb){fb.style.display='block';fb.style.color='var(--orange)';fb.style.background='var(--orange-bg)';fb.textContent=`ℹ️ ${email} ya es administrador.`;setTimeout(()=>fb.style.display='none',4000);}
     return;
   }
-  await update(ref(db,`acceso/${entry[0]}`),{esAdmin:true,adminDesde:Date.now(),promovidoPor:auth.currentUser?.email||''});
-  if(fb){fb.style.display='block';fb.style.color='var(--green)';fb.style.background='var(--green-bg)';fb.textContent=`✅ ${email} ahora es co-administrador.`;setTimeout(()=>fb.style.display='none',4000);}
+  await update(ref(db,`acceso/${entry[0]}`),{esAdmin:true,rol:'admin',adminDesde:Date.now(),promovidoPor:auth.currentUser?.email||''});
+  if(fb){fb.style.display='block';fb.style.color='var(--green)';fb.style.background='var(--green-bg)';fb.textContent=`✅ ${email} ahora es Administrador.`;setTimeout(()=>fb.style.display='none',4000);}
 };
 
 // Ceder admin: transfiere el rol completamente, el admin actual queda como usuario normal
 window.cederAdmin=async function(){
+  // Solo Super Admin puede transferir su rol (Admin Supremo tiene su propia lógica)
+  if(!window._esSuperAdmin&&!window._esAdminSupremo){
+    showModal('🔒','Sin permisos','Solo el Super Admin puede transferir este rol.');
+    return;
+  }
   const email=(document.getElementById('admin-transfer-email')?.value||'').trim().toLowerCase();
   const fb=document.getElementById('admin-transfer-feedback');
   if(!email){if(fb){fb.style.display='block';fb.style.color='var(--red)';fb.style.background='var(--red-bg)';fb.textContent='⚠️ Selecciona un usuario primero.';}return;}
-  const confirmed=confirm(`¿Transferir el rol de administrador a ${email}?\n\nTú quedarás como usuario normal y perderás acceso al panel de admin hasta que el nuevo admin te lo devuelva.`);
+  const confirmed=confirm(`¿Transferir el rol de Super Admin a ${email}?\n\nTú quedarás como Administrador normal y perderás acceso al panel de super admin.`);
   if(!confirmed)return;
   const snap=await get(rAcceso);const d=snap.val()||{};
   const entry=Object.entries(d).find(([k,v])=>(v.email||'').toLowerCase().trim()===email);
   if(!entry){if(fb){fb.style.display='block';fb.style.color='var(--red)';fb.style.background='var(--red-bg)';fb.textContent='❌ Usuario no encontrado.';}return;}
   const emailActualAdmin=(auth.currentUser?.email||'').toLowerCase().trim();
-  // Guardar el nuevo admin en Firebase (nodo adminEmail)
+  // Actualizar estado local ANTES del signOut para evitar race condition
+  window._esAdmin=false;
+  window._esSuperAdmin=false;
+  window._rol='admin';
+  // Guardar el nuevo Super Admin en Firebase
   await set(ref(db,'config/adminEmail'),email);
-  // Marcar al nuevo usuario como admin en su entrada de acceso
-  await update(ref(db,`acceso/${entry[0]}`),{esAdmin:true,adminDesde:Date.now(),promovidoPor:emailActualAdmin});
-  // Si el admin actual tenía una entrada en acceso/, quitarle esAdmin
+  // Marcar al nuevo usuario como Super Admin en su entrada de acceso
+  await update(ref(db,`acceso/${entry[0]}`),{esAdmin:true,rol:'super_admin',adminDesde:Date.now(),promovidoPor:emailActualAdmin});
+  // Si el admin actual tenía una entrada en acceso/, degradarlo
   const entryActual=Object.entries(d).find(([k,v])=>(v.email||'').toLowerCase().trim()===emailActualAdmin);
   if(entryActual){
-    await update(ref(db,`acceso/${entryActual[0]}`),{esAdmin:false});
+    await update(ref(db,`acceso/${entryActual[0]}`),{esAdmin:true,rol:'admin'});
   }
-  // Actualizar estado local para evitar que el listener reactivo lo restaure como admin
-  window._esAdmin=false;
-  if(fb){fb.style.display='block';fb.style.color='var(--green)';fb.style.background='var(--green-bg)';fb.textContent=`✅ Admin transferido a ${email}. Cerrando tu sesión...`;}
+  // Limpiar co-admins previos que no deberían tener rol de super_admin
+  for(const [k,v] of Object.entries(d)){
+    if((v.email||'').toLowerCase().trim()!==email&&(v.email||'').toLowerCase().trim()!==emailActualAdmin&&v.rol==='super_admin'){
+      await update(ref(db,`acceso/${k}`),{rol:'admin'});
+    }
+  }
+  if(fb){fb.style.display='block';fb.style.color='var(--green)';fb.style.background='var(--green-bg)';fb.textContent=`✅ Super Admin transferido a ${email}. Cerrando tu sesión...`;}
   // Cerrar el modal y hacer signOut del admin actual
+  // El listener onValue de roles/{uid} detectará el cambio si está en el nuevo nodo;
+  // aquí hacemos signOut directamente ya que se usó el nodo legado
   setTimeout(async()=>{
     document.getElementById('overlay-accesos').classList.remove('show');
     await signOut(auth);
