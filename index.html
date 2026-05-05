@@ -781,7 +781,7 @@ details summary::-webkit-details-marker{display:none;}
     <div class="m-btns">
       <button class="mbtn accent" onclick="guardarEditHist()">💾 Guardar corrección</button>
       <button class="mbtn secondary" onclick="closeHEdit()">Cancelar</button>
-      <button class="mbtn danger" onclick="eliminarHist()">🗑 Eliminar este registro</button>
+      <button id="btn-eliminar-hist" class="mbtn danger" onclick="eliminarHist()" style="display:none;">🗑 Eliminar este registro</button>
     </div>
   </div>
 </div>
@@ -1389,8 +1389,40 @@ function _aplicarRol(rol){
   window._esAdminSupremo=(rol==='admin_supremo');
   window._esSuperAdmin=(rol==='super_admin');
   window._esAdmin=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo');
+
+  // Permisos por rol (basado en MD Gestión de Accesos)
+  const puedeGestionarAccesos=(rol==='super_admin'||rol==='admin_supremo');
+  const puedeVerHistorial=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo');
+  const puedeEditarHistorial=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo');
+  const puedeEliminar=(rol==='super_admin'||rol==='admin_supremo');
+  const puedeExportar=(rol==='super_admin'||rol==='admin_supremo');
+
+  window._permisos={
+    gestionarAccesos:puedeGestionarAccesos,
+    verHistorial:puedeVerHistorial,
+    editarHistorial:puedeEditarHistorial,
+    eliminar:puedeEliminar,
+    exportar:puedeExportar,
+  };
+
+  // Botón 🔐 gestionar accesos — solo super_admin y admin_supremo
   const btnAccesos=document.getElementById('btn-gestionar-accesos');
-  if(btnAccesos)btnAccesos.style.display=window._esAdmin?'flex':'none';
+  if(btnAccesos)btnAccesos.style.display=puedeGestionarAccesos?'flex':'none';
+
+  // Tab 🗂 Historial — solo admin+
+  const tabHistorial=document.querySelector('.tab[onclick*=\'historial\']');
+  if(tabHistorial)tabHistorial.style.display=puedeVerHistorial?'':'none';
+
+  // Botón exportar Excel — solo super_admin+
+  document.querySelectorAll('[onclick*="exportarExcel"]').forEach(b=>b.style.display=puedeExportar?'':'none');
+
+  // Botón editar registros historial (admin panel) — solo admin+
+  const btnAdminHist=document.getElementById('btn-admin-hist');
+  if(btnAdminHist)btnAdminHist.style.display=puedeEditarHistorial?'':'none';
+
+  // Botón 🗑 eliminar en modal hedit — solo super_admin+
+  const btnElimHist=document.getElementById('btn-eliminar-hist');
+  if(btnElimHist)btnElimHist.style.display=puedeEliminar?'':'none';
 }
 
 // Devuelve una promesa que se resuelve cuando config Y acceso ya cargaron
@@ -2253,7 +2285,7 @@ function _toggleCancelNuevo(){
   btn.style.display=hayInteraccion?'block':'none';
 }
 window._toggleCancelNuevo=_toggleCancelNuevo;
-window.eliminarItem=function(key){if(confirm('¿Eliminar este producto?'))remove(ref(db,`faltantes/${key}`));};
+window.eliminarItem=function(key){if(!window._permisos?.eliminar){showModal('🔒','Sin permisos','Solo el Super Admin puede eliminar registros.');return;}if(confirm('¿Eliminar este producto?'))remove(ref(db,`faltantes/${key}`));};
 
 // CAMBIAR A COMPRADO
 window.cambiarAComprado=function(key){
@@ -2285,7 +2317,8 @@ function mkCard(item,opts={}){
   let cls=`item-card ${_uc}`;
   if(esComp)cls=`item-card comp-hoy ${_uc}`;
   if(esNuevo&&!esComp)cls+=` nuevo`;
-  const actions=esComp?`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>`:`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button><button class="ia-sm del" onclick="eliminarItem('${item.fbKey}')" title="Eliminar">🗑</button>`;
+  const _puedeElim=window._permisos?.eliminar;
+  const actions=esComp?`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>`:`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>${_puedeElim?`<button class="ia-sm del" onclick="eliminarItem('${item.fbKey}')" title="Eliminar">🗑</button>`:''}`;
   const derecha=esComp?`<span class="item-precio">${precioStr}</span>`:`<button class="btn-comp-ahora" onclick="cambiarAComprado('${item.fbKey}')">☐ Marcar comprado</button>`;
   const quienTag=item.quien
     ?`<span>·</span><span style="font-size:.65rem;font-weight:700;color:var(--text3);">👤 ${item.quien}</span>${(esComp&&item.quienEdito)?`<span style="font-size:.6rem;color:var(--text3);margin-left:3px;">· ✏️ ${item.quienEdito}</span>`:''}`
@@ -2435,6 +2468,7 @@ window.toggleGrupo=function(key){const estaAbierto=gruposOpen[key]!==false;grupo
 
 // EXPORTAR EXCEL
 window.exportarExcel=function(){
+  if(!window._permisos?.exportar){showModal('🔒','Sin permisos','Solo el Super Admin puede exportar datos.');return;}
   // Replica exactamente la misma cadena de filtros que renderHist
   const lim=msL(fHist);
   let todos=todosComp().filter(i=>(i.tsComprado||0)>=lim);
@@ -2710,7 +2744,7 @@ window.guardarEditHist=function(){
   if(adminModeActive)modifiedInSession.add(editHistItem.fbKey);
   closeHEdit();showModal('✅','Registro corregido','Los cambios se guardaron correctamente.');
 };
-window.eliminarHist=function(){if(!editHistItem)return;if(!confirm('¿Eliminar este registro permanentemente?'))return;if(editHistItem._tipo==='hist')remove(ref(db,`archivo/${editHistItem.fbKey}`));else remove(ref(db,`faltantes/${editHistItem.fbKey}`));closeHEdit();};
+window.eliminarHist=function(){if(!editHistItem)return;if(!window._permisos?.eliminar){showModal('🔒','Sin permisos','Solo el Super Admin puede eliminar registros.');return;}if(!confirm('¿Eliminar este registro permanentemente?'))return;if(editHistItem._tipo==='hist')remove(ref(db,`archivo/${editHistItem.fbKey}`));else remove(ref(db,`faltantes/${editHistItem.fbKey}`));closeHEdit();};
 window.closeHEdit=function(){document.getElementById('overlay-hedit').classList.remove('show');editHistItem=null;renderHist();};
 
 // Listener delegado para botones de edición en historial (evita problemas de escapado)
@@ -3990,7 +4024,7 @@ onAuthStateChanged(auth,async user=>{
     const btnLogout=document.getElementById('btn-logout');
     if(btnLogout)btnLogout.style.display='flex';
     const btnAccesos=document.getElementById('btn-gestionar-accesos');
-    if(btnAccesos)btnAccesos.style.display=window._esAdmin?'flex':'none';
+    if(btnAccesos)btnAccesos.style.display=(window._permisos?.gestionarAccesos)?'flex':'none';
     // Cargar perfil del usuario desde Firebase
     const snapPerfil=await get(_rPerfil(user.uid));
     if(snapPerfil.exists()&&snapPerfil.val().nombre){
@@ -4016,7 +4050,7 @@ onAuthStateChanged(auth,async user=>{
 
 // ── GESTIÓN DE ACCESOS (adaptativo por rol) ──────────────────────────────────
 window.abrirGestionAccesos=function(){
-  if(!window._esAdmin)return;
+  if(!window._permisos?.gestionarAccesos)return;
   _adaptarModalPorRol();
   renderListaAccesos();
   document.getElementById('overlay-accesos').classList.add('show');
