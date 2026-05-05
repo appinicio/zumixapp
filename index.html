@@ -1242,11 +1242,30 @@ let _correosAutorizados=new Set();
 let _accesoListo=false;
 let _accesoResolvers=[];
 
-// Cargar email del Admin Supremo desde Firebase (protegido; solo lectura para autenticados)
+// ── CARGA DE CONFIG (se espera antes de verificar auth) ───────────────────────
+// _configListo se resuelve cuando config/adminSupremoEmail llega desde Firebase
+let _configListo=false;
+let _configResolvers=[];
+function _esperarConfig(){
+  if(_configListo)return Promise.resolve();
+  return new Promise(r=>{
+    _configResolvers.push(r);
+    // Timeout de seguridad: si Firebase tarda más de 4s, continuar igual
+    setTimeout(()=>{if(!_configListo){_configListo=true;_configResolvers.forEach(fn=>fn());_configResolvers=[];}},4000);
+  });
+}
+
+// Cargar email del Admin Supremo desde Firebase
 onValue(ref(db,'config/adminSupremoEmail'),snap=>{
   if(snap.val()){
     ADMIN_SUPREMO_EMAIL=snap.val().toLowerCase().trim();
     _correosAutorizados.add(ADMIN_SUPREMO_EMAIL);
+  }
+  // Marcar config como listo (aunque el valor sea null)
+  if(!_configListo){
+    _configListo=true;
+    _configResolvers.forEach(r=>r());
+    _configResolvers=[];
   }
 });
 // Compatibilidad: listener del nodo legado config/adminEmail
@@ -1259,6 +1278,7 @@ onValue(ref(db,'config/adminEmail'),snap=>{
 });
 
 // Escuchar cambios en acceso/ (nodo legado) para compatibilidad
+// NOTA: si acceso/ no existe en Firebase, onValue llega con snap.val()===null — eso es válido
 onValue(rAcceso,snap=>{
   _correosAutorizados=new Set();
   if(ADMIN_SUPREMO_EMAIL)_correosAutorizados.add(ADMIN_SUPREMO_EMAIL);
@@ -1329,12 +1349,17 @@ function _aplicarRol(rol){
   if(btnAccesos)btnAccesos.style.display=window._esAdmin?'flex':'none';
 }
 
-// Devuelve una promesa que se resuelve cuando la lista ya cargó
+// Devuelve una promesa que se resuelve cuando config Y acceso ya cargaron
 function _esperarAcceso(){
+  // Esperar ambos: config (para saber quién es Admin Supremo) y acceso (lista de usuarios)
+  return Promise.all([_esperarConfig(), _esperarAccesoNodo()]);
+}
+function _esperarAccesoNodo(){
   if(_accesoListo)return Promise.resolve();
   return new Promise(r=>{
     _accesoResolvers.push(r);
-    setTimeout(()=>{if(!_accesoListo){_accesoListo=true;_accesoResolvers.forEach(fn=>fn());_accesoResolvers=[];}},5000);
+    // Si acceso/ no existe en Firebase, onValue igual llega (con null) — pero por si acaso, timeout
+    setTimeout(()=>{if(!_accesoListo){_accesoListo=true;_accesoResolvers.forEach(fn=>fn());_accesoResolvers=[];}},4000);
   });
 }
 function _emailAutorizado(email){
