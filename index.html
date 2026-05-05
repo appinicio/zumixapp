@@ -845,46 +845,90 @@ details summary::-webkit-details-marker{display:none;}
   </div>
 </div>
 
-<!-- MODAL GESTIÓN DE ACCESOS -->
+<!-- MODAL GESTIÓN DE ACCESOS (adaptativo por rol) -->
 <div id="overlay-accesos" class="overlay" style="background:rgba(0,0,0,0.75);">
   <div class="modal-box">
+
+    <!-- CABECERA siempre visible -->
     <div class="m-head">
-      <span class="m-title">🔐 Gestión de Accesos</span>
+      <span class="m-title" id="accesos-titulo">🔐 Gestión de Accesos</span>
       <button class="m-close" onclick="cerrarGestionAccesos()">✕</button>
     </div>
-    <div style="font-size:.75rem;color:var(--text3);margin-bottom:14px;">Gestiona quién puede acceder a Zumix Stock.</div>
-    <!-- Agregar nuevo -->
-    <div class="field-label" style="font-size:.72rem;margin-bottom:6px;">➕ Agregar correo</div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
-      <input class="input-f" type="email" id="nuevo-acceso-email" placeholder="correo@gmail.com" style="width:100%;font-size:.88rem;box-sizing:border-box;"/>
-      <button class="mbtn primary" style="width:100%;padding:12px;" onclick="agregarAcceso()">➕ Agregar acceso</button>
+    <div style="font-size:.75rem;color:var(--text3);margin-bottom:14px;" id="accesos-subtitulo">Gestiona quién puede acceder a Zumix Stock.</div>
+
+    <!-- CHIP de rol del usuario actual -->
+    <div id="accesos-rol-chip" style="margin-bottom:14px;"></div>
+
+    <!-- ═══ SECCIÓN: AGREGAR CORREO ═══════════════════════════════════
+         Visible para: Admin Supremo, Super Admin, Admin
+         Admin solo puede agregar Usuarios Normales                    -->
+    <div id="sec-agregar" style="display:none;">
+      <div class="field-label" style="font-size:.72rem;margin-bottom:6px;">➕ Agregar correo</div>
+      <!-- Nota visible solo para Admin (rol=admin) -->
+      <div id="nota-admin-agregar" style="display:none;font-size:.72rem;color:var(--orange);background:var(--orange-bg);border-radius:8px;padding:7px 10px;margin-bottom:8px;line-height:1.5;">
+        ℹ️ Como Admin solo podés agregar <strong>Usuarios Normales</strong>. Para promover a Admin se requiere aprobación del Super Admin.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+        <input class="input-f" type="email" id="nuevo-acceso-email" placeholder="correo@gmail.com" style="width:100%;font-size:.88rem;box-sizing:border-box;"/>
+        <button class="mbtn primary" style="width:100%;padding:12px;" onclick="agregarAcceso()">➕ Agregar acceso</button>
+      </div>
+      <div id="acceso-feedback" style="display:none;font-size:.78rem;color:#4caf50;background:rgba(76,175,80,0.12);border-radius:8px;padding:8px 12px;margin-bottom:8px;text-align:center;"></div>
     </div>
-    <!-- Lista actual -->
-    <div class="field-label" style="font-size:.72rem;margin-bottom:8px;">👥 Usuarios con acceso</div>
-    <!-- Fila del Admin Supremo — se renderiza dinámicamente desde Firebase -->
-    <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:8px;" id="admin-supremo-row">
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div>
-          <div style="font-size:.82rem;font-weight:600;color:var(--text1);">Cargando…</div>
-          <div style="font-size:.68rem;color:var(--accent);">Admin Supremo · Acceso permanente</div>
+
+    <!-- ═══ SECCIÓN: LISTA DE USUARIOS ═══════════════════════════════
+         Admin Supremo: ve a todos
+         Super Admin: ve a todos excepto Admin Supremo
+         Admin: ve solo Usuarios Normales                              -->
+    <div id="sec-lista" style="display:none;">
+      <div class="field-label" style="font-size:.72rem;margin-bottom:8px;">👥 Usuarios con acceso</div>
+      <!-- Fila Admin Supremo — solo visible para Admin Supremo y Super Admin -->
+      <div id="admin-supremo-row" style="display:none;background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:.82rem;font-weight:600;color:var(--text1);" id="admin-supremo-email">Cargando…</div>
+            <div style="font-size:.68rem;color:var(--accent);">👑 Admin Supremo · Acceso permanente</div>
+          </div>
         </div>
       </div>
+      <div id="lista-accesos"></div>
     </div>
-    <div id="lista-accesos"></div>
-    <div id="acceso-feedback" style="display:none;font-size:.78rem;color:#4caf50;background:rgba(76,175,80,0.12);border-radius:8px;padding:8px 12px;margin-bottom:8px;text-align:center;"></div>
-    <!-- Ceder / compartir admin -->
-    <div style="margin-top:14px;border-top:1.5px solid var(--border);padding-top:14px;">
-      <div class="field-label" style="font-size:.72rem;margin-bottom:6px;">🔑 Ceder o compartir administración</div>
-      <div style="font-size:.75rem;color:var(--text3);margin-bottom:10px;line-height:1.5;">Puedes <strong>compartir</strong> el rol Admin con otro correo autorizado o <strong>transferir</strong> el rol de Super Admin a otra persona.<br><span style="color:var(--orange);font-weight:600;">⚠️ El Admin Supremo no puede ser modificado desde aquí.</span></div>
+
+    <!-- ═══ SECCIÓN: BANDEJA DE SOLICITUDES ══════════════════════════
+         Visible para: Admin Supremo, Super Admin
+         Muestra solicitudes pendientes de promoción a Admin           -->
+    <div id="sec-solicitudes" style="display:none;margin-top:14px;border-top:1.5px solid var(--border);padding-top:14px;">
+      <div class="field-label" style="font-size:.72rem;margin-bottom:6px;">📬 Solicitudes pendientes</div>
+      <div id="lista-solicitudes">
+        <div style="font-size:.8rem;color:var(--text3);text-align:center;padding:10px 0;">Sin solicitudes pendientes</div>
+      </div>
+    </div>
+
+    <!-- ═══ SECCIÓN: PROPONER PROMOCIÓN A ADMIN ══════════════════════
+         Visible SOLO para: Admin
+         Genera una solicitud que el Super Admin debe aprobar          -->
+    <div id="sec-proponer" style="display:none;margin-top:14px;border-top:1.5px solid var(--border);padding-top:14px;">
+      <div class="field-label" style="font-size:.72rem;margin-bottom:6px;">📤 Proponer promoción a Admin</div>
+      <div style="font-size:.75rem;color:var(--text3);margin-bottom:10px;line-height:1.5;">Seleccioná un usuario para proponer su promoción. El Super Admin recibirá la solicitud y decidirá.</div>
+      <select class="select-f" id="proponer-email" style="margin-bottom:8px;font-size:.85rem;">
+        <option value="">— Selecciona un usuario —</option>
+      </select>
+      <button class="mbtn secondary" style="width:100%;padding:10px;font-size:.85rem;" onclick="proponerPromocion()">📤 Enviar solicitud al Super Admin</button>
+      <div id="proponer-feedback" style="display:none;font-size:.78rem;border-radius:8px;padding:8px 12px;margin-top:8px;text-align:center;"></div>
+    </div>
+
+    <!-- ═══ SECCIÓN: TRANSFERENCIA DE ROL ════════════════════════════
+         Visible para: Admin Supremo (transferir Admin Supremo)
+                       Super Admin (transferir Super Admin)            -->
+    <div id="sec-transferir" style="display:none;margin-top:14px;border-top:1.5px solid var(--border);padding-top:14px;">
+      <div class="field-label" style="font-size:.72rem;margin-bottom:6px;" id="transferir-titulo">🔑 Transferencia de rol</div>
+      <div style="font-size:.75rem;color:var(--text3);margin-bottom:10px;line-height:1.5;" id="transferir-desc">—</div>
       <select class="select-f" id="admin-transfer-email" style="margin-bottom:8px;font-size:.85rem;">
         <option value="">— Selecciona un usuario autorizado —</option>
       </select>
-      <div style="display:flex;gap:8px;">
-        <button class="mbtn secondary" style="flex:1;padding:10px;font-size:.8rem;" onclick="compartirAdmin()">🤝 Promover a Admin</button>
-        <button class="mbtn danger" style="flex:1;padding:10px;font-size:.8rem;" onclick="cederAdmin()">🔄 Transferir Super Admin</button>
-      </div>
+      <div id="sec-botones-transferir" style="display:flex;gap:8px;"></div>
       <div id="admin-transfer-feedback" style="display:none;font-size:.78rem;border-radius:8px;padding:8px 12px;margin-top:8px;text-align:center;"></div>
     </div>
+
     <div class="m-btns" style="margin-top:14px;">
       <button class="mbtn primary" onclick="cerrarGestionAccesos()">Listo</button>
     </div>
@@ -3970,111 +4014,270 @@ onAuthStateChanged(auth,async user=>{
   }
 });
 
-// ── GESTIÓN DE ACCESOS (solo admin) ──────────────────────────────────────────
+// ── GESTIÓN DE ACCESOS (adaptativo por rol) ──────────────────────────────────
 window.abrirGestionAccesos=function(){
   if(!window._esAdmin)return;
+  _adaptarModalPorRol();
   renderListaAccesos();
   document.getElementById('overlay-accesos').classList.add('show');
 };
+
+// Adapta visibilidad de secciones según el rol del usuario activo
+function _adaptarModalPorRol(){
+  const rol=window._rol;
+  // Chip de rol
+  const chipData={
+    admin_supremo:{label:'👑 Admin Supremo',bg:'#8B0000',color:'#fff'},
+    super_admin:  {label:'🏢 Super Admin',  bg:'var(--blue)',color:'#fff'},
+    admin:        {label:'👔 Admin',         bg:'var(--accent)',color:'#111'},
+  };
+  const chip=chipData[rol];
+  const chipEl=document.getElementById('accesos-rol-chip');
+  if(chipEl&&chip){
+    chipEl.innerHTML=`<span style="font-size:.7rem;font-weight:700;padding:4px 12px;border-radius:20px;background:${chip.bg};color:${chip.color};">${chip.label}</span>`;
+  }
+  // Subtítulo contextual
+  const subtitulos={
+    admin_supremo:'Control total del sistema. Solo vos podés transferir el rol de Admin Supremo.',
+    super_admin:  'Podés gestionar Admins y Usuarios. No podés ver ni modificar al Admin Supremo.',
+    admin:        'Podés agregar Usuarios Normales y proponer promociones al Super Admin.',
+  };
+  const subEl=document.getElementById('accesos-subtitulo');
+  if(subEl)subEl.textContent=subtitulos[rol]||'Gestiona el acceso a Zumix Stock.';
+
+  // ── Sección AGREGAR ──
+  const secAgregar=document.getElementById('sec-agregar');
+  if(secAgregar)secAgregar.style.display='block'; // todos los admins pueden agregar
+  const notaAdmin=document.getElementById('nota-admin-agregar');
+  if(notaAdmin)notaAdmin.style.display=(rol==='admin')?'block':'none';
+
+  // ── Sección LISTA ──
+  const secLista=document.getElementById('sec-lista');
+  if(secLista)secLista.style.display='block';
+  // Fila Admin Supremo: solo visible para admin_supremo y super_admin
+  const rowSupremo=document.getElementById('admin-supremo-row');
+  if(rowSupremo)rowSupremo.style.display=(rol==='admin_supremo'||rol==='super_admin')?'block':'none';
+  // Actualizar email en la fila del Admin Supremo
+  const emailSupremoEl=document.getElementById('admin-supremo-email');
+  if(emailSupremoEl)emailSupremoEl.textContent=ADMIN_SUPREMO_EMAIL||ADMIN_EMAIL||'—';
+
+  // ── Sección SOLICITUDES (bandeja) ──
+  // Solo Admin Supremo y Super Admin ven las solicitudes pendientes
+  const secSol=document.getElementById('sec-solicitudes');
+  if(secSol)secSol.style.display=(rol==='admin_supremo'||rol==='super_admin')?'block':'none';
+  if(rol==='admin_supremo'||rol==='super_admin')renderSolicitudes();
+
+  // ── Sección PROPONER PROMOCIÓN ──
+  // Solo Admin ve esta sección
+  const secProp=document.getElementById('sec-proponer');
+  if(secProp)secProp.style.display=(rol==='admin')?'block':'none';
+
+  // ── Sección TRANSFERIR ──
+  const secTransf=document.getElementById('sec-transferir');
+  const tituloTransf=document.getElementById('transferir-titulo');
+  const descTransf=document.getElementById('transferir-desc');
+  const botonesTransf=document.getElementById('sec-botones-transferir');
+  if(rol==='admin_supremo'){
+    if(secTransf)secTransf.style.display='block';
+    if(tituloTransf)tituloTransf.textContent='👑 Transferir Admin Supremo';
+    if(descTransf)descTransf.innerHTML='Esta acción es <strong>irreversible</strong>. Transferís tu rol de Admin Supremo a otra persona y no podrás recuperarlo a menos que el nuevo Admin Supremo te lo ceda.';
+    if(botonesTransf)botonesTransf.innerHTML=`<button class="mbtn danger" style="flex:1;padding:10px;font-size:.8rem;" onclick="transferirAdminSupremo()">👑 Transferir mi rol de Admin Supremo</button>`;
+  }else if(rol==='super_admin'){
+    if(secTransf)secTransf.style.display='block';
+    if(tituloTransf)tituloTransf.textContent='🔑 Transferir Super Admin';
+    if(descTransf)descTransf.innerHTML='Podés <strong>promover a Admin</strong> a un usuario autorizado o <strong>transferir</strong> tu rol de Super Admin a otra persona.';
+    if(botonesTransf)botonesTransf.innerHTML=
+      `<button class="mbtn secondary" style="flex:1;padding:10px;font-size:.8rem;" onclick="compartirAdmin()">🤝 Promover a Admin</button>`+
+      `<button class="mbtn danger" style="flex:1;padding:10px;font-size:.8rem;" onclick="cederAdmin()">🔄 Transferir Super Admin</button>`;
+  }else{
+    if(secTransf)secTransf.style.display='none';
+  }
+}
+
 window.cerrarGestionAccesos=function(){
   document.getElementById('overlay-accesos').classList.remove('show');
-  // Cancelar listener reactivo al cerrar
   if(_unsubAccesos){_unsubAccesos();_unsubAccesos=null;}
+  if(_unsubSolicitudes){_unsubSolicitudes();_unsubSolicitudes=null;}
 };
+
 window.agregarAcceso=async function(){
   const input=document.getElementById('nuevo-acceso-email');
   const email=(input.value||'').toLowerCase().trim();
   if(!email||!email.includes('@')){showModal('⚠️','Error','Ingresa un correo válido.');return;}
-  // Verificar contra Firebase directamente, no el cache (evita falsos 'ya existe')
   const snapCheck=await get(rAcceso);
   const adminProtegidos=new Set([ADMIN_SUPREMO_EMAIL,ADMIN_EMAIL].filter(Boolean));
   const yaExiste=snapCheck.val()&&Object.values(snapCheck.val()).some(v=>v&&(v.email||'').toLowerCase().trim()===email);
   if(yaExiste||adminProtegidos.has(email)){
-    showModal('ℹ️','Ya existe','Ese correo ya tiene acceso.');
-    return;
+    showModal('ℹ️','Ya existe','Ese correo ya tiene acceso.');return;
   }
-  // Usar push-style key: timestamp + random para evitar colisiones
   const k=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-  await set(ref(db,`acceso/${k}`),{email,agregadoPor:auth.currentUser?.email||'',ts:Date.now()});
+  await set(ref(db,`acceso/${k}`),{email,rol:'usuario',agregadoPor:auth.currentUser?.email||'',ts:Date.now()});
   input.value='';
   const fb=document.getElementById('acceso-feedback');
   if(fb){fb.textContent='✅ '+email+' agregado correctamente';fb.style.display='block';setTimeout(()=>fb.style.display='none',3000);}
 };
+
 window.quitarAcceso=async function(key){
-  // Protección: verificar que no sea el Admin Supremo ni el Super Admin
   const snapCheck=await get(ref(db,`acceso/${key}`));
   if(snapCheck.exists()){
     const emailObjetivo=(snapCheck.val().email||'').toLowerCase().trim();
     const protegidos=new Set([ADMIN_SUPREMO_EMAIL,ADMIN_EMAIL].filter(Boolean));
     if(protegidos.has(emailObjetivo)){
-      showModal('🔒','Protegido','No se puede quitar el acceso al Admin Supremo o Super Admin.');
-      return;
+      showModal('🔒','Protegido','No se puede quitar el acceso al Admin Supremo.');return;
     }
-  }
-  // Solo Super Admin o Admin Supremo pueden quitar a otros Admins
-  const snapEntrada=snapCheck.exists()?snapCheck:await get(ref(db,`acceso/${key}`));
-  if(snapEntrada.exists()&&snapEntrada.val().esAdmin===true&&!window._esSuperAdmin&&!window._esAdminSupremo){
-    showModal('🔒','Sin permisos','Solo el Super Admin puede quitar acceso a un Administrador.');
-    return;
+    const rolObjetivo=snapCheck.val().rol||'usuario';
+    // Admin no puede quitar a otros admins
+    if((rolObjetivo==='admin'||rolObjetivo==='super_admin')&&!window._esSuperAdmin&&!window._esAdminSupremo){
+      showModal('🔒','Sin permisos','Solo el Super Admin puede quitar acceso a un Administrador.');return;
+    }
   }
   if(!confirm('¿Quitar acceso a este correo?'))return;
   await remove(ref(db,`acceso/${key}`));
 };
-// Listener reactivo para la lista de accesos (se activa al abrir el modal)
+
+// Proponer promoción a Admin (solo rol=admin)
+window.proponerPromocion=async function(){
+  const email=(document.getElementById('proponer-email')?.value||'').trim().toLowerCase();
+  const fb=document.getElementById('proponer-feedback');
+  if(!email){if(fb){fb.style.display='block';fb.style.color='var(--red)';fb.style.background='var(--red-bg)';fb.textContent='⚠️ Seleccioná un usuario primero.';}return;}
+  const k=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  await set(ref(db,`solicitudes/${k}`),{
+    tipo:'promover_admin',
+    emailSolicitante:auth.currentUser?.email||'',
+    emailObjetivo:email,
+    estado:'pendiente',
+    ts:Date.now()
+  });
+  if(fb){fb.style.display='block';fb.style.color='var(--green)';fb.style.background='var(--green-bg)';fb.textContent=`✅ Solicitud enviada al Super Admin para aprobación.`;setTimeout(()=>fb.style.display='none',4000);}
+  document.getElementById('proponer-email').value='';
+};
+
+// Aprobar solicitud (Super Admin / Admin Supremo)
+window.aprobarSolicitud=async function(key,emailObjetivo){
+  const snap=await get(rAcceso);const d=snap.val()||{};
+  const entry=Object.entries(d).find(([k,v])=>(v.email||'').toLowerCase().trim()===emailObjetivo.toLowerCase().trim());
+  if(!entry){showModal('❌','Error','El usuario no está en la lista de accesos.');return;}
+  await update(ref(db,`acceso/${entry[0]}`),{esAdmin:true,rol:'admin',promovidoPor:auth.currentUser?.email||''});
+  await update(ref(db,`solicitudes/${key}`),{estado:'aprobada',resueltoPor:auth.currentUser?.email||'',tsResolucion:Date.now()});
+  showModal('✅','Aprobado',`${emailObjetivo} ahora es Admin.`);
+};
+
+// Rechazar solicitud
+window.rechazarSolicitud=async function(key){
+  await update(ref(db,`solicitudes/${key}`),{estado:'rechazada',resueltoPor:auth.currentUser?.email||'',tsResolucion:Date.now()});
+};
+
+// Transferir Admin Supremo (solo admin_supremo)
+window.transferirAdminSupremo=async function(){
+  const email=(document.getElementById('admin-transfer-email')?.value||'').trim().toLowerCase();
+  const fb=document.getElementById('admin-transfer-feedback');
+  if(!email){if(fb){fb.style.display='block';fb.style.color='var(--red)';fb.style.background='var(--red-bg)';fb.textContent='⚠️ Seleccioná un usuario primero.';}return;}
+  const confirmed=confirm(`¿Transferir el rol de Admin Supremo a ${email}?\n\nEsta acción es IRREVERSIBLE. Solo podrás recuperarlo si el nuevo Admin Supremo te lo cede.`);
+  if(!confirmed)return;
+  const emailActual=(auth.currentUser?.email||'').toLowerCase().trim();
+  window._esAdmin=false;window._esAdminSupremo=false;window._rol='usuario';
+  // Actualizar config
+  await set(ref(db,'config/adminSupremoEmail'),email);
+  await set(ref(db,'config/adminEmail'),email);
+  // Actualizar nodo acceso/
+  const snap=await get(rAcceso);const d=snap.val()||{};
+  const entryNuevo=Object.entries(d).find(([k,v])=>(v.email||'').toLowerCase().trim()===email);
+  if(entryNuevo)await update(ref(db,`acceso/${entryNuevo[0]}`),{esAdmin:true,rol:'admin_supremo',promovidoPor:emailActual});
+  const entryActual=Object.entries(d).find(([k,v])=>(v.email||'').toLowerCase().trim()===emailActual);
+  if(entryActual)await update(ref(db,`acceso/${entryActual[0]}`),{esAdmin:false,rol:'usuario'});
+  if(fb){fb.style.display='block';fb.style.color='var(--green)';fb.style.background='var(--green-bg)';fb.textContent=`✅ Admin Supremo transferido a ${email}. Cerrando sesión…`;}
+  setTimeout(async()=>{document.getElementById('overlay-accesos').classList.remove('show');await signOut(auth);},2000);
+};
+
+// ── LISTENER REACTIVO ─────────────────────────────────────────────────────────
 let _unsubAccesos=null;
+let _unsubSolicitudes=null;
+
 function renderListaAccesos(){
   const lista=document.getElementById('lista-accesos');
   if(!lista)return;
-  // Actualizar dinámicamente el email del Admin Supremo en la cabecera del modal
-  const adminSupremoRow=document.getElementById('admin-supremo-row');
-  if(adminSupremoRow){
-    const emailMostrar=ADMIN_SUPREMO_EMAIL||ADMIN_EMAIL||'—';
-    const labelRol=window._esAdminSupremo&&ADMIN_SUPREMO_EMAIL?'Admin Supremo · Acceso permanente':(ADMIN_EMAIL?'Super Admin · Acceso permanente':'Administrador · Acceso permanente');
-    adminSupremoRow.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;">`+
-      `<div><div style="font-size:.82rem;font-weight:600;color:var(--text1);">${emailMostrar}</div>`+
-      `<div style="font-size:.68rem;color:var(--accent);">${labelRol}</div></div></div>`;
-  }
-  // Cancelar listener previo si existe
   if(_unsubAccesos){_unsubAccesos();_unsubAccesos=null;}
-  // Suscribir listener en tiempo real
   _unsubAccesos=onValue(rAcceso,snap=>{
     const d=snap.val()||{};
     const adminProtegidos=new Set([ADMIN_SUPREMO_EMAIL,ADMIN_EMAIL].filter(Boolean));
-    // Filtrar entradas válidas (con email) y ordenar por ts
-    const entradas=Object.entries(d)
-      .filter(([k,v])=>v&&v.email&&!adminProtegidos.has((v.email||'').toLowerCase().trim()))
-      .sort((a,b)=>(a[1].ts||0)-(b[1].ts||0));
-    // Badge de rol visual
-    function rolBadge(v){
-      if(v.esAdmin){
-        const rolLabel=v.rol==='super_admin'?'SUPER ADMIN':v.rol==='admin_supremo'?'ADMIN SUPREMO':'CO-ADMIN';
-        const color=v.rol==='admin_supremo'?'#8B0000':v.rol==='super_admin'?'var(--blue)':'var(--accent)';
-        return` <span style="font-size:.65rem;background:${color};color:#fff;padding:2px 7px;border-radius:20px;font-weight:700;vertical-align:middle;">${rolLabel}</span>`;
-      }
-      return'';
+    const emailActual=(auth.currentUser?.email||'').toLowerCase().trim();
+    // Filtrar según rol del usuario actual
+    let entradas=Object.entries(d).filter(([k,v])=>v&&v.email);
+    if(window._rol==='super_admin'){
+      // Super Admin no ve al Admin Supremo
+      entradas=entradas.filter(([k,v])=>!adminProtegidos.has((v.email||'').toLowerCase().trim())&&(v.rol||'usuario')!=='admin_supremo');
+    }else if(window._rol==='admin'){
+      // Admin solo ve Usuarios Normales (no admins, no admin supremo)
+      entradas=entradas.filter(([k,v])=>!adminProtegidos.has((v.email||'').toLowerCase().trim())&&!v.esAdmin&&(v.rol||'usuario')==='usuario');
+    }else{
+      // Admin Supremo ve todo excepto su propia fila (ya está arriba)
+      entradas=entradas.filter(([k,v])=>!adminProtegidos.has((v.email||'').toLowerCase().trim()));
     }
+    entradas.sort((a,b)=>(a[1].ts||0)-(b[1].ts||0));
+
+    function rolBadge(v){
+      const r=v.rol||'usuario';
+      const mapa={super_admin:{label:'SUPER ADMIN',bg:'var(--blue)'},admin:{label:'ADMIN',bg:'var(--accent)',color:'#111'},usuario:{label:'',bg:''}};
+      const m=mapa[r];
+      if(!m||!m.label)return'';
+      return` <span style="font-size:.65rem;background:${m.bg};color:${m.color||'#fff'};padding:2px 7px;border-radius:20px;font-weight:700;vertical-align:middle;">${m.label}</span>`;
+    }
+
     lista.innerHTML=entradas.map(([k,v])=>{
       const emailSafe=(v.email||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const porSafe=(v.agregadoPor||'admin').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      // Solo Admin Supremo y Super Admin pueden ver el botón Quitar en admins
-      const puedeQuitar=!v.esAdmin||(window._esSuperAdmin||window._esAdminSupremo);
-      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:10px;margin-bottom:8px;">`+
-        `<div>`+
-        `<div style="font-size:.82rem;font-weight:600;color:var(--text);">${emailSafe}${rolBadge(v)}</div>`+
-        `<div style="font-size:.68rem;color:var(--text3);">Agregado por ${porSafe}</div>`+
-        `</div>`+
-        (puedeQuitar?`<button onclick="quitarAcceso('${k}')" style="background:var(--red,#e53935);border:none;color:#fff;border-radius:8px;padding:6px 10px;font-size:.72rem;cursor:pointer;">Quitar</button>`:'<span style="font-size:.65rem;color:var(--text3);padding:4px 8px;">🔒</span>')+
+      const rolV=v.rol||'usuario';
+      const puedeQuitar=(rolV==='usuario')||(window._esSuperAdmin||window._esAdminSupremo);
+      return`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:10px;margin-bottom:8px;">`+
+        `<div><div style="font-size:.82rem;font-weight:600;color:var(--text);">${emailSafe}${rolBadge(v)}</div>`+
+        `<div style="font-size:.68rem;color:var(--text3);">Agregado por ${porSafe}</div></div>`+
+        (puedeQuitar?`<button onclick="quitarAcceso('${k}')" style="background:var(--red);border:none;color:#fff;border-radius:8px;padding:6px 10px;font-size:.72rem;cursor:pointer;">Quitar</button>`
+          :`<span style="font-size:.65rem;color:var(--text3);padding:4px 8px;">🔒</span>`)+
         `</div>`;
-    }).join('')||'<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:16px;">No hay usuarios adicionales</div>';
-    // Poblar select de transferencia con los usuarios autorizados (excluye al admin actual y ya co-admins)
+    }).join('')||`<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:16px;">No hay usuarios adicionales</div>`;
+
+    // Poblar select de transferencia
     const sel=document.getElementById('admin-transfer-email');
     if(sel){
-      const currentUserEmail=(auth.currentUser?.email||'').toLowerCase();
-      const opts=entradas
-        .filter(([k,v])=>(v.email||'').toLowerCase()!==currentUserEmail && !v.esAdmin)
+      const todosExceptoActual=Object.entries(d)
+        .filter(([k,v])=>v&&v.email&&(v.email||'').toLowerCase().trim()!==emailActual&&(v.rol||'usuario')!=='admin_supremo')
         .map(([k,v])=>`<option value="${(v.email||'').replace(/"/g,'&quot;')}">${v.email}</option>`).join('');
-      sel.innerHTML='<option value="">— Selecciona un usuario autorizado —</option>'+opts;
+      sel.innerHTML='<option value="">— Selecciona un usuario autorizado —</option>'+todosExceptoActual;
     }
+    // Poblar select de proponer (solo usuarios normales)
+    const selProp=document.getElementById('proponer-email');
+    if(selProp){
+      const usuariosNorm=Object.entries(d)
+        .filter(([k,v])=>v&&v.email&&(v.rol||'usuario')==='usuario')
+        .map(([k,v])=>`<option value="${(v.email||'').replace(/"/g,'&quot;')}">${v.email}</option>`).join('');
+      selProp.innerHTML='<option value="">— Selecciona un usuario —</option>'+usuariosNorm;
+    }
+  });
+}
+
+// Renderiza bandeja de solicitudes pendientes
+function renderSolicitudes(){
+  const lista=document.getElementById('lista-solicitudes');
+  if(!lista)return;
+  if(_unsubSolicitudes){_unsubSolicitudes();_unsubSolicitudes=null;}
+  _unsubSolicitudes=onValue(ref(db,'solicitudes'),snap=>{
+    const d=snap.val()||{};
+    const pendientes=Object.entries(d).filter(([k,v])=>v&&v.estado==='pendiente');
+    if(!pendientes.length){
+      lista.innerHTML='<div style="font-size:.8rem;color:var(--text3);text-align:center;padding:10px 0;">Sin solicitudes pendientes</div>';
+      return;
+    }
+    lista.innerHTML=pendientes.map(([k,v])=>{
+      const solSafe=(v.emailSolicitante||'').replace(/</g,'&lt;');
+      const objSafe=(v.emailObjetivo||'').replace(/</g,'&lt;');
+      return`<div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:8px;">`+
+        `<div style="font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:2px;">Promover a Admin: <span style="color:var(--blue);">${objSafe}</span></div>`+
+        `<div style="font-size:.68rem;color:var(--text3);margin-bottom:8px;">Propuesto por ${solSafe}</div>`+
+        `<div style="display:flex;gap:6px;">`+
+        `<button onclick="aprobarSolicitud('${k}','${v.emailObjetivo}')" style="flex:1;padding:7px;background:var(--green);border:none;color:#fff;border-radius:8px;font-size:.75rem;font-weight:700;cursor:pointer;">✅ Aprobar</button>`+
+        `<button onclick="rechazarSolicitud('${k}')" style="flex:1;padding:7px;background:var(--red-bg);border:1.5px solid rgba(197,56,42,.2);color:var(--red);border-radius:8px;font-size:.75rem;font-weight:700;cursor:pointer;">❌ Rechazar</button>`+
+        `</div></div>`;
+    }).join('');
   });
 }
 
