@@ -1390,12 +1390,16 @@ function _aplicarRol(rol){
   window._esSuperAdmin=(rol==='super_admin');
   window._esAdmin=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo');
 
-  // Permisos por rol (basado en MD Gestión de Accesos)
+  // ── Permisos funcionales (MD Gestión de Accesos + asesoramiento stats) ──────
   const puedeGestionarAccesos=(rol==='super_admin'||rol==='admin_supremo');
   const puedeVerHistorial=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo');
   const puedeEditarHistorial=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo');
   const puedeEliminar=(rol==='super_admin'||rol==='admin_supremo');
   const puedeExportar=(rol==='super_admin'||rol==='admin_supremo');
+  // Stats: 3 niveles
+  const puedeVerStatsPropias=(rol==='usuario'||rol==='admin'||rol==='super_admin'||rol==='admin_supremo');
+  const puedeVerStatsBasicas=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo');
+  const puedeVerStatsAvanzadas=(rol==='super_admin'||rol==='admin_supremo');
 
   window._permisos={
     gestionarAccesos:puedeGestionarAccesos,
@@ -1403,26 +1407,51 @@ function _aplicarRol(rol){
     editarHistorial:puedeEditarHistorial,
     eliminar:puedeEliminar,
     exportar:puedeExportar,
+    verStatsPropias:puedeVerStatsPropias,
+    verStatsBasicas:puedeVerStatsBasicas,
+    verStatsAvanzadas:puedeVerStatsAvanzadas,
   };
 
-  // Botón 🔐 gestionar accesos — solo super_admin y admin_supremo
+  // ── Aplicar visibilidad de elementos ─────────────────────────────────────────
+
+  // 🔐 Gestionar accesos — solo super_admin+
   const btnAccesos=document.getElementById('btn-gestionar-accesos');
   if(btnAccesos)btnAccesos.style.display=puedeGestionarAccesos?'flex':'none';
 
-  // Tab 🗂 Historial — solo admin+
+  // 🗂 Tab Historial — solo admin+
   const tabHistorial=document.querySelector('.tab[onclick*=\'historial\']');
   if(tabHistorial)tabHistorial.style.display=puedeVerHistorial?'':'none';
 
-  // Botón exportar Excel — solo super_admin+
+  // 📊 Tab Stats — todos los roles (pero contenido adaptado)
+  // El tab siempre está visible; el contenido se adapta en renderStats()
+  // Solo ocultamos si no tiene NINGÚN permiso de stats (no debería ocurrir)
+
+  // 📊 Botón PDF en stats — solo super_admin+ (exportar_datos)
+  const btnPDF=document.querySelector('[onclick*="generarReportePDF"]');
+  if(btnPDF)btnPDF.style.display=puedeExportar?'':'none';
+
+  // 📊 Botón exportar Excel — solo super_admin+
   document.querySelectorAll('[onclick*="exportarExcel"]').forEach(b=>b.style.display=puedeExportar?'':'none');
 
-  // Botón editar registros historial (admin panel) — solo admin+
+  // 🔐 Botón editar registros historial — solo admin+
   const btnAdminHist=document.getElementById('btn-admin-hist');
   if(btnAdminHist)btnAdminHist.style.display=puedeEditarHistorial?'':'none';
 
-  // Botón 🗑 eliminar en modal hedit — solo super_admin+
+  // 🗑 Botón eliminar en modal hedit — solo super_admin+
   const btnElimHist=document.getElementById('btn-eliminar-hist');
   if(btnElimHist)btnElimHist.style.display=puedeEliminar?'':'none';
+
+  // 💰 Total gastado hoy y resumen por usuario en "Comprados hoy"
+  // usuario: solo ve su propio monto (se filtra en renderLista)
+  // admin+: ve el total global
+  const compTotalDia=document.getElementById('comp-total-dia');
+  // No ocultamos el contenedor, sino que controlamos el resumen por usuario en renderLista
+
+  // Re-renderizar si ya hay datos cargados (para aplicar filtros de rol)
+  if(typeof renderLista==='function'&&(typeof activos!=='undefined')&&activos.length){
+    renderLista();
+    if(document.getElementById('pane-stats')?.classList.contains('active')&&typeof renderStats==='function')renderStats();
+  }
 }
 
 // Devuelve una promesa que se resuelve cuando config Y acceso ya cargaron
@@ -2320,8 +2349,14 @@ function mkCard(item,opts={}){
   const _puedeElim=window._permisos?.eliminar;
   const actions=esComp?`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>`:`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>${_puedeElim?`<button class="ia-sm del" onclick="eliminarItem('${item.fbKey}')" title="Eliminar">🗑</button>`:''}`;
   const derecha=esComp?`<span class="item-precio">${precioStr}</span>`:`<button class="btn-comp-ahora" onclick="cambiarAComprado('${item.fbKey}')">☐ Marcar comprado</button>`;
-  const quienTag=item.quien
-    ?`<span>·</span><span style="font-size:.65rem;font-weight:700;color:var(--text3);">👤 ${item.quien}</span>${(esComp&&item.quienEdito)?`<span style="font-size:.6rem;color:var(--text3);margin-left:3px;">· ✏️ ${item.quienEdito}</span>`:''}`
+  // usuario: en pendientes solo ve su propio "quien"; en comprados ve el suyo propio
+  // admin+: ve todos
+  const _esUsuarioNormal=window._rol==='usuario';
+  const _miNombre=(window._nombreActual||'').toUpperCase().trim();
+  const _esPropio=(item.quien||'').toUpperCase().trim()===_miNombre;
+  const _mostrarQuien=!_esUsuarioNormal||_esPropio;
+  const quienTag=(_mostrarQuien&&item.quien)
+    ?`<span>·</span><span style="font-size:.65rem;font-weight:700;color:var(--text3);">👤 ${item.quien}</span>${(esComp&&item.quienEdito&&!_esUsuarioNormal)?`<span style="font-size:.6rem;color:var(--text3);margin-left:3px;">· ✏️ ${item.quienEdito}</span>`:''}`
     :'';
   return `<div class="${cls}" id="card-${item.fbKey}"><div class="item-icon">${em}</div><div class="item-body"><div class="item-nom">${item.nombre}${esNuevo&&!esComp?' ✦':''}</div><div class="item-sub"><span>${cantStr}${totalStr}</span><span>·</span><span>${item.categoria||''}</span>${rel?`<span>·</span><span>${rel}</span>`:''}${quienTag}</div></div><div class="item-right">${derecha}<div class="item-actions">${actions}</div></div></div>`;
 }
@@ -2358,10 +2393,20 @@ function renderLista(){
       function rGC(items,key,label,icon){if(!items.length)return'';const open=gruposOpen[key]!==false;return `<div class="grupo-header" onclick="toggleGrupo('${key}')"><span class="grupo-title">${icon} ${label}<span class="grupo-badge">${items.length}</span></span><span class="grupo-arrow${open?' open':''}" id="garr-${key}">▼</span></div><div id="gbody-${key}" style="${open?'':'display:none'}">${items.map(it=>mkCard(it,{esComp:true,esNuevo:it.fbKey===ultimoKey})).join('')}</div>`;}
       lc.innerHTML=rGC(gDLC,'c-darlyn','Darlyn y Luz','👑')+rGC(gNosC,'c-nosotros','Nosotros','👥');
     }
-    const totalDia=compHoy.reduce((s,i)=>s+getP(i),0);totEl.style.display='block';totVal.textContent=`S/ ${totalDia.toFixed(2)}`;
+    const _esUsNorm=window._rol==='usuario';
+    const _miNombreCmp=(window._nombreActual||'').toUpperCase().trim();
+    // usuario: solo ve su propio monto; admin+: ve total global
+    const compParaTotal=_esUsNorm?compHoy.filter(i=>(i.quien||'').toUpperCase().trim()===_miNombreCmp):compHoy;
+    const totalDia=compParaTotal.reduce((s,i)=>s+getP(i),0);
+    totEl.style.display=compParaTotal.length?'block':'none';
+    totVal.textContent=`S/ ${totalDia.toFixed(2)}`;
+    if(_esUsNorm){totEl.querySelector('span:first-child').textContent='💰 Mi total hoy';}
+    else{const _tl=totEl.querySelector('span:first-child');if(_tl)_tl.textContent='💰 Total gastado hoy';}
     const _fnb=(window._nombreActual||'DESCONOCIDO').toUpperCase();
     const pu={};
-    compHoy.forEach(i=>{
+    // usuario: solo se muestra su propio resumen
+    const compParaResumen=_esUsNorm?compHoy.filter(i=>(i.quien||'').toUpperCase().trim()===_miNombreCmp):compHoy;
+    compParaResumen.forEach(i=>{
       const u=(i.quien&&i.quien.trim()!==''?i.quien.trim():_fnb).toUpperCase();
       if(!pu[u])pu[u]={alta:0,media:0,baja:0,g:0};
       const _uc=i.urgencia||'baja';
@@ -3577,6 +3622,19 @@ ${secHeader('🕐','Compras recientes del período',`Últimas ${Math.min(10,todo
 function compP(periodos){return periodos.map(p=>{const its=todosComp().filter(i=>{const t=i.tsComprado||0;return t>=p.desde&&t<p.hasta;});return{label:p.label,compras:its.length,gasto:its.reduce((s,i)=>s+getP(i),0)};});}
 function rComp(id,datos){if(!datos.length){document.getElementById(id).innerHTML='<p class="no-data">Sin datos</p>';return;}const mx=datos.reduce((b,d,i)=>d.gasto>datos[b].gasto?i:b,0);const mn=datos.reduce((b,d,i)=>d.gasto<datos[b].gasto?i:b,0);document.getElementById(id).innerHTML=datos.map((d,i)=>`<div class="comp-c${i===mx?' mas':i===mn&&datos.length>1?' menos':''}"><div class="cc-b">${i===mx?'📈':i===mn&&datos.length>1?'📉':''}</div><div class="cc-per">${d.label}</div><div class="cc-g">S/ ${d.gasto.toFixed(2)}</div><div class="cc-c">${d.compras} compras</div></div>`).join('');}
 function renderStats(){
+  // Adaptar stats según rol:
+  // usuario       → ver_stats_propias: solo sus propios registros de hoy
+  // admin         → ver_stats_basicas: operativas (sin costos globales ni comparativas)
+  // super_admin+  → ver_stats_avanzadas: todo
+  const _rolStats=window._rol||'usuario';
+  const _statsAvanz=window._permisos?.verStatsAvanzadas;
+  const _statsBasic=window._permisos?.verStatsBasicas;
+  const _statsProp=window._permisos?.verStatsPropias;
+  const _miNombreStats=(window._nombreActual||'').toUpperCase().trim();
+
+  // Para usuario: filtrar solo sus propios registros; para admin+: todos
+  // (se aplica después de cargar todos)
+
   const hoy=new Date();hoy.setHours(0,0,0,0);
   rComp('comp-dias',compP([-2,-1,0].map(o=>{const d=new Date(hoy);d.setDate(d.getDate()+o);const f=new Date(d);f.setDate(f.getDate()+1);const D=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];return{label:`${D[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}`,desde:d.getTime(),hasta:f.getTime()};})));
   const lun=new Date(hoy);lun.setDate(lun.getDate()-((lun.getDay()+6)%7));
@@ -3589,7 +3647,13 @@ function renderStats(){
   if(sFrom){const d=new Date(sFrom+'T00:00:00');todos=todos.filter(i=>(i.tsComprado||0)>=d.getTime());}
   if(sTo){const d=new Date(sTo+'T23:59:59');todos=todos.filter(i=>(i.tsComprado||0)<=d.getTime());}
   const nd='<p class="no-data">Sin datos en este período</p>';
-  if(!todos.length){['st-top','st-cant','st-freq','st-cat','st-emp','st-ticket','st-diasem'].forEach(id=>document.getElementById(id).innerHTML=nd);return;}
+  // Filtrar según rol:
+  // usuario: solo ve sus propios registros
+  // admin: ve todos pero sin datos sensibles (gasto global) — se controla en el render
+  if(_rolStats==='usuario'&&_miNombreStats){
+    todos=todos.filter(i=>(i.quien||'').toUpperCase().trim()===_miNombreStats);
+  }
+  if(!todos.length){['st-top','st-cant','st-freq','st-cat','st-emp','st-ticket','st-diasem'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=nd;});return;}
   const cP={};todos.forEach(i=>{const n=norm(i.nombre||'');if(!cP[n])cP[n]={nombre:i.nombre,c:0};cP[n].c++;});
   const tP=Object.values(cP).sort((a,b)=>b.c-a.c).slice(0,8);const mP=tP[0]?.c||1;
   document.getElementById('st-top').innerHTML=tP.map(p=>`<div class="sr"><span class="sr-n">${p.nombre}</span><div class="sr-bg"><div class="sr-bar" style="width:${Math.round(p.c/mP*100)}%"></div></div><span class="sr-v">${p.c}x</span></div>`).join('');
@@ -3611,13 +3675,36 @@ function renderStats(){
   document.getElementById('st-freq').innerHTML=freqs.length?freqs.map(f=>`<div class="sr"><span class="sr-n">${f.nombre}</span><span class="sr-e">~${f.avg<1?'<1':Math.round(f.avg)}d · ${f.c}x</span></div>`).join(''):nd;
   const gC={};todos.forEach(i=>{const c=i.categoria||'OTROS';if(!gC[c])gC[c]={gasto:0,cantidad:0};gC[c].cantidad++;const p=getP(i);if(p>0)gC[c].gasto+=p;});
   const tCat=Object.entries(gC).sort((a,b)=>b[1].gasto-a[1].gasto||b[1].cantidad-a[1].cantidad);const mCat=tCat[0]?.[1].gasto||1;
-  document.getElementById('st-cat').innerHTML=tCat.length?tCat.map(([c,d])=>`<div class="sr"><span class="sr-n">${EM[c]||'⚙️'} ${c}</span><div class="sr-bg"><div class="sr-bar" style="width:${mCat>0?Math.round(d.gasto/mCat*100):0}%"></div></div><span class="sr-v">S/ ${d.gasto.toFixed(2)}</span><span class="sr-e">${d.cantidad}x</span></div>`).join(''):nd;
-  const _fallbackNombre=(window._nombreActual||'DESCONOCIDO').toUpperCase();const gE={};todos.forEach(i=>{const raw=(i.quien&&i.quien.trim()!==''?i.quien.trim():_fallbackNombre).toUpperCase();const e=(raw===''||raw==='SIN NOMBRE')?_fallbackNombre:raw;if(!gE[e])gE[e]={t:0,u:0,g:0};gE[e].t++;if(i.urgencia==='alta'||i.urgencia==='urgente')gE[e].u++;const p=getP(i);if(p>0)gE[e].g+=p;});
-  const tE=Object.entries(gE).sort((a,b)=>b[1].t-a[1].t);const mE=tE[0]?.[1].t||1;
-  document.getElementById('st-emp').innerHTML=tE.length?tE.map(([e,d])=>`<div class="sr"><span class="sr-n">👤 ${e}</span><div class="sr-bg"><div class="sr-bar" style="width:${Math.round(d.t/mE*100)}%"></div></div><span class="sr-v">${d.t}</span><span class="sr-e">${d.g>0?`S/ ${d.g.toFixed(2)}`:''}${d.u>0?` 🔴${d.u}`:''}</span></div>`).join(''):nd;
+  const stCatEl=document.getElementById('st-cat');
+  if(stCatEl){
+    if(_statsBasic){
+      // admin+: ve categorías con montos (básico) o sin montos (usuario)
+      const mostrarMonto=_statsBasic; // admin ve cantidades y montos básicos
+      stCatEl.innerHTML=tCat.length?tCat.map(([c,d])=>`<div class="sr"><span class="sr-n">${EM[c]||'⚙️'} ${c}</span><div class="sr-bg"><div class="sr-bar" style="width:${mCat>0?Math.round(d.gasto/mCat*100):0}%"></div></div>${mostrarMonto&&d.gasto>0?`<span class="sr-v">S/ ${d.gasto.toFixed(2)}</span>`:''}<span class="sr-e">${d.cantidad}x</span></div>`).join(''):nd;
+    }else{
+      // usuario: ve categorías pero sin montos
+      stCatEl.innerHTML=tCat.length?tCat.map(([c,d])=>`<div class="sr"><span class="sr-n">${EM[c]||'⚙️'} ${c}</span><div class="sr-bg"><div class="sr-bar" style="width:${mCat>0?Math.round(d.cantidad/tCat[0][1].cantidad*100):0}%"></div></div><span class="sr-e">${d.cantidad}x</span></div>`).join(''):nd;
+    }
+  }
+  // Actividad por persona: solo super_admin+ ve gasto por persona
+  // admin: ve cantidad de registros pero no montos de otros
+  // usuario: ya filtrado a sus propios registros arriba, igual se muestra su propia actividad
+  const _fallbackNombre=(window._nombreActual||'DESCONOCIDO').toUpperCase();
+  const stEmpEl=document.getElementById('st-emp');
+  // Ocultar sección completa de "por persona" para admin (evita comparaciones entre empleados)
+  const _secEmp=stEmpEl?.closest('.stat-card');
+  if(_secEmp)_secEmp.style.display=_statsAvanz?'':'none';
+  if(_statsAvanz){
+    const gE={};todos.forEach(i=>{const raw=(i.quien&&i.quien.trim()!==''?i.quien.trim():_fallbackNombre).toUpperCase();const e=(raw===''||raw==='SIN NOMBRE')?_fallbackNombre:raw;if(!gE[e])gE[e]={t:0,u:0,g:0};gE[e].t++;if(i.urgencia==='alta'||i.urgencia==='urgente')gE[e].u++;const p=getP(i);if(p>0)gE[e].g+=p;});
+    const tE=Object.entries(gE).sort((a,b)=>b[1].t-a[1].t);const mE=tE[0]?.[1].t||1;
+    if(stEmpEl)stEmpEl.innerHTML=tE.length?tE.map(([e,d])=>`<div class="sr"><span class="sr-n">👤 ${e}</span><div class="sr-bg"><div class="sr-bar" style="width:${Math.round(d.t/mE*100)}%"></div></div><span class="sr-v">${d.t}</span><span class="sr-e">${d.g>0?`S/ ${d.g.toFixed(2)}`:''}${d.u>0?` 🔴${d.u}`:''}</span></div>`).join(''):nd;
+  }
 
-  // Ticket promedio y dispersión
-  const conPrecio=todos.filter(i=>getP(i)>0);if(conPrecio.length){
+  // Ticket promedio y dispersión — solo admin+ (super_admin ve todo, admin ve básico)
+  const stTicketEl=document.getElementById('st-ticket');
+  const _secTicket=stTicketEl?.closest('.stat-card');
+  if(_secTicket)_secTicket.style.display=_statsBasic?'':'none';
+  const conPrecio=todos.filter(i=>getP(i)>0);if(_statsBasic&&conPrecio.length){
     const precios=conPrecio.map(i=>getP(i)).sort((a,b)=>a-b);
     const avg=precios.reduce((s,p)=>s+p,0)/precios.length;
     const med=precios.length%2===0?(precios[precios.length/2-1]+precios[precios.length/2])/2:precios[Math.floor(precios.length/2)];
