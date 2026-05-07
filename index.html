@@ -893,29 +893,7 @@ details summary::-webkit-details-marker{display:none;}
       <div id="lista-accesos"></div>
     </div>
 
-    <!-- ═══ SECCIÓN: BANDEJA DE SOLICITUDES ══════════════════════════
-         Visible para: Admin Supremo, Super Admin
-         Muestra solicitudes pendientes de promoción a Admin           -->
-    <div id="sec-solicitudes" style="display:none;margin-top:14px;border-top:1.5px solid var(--border);padding-top:14px;">
-      <div class="field-label" style="font-size:.72rem;margin-bottom:6px;">📬 Solicitudes de promoción pendientes</div>
-      <div style="font-size:.72rem;color:var(--text3);margin-bottom:8px;line-height:1.5;">Solicitudes enviadas por Admins para promover usuarios. El Super Admin las gestiona.</div>
-      <div id="lista-solicitudes">
-        <div style="font-size:.8rem;color:var(--text3);text-align:center;padding:10px 0;">Sin solicitudes pendientes</div>
-      </div>
-    </div>
-
-    <!-- ═══ SECCIÓN: PROPONER PROMOCIÓN A ADMIN ══════════════════════
-         Visible SOLO para: Admin
-         Genera una solicitud que el Super Admin debe aprobar          -->
-    <div id="sec-proponer" style="display:none;margin-top:14px;border-top:1.5px solid var(--border);padding-top:14px;">
-      <div class="field-label" style="font-size:.72rem;margin-bottom:6px;">📤 Proponer promoción a Admin</div>
-      <div style="font-size:.75rem;color:var(--text3);margin-bottom:10px;line-height:1.5;">Seleccioná un usuario para proponer su promoción. El Super Admin recibirá la solicitud y decidirá.</div>
-      <select class="select-f" id="proponer-email" style="margin-bottom:8px;font-size:.85rem;">
-        <option value="">— Selecciona un usuario —</option>
-      </select>
-      <button class="mbtn secondary" style="width:100%;padding:10px;font-size:.85rem;" onclick="proponerPromocion()">📤 Enviar solicitud al Super Admin</button>
-      <div id="proponer-feedback" style="display:none;font-size:.78rem;border-radius:8px;padding:8px 12px;margin-top:8px;text-align:center;"></div>
-    </div>
+    <!-- Solicitudes y proponer: removidos — Admin no tiene acceso al modal 🔐 -->
 
     <!-- ═══ SECCIÓN: TRANSFERENCIA DE ROL ════════════════════════════
          Visible para: Admin Supremo (transferir Admin Supremo)
@@ -1358,29 +1336,22 @@ onValue(rRoles,snap=>{
 });
 
 // Función centralizada para recalcular el rol del usuario activo
+// Lee el campo "rol" directamente desde acceso/{key}/rol
 function _recalcularRolAdmin(){
   const usuarioActivo=auth.currentUser;
   if(!usuarioActivo)return;
   const emailActual=(usuarioActivo.email||'').toLowerCase().trim();
-  const uid=usuarioActivo.uid;
-  // Primero verificar en el nodo roles/ (nuevo sistema)
-  get(ref(db,'roles/'+uid)).then(snapRol=>{
+  get(rAcceso).then(snapAcc=>{
+    const d=snapAcc.val()||{};
+    // Buscar la entrada del usuario actual en acceso/
+    const entrada=Object.values(d).find(v=>v&&(v.email||'').toLowerCase().trim()===emailActual);
     let rol='usuario';
-    if(snapRol.exists()&&snapRol.val().rol){
-      rol=snapRol.val().rol;
-    }else{
-      // Fallback al sistema legado (acceso/ + config/adminEmail)
-      const esAdminPrincipal=(ADMIN_EMAIL&&emailActual===ADMIN_EMAIL)||(ADMIN_SUPREMO_EMAIL&&emailActual===ADMIN_SUPREMO_EMAIL);
-      if(esAdminPrincipal){
-        rol=ADMIN_SUPREMO_EMAIL&&emailActual===ADMIN_SUPREMO_EMAIL?'admin_supremo':'super_admin';
-      }else{
-        // Verificar esAdmin en nodo legado acceso/
-        return get(rAcceso).then(snapAcc=>{
-          const d=snapAcc.val()||{};
-          const esCoAdmin=Object.values(d).some(v=>v&&(v.email||'').toLowerCase().trim()===emailActual&&v.esAdmin===true);
-          _aplicarRol(esCoAdmin?'admin':'usuario');
-        });
-      }
+    if(entrada&&entrada.rol){
+      // Usar el campo rol directamente (admin_supremo, super_admin, admin, usuario)
+      rol=entrada.rol;
+    }else if(entrada&&entrada.esAdmin){
+      // Fallback legado: esAdmin:true sin campo rol = admin
+      rol='admin';
     }
     _aplicarRol(rol);
   });
@@ -1397,10 +1368,11 @@ function _aplicarRol(rol){
   const puedeEditarHistorial=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo');
   const puedeEliminar=(rol==='super_admin'||rol==='admin_supremo');
   const puedeExportar=(rol==='super_admin'||rol==='admin_supremo');
-  // Stats: 3 niveles
-  const puedeVerStatsPropias=(rol==='usuario'||rol==='admin'||rol==='super_admin'||rol==='admin_supremo');
+  // Stats: usuario NO ve el tab stats para nada
+  const puedeVerStatsPropias=false; // usuario no usa stats — solo admin+
   const puedeVerStatsBasicas=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo');
   const puedeVerStatsAvanzadas=(rol==='super_admin'||rol==='admin_supremo');
+  const puedeVerStats=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo');
 
   window._permisos={
     gestionarAccesos:puedeGestionarAccesos,
@@ -1408,7 +1380,7 @@ function _aplicarRol(rol){
     editarHistorial:puedeEditarHistorial,
     eliminar:puedeEliminar,
     exportar:puedeExportar,
-    verStatsPropias:puedeVerStatsPropias,
+    verStats:puedeVerStats,
     verStatsBasicas:puedeVerStatsBasicas,
     verStatsAvanzadas:puedeVerStatsAvanzadas,
   };
@@ -1423,12 +1395,12 @@ function _aplicarRol(rol){
   // Tab historial — usar ID para control confiable
   const tabHistorial=document.getElementById('tab-historial');
   if(tabHistorial)tabHistorial.style.display=puedeVerHistorial?'':'none';
-  // Tab stats — usuario no debe ver el tab stats
+  // Tab stats — solo admin+
   const tabStats=document.getElementById('tab-stats');
-  if(tabStats)tabStats.style.display=puedeVerStatsPropias?'':'none';
+  if(tabStats)tabStats.style.display=puedeVerStats?'':'none';
   // Si el tab activo quedó oculto, volver a lista
   if(!puedeVerHistorial&&document.getElementById('pane-historial')?.classList.contains('active'))switchTab('lista');
-  if(!puedeVerStatsPropias&&document.getElementById('pane-stats')?.classList.contains('active'))switchTab('lista');
+  if(!puedeVerStats&&document.getElementById('pane-stats')?.classList.contains('active'))switchTab('lista');
 
   // 📊 Tab Stats — todos los roles (pero contenido adaptado)
   // El tab siempre está visible; el contenido se adapta en renderStats()
@@ -2361,7 +2333,7 @@ function mkCard(item,opts={}){
   if(esComp)cls=`item-card comp-hoy ${_uc}`;
   if(esNuevo&&!esComp)cls+=` nuevo`;
   const _puedeElim=window._permisos?.eliminar;
-  const _rolMkCard=(window._rol||'usuario');
+  const _rolMkCard=window._rol||'admin'; // si rol no cargó aún, asumir admin (re-render ocurrirá)
   const _esUsuarioCard=_rolMkCard==='usuario';
   const _miNombreMk=(window._nombreActual||'').toUpperCase().trim();
   const _esPropiaMk=(item.quien||'').toUpperCase().trim()===_miNombreMk;
@@ -2374,7 +2346,7 @@ function mkCard(item,opts={}){
   const derecha=esComp?`<span class="item-precio">${precioStr}</span>`:`<button class="btn-comp-ahora" onclick="cambiarAComprado('${item.fbKey}')">☐ Marcar comprado</button>`;
   // usuario: en pendientes solo ve su propio "quien"; en comprados ve el suyo propio
   // admin+: ve todos
-  const _esUsuarioNormal=(window._rol||'usuario')==='usuario'; // solo ocultar quien si es estrictamente usuario
+  const _esUsuarioNormal=window._rol==='usuario'; // null/undefined = no ocultar (admin+ ya cargado)
   const _miNombre=(window._nombreActual||'').toUpperCase().trim();
   const _esPropio=(item.quien||'').toUpperCase().trim()===_miNombre;
   const _mostrarQuien=!_esUsuarioNormal||_esPropio;
@@ -2416,7 +2388,7 @@ function renderLista(){
       function rGC(items,key,label,icon){if(!items.length)return'';const open=gruposOpen[key]!==false;return `<div class="grupo-header" onclick="toggleGrupo('${key}')"><span class="grupo-title">${icon} ${label}<span class="grupo-badge">${items.length}</span></span><span class="grupo-arrow${open?' open':''}" id="garr-${key}">▼</span></div><div id="gbody-${key}" style="${open?'':'display:none'}">${items.map(it=>mkCard(it,{esComp:true,esNuevo:it.fbKey===ultimoKey})).join('')}</div>`;}
       lc.innerHTML=rGC(gDLC,'c-darlyn','Darlyn y Luz','👑')+rGC(gNosC,'c-nosotros','Nosotros','👥');
     }
-    const _esUsNorm=(window._rol||'usuario')==='usuario'; // solo filtrar si es estrictamente usuario
+    const _esUsNorm=window._rol==='usuario'; // null/undefined = admin, ve total global
     const _miNombreCmp=(window._nombreActual||'').toUpperCase().trim();
     // usuario: solo ve su propio monto; admin+: ve total global
     const compParaTotal=_esUsNorm?compHoy.filter(i=>(i.quien||'').toUpperCase().trim()===_miNombreCmp):compHoy;
@@ -2429,7 +2401,7 @@ function renderLista(){
     const pu={};
     // usuario: solo se muestra su propio resumen
     const compParaResumen=_esUsNorm?compHoy.filter(i=>(i.quien||'').toUpperCase().trim()===_miNombreCmp):compHoy;
-    compParaResumen.forEach(i=>{
+    compParaResumen.forEach(i=>{ // admin+: todos; usuario: solo los suyos
       const u=(i.quien&&i.quien.trim()!==''?i.quien.trim():_fnb).toUpperCase();
       if(!pu[u])pu[u]={alta:0,media:0,baja:0,g:0};
       const _uc=i.urgencia||'baja';
@@ -3650,12 +3622,16 @@ function renderStats(){
   // admin         → ver_stats_basicas: operativas (sin costos globales ni comparativas)
   // super_admin+  → ver_stats_avanzadas: todo
   const _rolStats=window._rol||'usuario';
-  // Calcular permisos directamente desde el rol, no desde _permisos
-  // Esto evita el timing issue si _permisos no se seteó aún
+  // Permisos calculados desde rol directamente (no desde _permisos para evitar timing)
   const _statsAvanz=(_rolStats==='super_admin'||_rolStats==='admin_supremo');
   const _statsBasic=(_rolStats==='admin'||_rolStats==='super_admin'||_rolStats==='admin_supremo');
-  const _statsProp=true; // todos pueden ver sus propias stats
   const _miNombreStats=(window._nombreActual||'').toUpperCase().trim();
+  // Si por alguna razón llegó un usuario sin permiso, mostrar mensaje
+  if(!_statsBasic){
+    const c=document.getElementById('pane-stats');
+    if(c)c.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3);font-size:.85rem;">Sin acceso a estadísticas</div>';
+    return;
+  }
 
   // Para usuario: filtrar solo sus propios registros; para admin+: todos
   // (se aplica después de cargar todos)
@@ -3672,9 +3648,8 @@ function renderStats(){
   if(sFrom){const d=new Date(sFrom+'T00:00:00');todos=todos.filter(i=>(i.tsComprado||0)>=d.getTime());}
   if(sTo){const d=new Date(sTo+'T23:59:59');todos=todos.filter(i=>(i.tsComprado||0)<=d.getTime());}
   const nd='<p class="no-data">Sin datos en este período</p>';
-  // Filtrar según rol:
-  // usuario: solo ve sus propios registros
-  // admin: ve todos pero sin datos sensibles (gasto global) — se controla en el render
+  // admin y super_admin+ ven TODOS los registros sin filtrar
+  // (usuario no debería llegar acá — tab oculto — pero por seguridad filtramos)
   if(_rolStats==='usuario'&&_miNombreStats){
     todos=todos.filter(i=>(i.quien||'').toUpperCase().trim()===_miNombreStats);
   }
@@ -4099,35 +4074,26 @@ onAuthStateChanged(auth,async user=>{
     ocultarLogin();
     // Determinar rol completo (4 niveles)
     const emailActual=(user.email||'').toLowerCase().trim();
-    const uid=user.uid;
-    // Verificar en nodo roles/ primero (nuevo sistema)
-    const snapRolUsuario=await get(ref(db,'roles/'+uid));
+    // Leer rol directamente desde acceso/{key}/rol — fuente única de verdad
+    const snapAccRol=await get(rAcceso);
+    const dAccRol=snapAccRol.val()||{};
+    const entradaRol=Object.values(dAccRol).find(v=>v&&(v.email||'').toLowerCase().trim()===emailActual);
     let rolDetectado='usuario';
-    if(snapRolUsuario.exists()&&snapRolUsuario.val().rol){
-      rolDetectado=snapRolUsuario.val().rol;
-    }else{
-      // Fallback: sistema legado (acceso/ + config/adminEmail)
-      const esAdminPrincipal=(ADMIN_EMAIL&&emailActual===ADMIN_EMAIL)||(ADMIN_SUPREMO_EMAIL&&emailActual===ADMIN_SUPREMO_EMAIL);
-      if(esAdminPrincipal){
-        rolDetectado=ADMIN_SUPREMO_EMAIL&&emailActual===ADMIN_SUPREMO_EMAIL?'admin_supremo':'super_admin';
-      }else{
-        const snapAccAdmin=await get(rAcceso);
-        const dAccAdmin=snapAccAdmin.val()||{};
-        const esCoAdmin=Object.values(dAccAdmin).some(v=>v&&(v.email||'').toLowerCase().trim()===emailActual&&v.esAdmin===true);
-        rolDetectado=esCoAdmin?'admin':'usuario';
-      }
+    if(entradaRol&&entradaRol.rol){
+      rolDetectado=entradaRol.rol;
+    }else if(entradaRol&&entradaRol.esAdmin){
+      rolDetectado='admin'; // fallback legado
     }
     _aplicarRol(rolDetectado);
-    // Listener en tiempo real: si el rol cambia, forzar logout
-    onValue(ref(db,'roles/'+uid),snap=>{
+    // Listener en tiempo real sobre acceso/ para detectar cambios de rol
+    onValue(rAcceso,snapLive=>{
       if(!auth.currentUser)return;
-      if(!snap.exists()||snap.val()===null){
-        // Puede que aún esté en el nodo legado — no forzar logout inmediato
-        return;
-      }
-      const nuevoRol=snap.val().rol;
+      const dLive=snapLive.val()||{};
+      const entradaLive=Object.values(dLive).find(v=>v&&(v.email||'').toLowerCase().trim()===emailActual);
+      if(!entradaLive){return;} // puede que aún esté cargando
+      const nuevoRol=entradaLive.rol||(entradaLive.esAdmin?'admin':'usuario');
       if(nuevoRol&&nuevoRol!==window._rol){
-        signOut(auth);
+        _aplicarRol(nuevoRol); // actualizar UI en tiempo real si cambia el rol
       }
     });
     // Iniciar listeners de Firebase
@@ -4207,16 +4173,7 @@ function _adaptarModalPorRol(){
   const emailSupremoEl=document.getElementById('admin-supremo-email');
   if(emailSupremoEl)emailSupremoEl.textContent=ADMIN_SUPREMO_EMAIL||ADMIN_EMAIL||'—';
 
-  // ── Sección SOLICITUDES (bandeja) ──
-  // Solo Admin Supremo y Super Admin ven las solicitudes pendientes
-  const secSol=document.getElementById('sec-solicitudes');
-  if(secSol)secSol.style.display=(rol==='admin_supremo'||rol==='super_admin')?'block':'none';
-  if(rol==='admin_supremo'||rol==='super_admin')renderSolicitudes();
-
-  // ── Sección PROPONER PROMOCIÓN ──
-  // Solo Admin ve esta sección
-  const secProp=document.getElementById('sec-proponer');
-  if(secProp)secProp.style.display=(rol==='admin')?'block':'none';
+  // Solicitudes y proponer: removidos del modal
 
   // ── Sección TRANSFERIR ──
   const secTransf=document.getElementById('sec-transferir');
@@ -4243,7 +4200,6 @@ function _adaptarModalPorRol(){
 window.cerrarGestionAccesos=function(){
   document.getElementById('overlay-accesos').classList.remove('show');
   if(_unsubAccesos){_unsubAccesos();_unsubAccesos=null;}
-  if(_unsubSolicitudes){_unsubSolicitudes();_unsubSolicitudes=null;}
 };
 
 window.agregarAcceso=async function(){
