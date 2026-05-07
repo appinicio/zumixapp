@@ -897,7 +897,8 @@ details summary::-webkit-details-marker{display:none;}
          Visible para: Admin Supremo, Super Admin
          Muestra solicitudes pendientes de promoción a Admin           -->
     <div id="sec-solicitudes" style="display:none;margin-top:14px;border-top:1.5px solid var(--border);padding-top:14px;">
-      <div class="field-label" style="font-size:.72rem;margin-bottom:6px;">📬 Solicitudes pendientes</div>
+      <div class="field-label" style="font-size:.72rem;margin-bottom:6px;">📬 Solicitudes de promoción pendientes</div>
+      <div style="font-size:.72rem;color:var(--text3);margin-bottom:8px;line-height:1.5;">Solicitudes enviadas por Admins para promover usuarios. El Super Admin las gestiona.</div>
       <div id="lista-solicitudes">
         <div style="font-size:.8rem;color:var(--text3);text-align:center;padding:10px 0;">Sin solicitudes pendientes</div>
       </div>
@@ -957,9 +958,9 @@ details summary::-webkit-details-marker{display:none;}
     </div>
   </div>
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('lista')">📋 Lista</div>
-    <div class="tab" onclick="switchTab('historial')">🗂 Historial</div>
-    <div class="tab" onclick="switchTab('stats')">📊 Stats</div>
+    <div class="tab active" id="tab-lista" onclick="switchTab('lista')">📋 Lista</div>
+    <div class="tab" id="tab-historial" onclick="switchTab('historial')">🗂 Historial</div>
+    <div class="tab" id="tab-stats" onclick="switchTab('stats')">📊 Stats</div>
   </div>
 </div>
 
@@ -1419,8 +1420,15 @@ function _aplicarRol(rol){
   if(btnAccesos)btnAccesos.style.display=puedeGestionarAccesos?'flex':'none';
 
   // 🗂 Tab Historial — solo admin+
-  const tabHistorial=document.querySelector('.tab[onclick*=\'historial\']');
+  // Tab historial — usar ID para control confiable
+  const tabHistorial=document.getElementById('tab-historial');
   if(tabHistorial)tabHistorial.style.display=puedeVerHistorial?'':'none';
+  // Tab stats — usuario no debe ver el tab stats
+  const tabStats=document.getElementById('tab-stats');
+  if(tabStats)tabStats.style.display=puedeVerStatsPropias?'':'none';
+  // Si el tab activo quedó oculto, volver a lista
+  if(!puedeVerHistorial&&document.getElementById('pane-historial')?.classList.contains('active'))switchTab('lista');
+  if(!puedeVerStatsPropias&&document.getElementById('pane-stats')?.classList.contains('active'))switchTab('lista');
 
   // 📊 Tab Stats — todos los roles (pero contenido adaptado)
   // El tab siempre está visible; el contenido se adapta en renderStats()
@@ -1501,6 +1509,8 @@ function mostrarApp(n){
   document.getElementById('screen-onboard').style.display='none';
   window._nombreActual=n;
   document.getElementById('brand-user').textContent=n;
+  // Re-aplicar permisos al mostrar la app — resuelve el timing del 🔐 intermitente
+  if(window._rol)setTimeout(()=>_aplicarRol(window._rol),0);
 }
 window.registrarNombre=async function(){
   const v=document.getElementById('ob-input').value.trim().toUpperCase();
@@ -1559,7 +1569,11 @@ window.closeModal=()=>document.getElementById('overlay').classList.remove('show'
 
 // TABS
 window.switchTab=function(t){
-  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['lista','historial','stats'][i]===t));
+  // Usar IDs para no depender de orden/visibilidad de los tabs
+  ['lista','historial','stats'].forEach(name=>{
+    const tab=document.getElementById(`tab-${name}`);
+    if(tab)tab.classList.toggle('active',name===t);
+  });
   document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
   document.getElementById(`pane-${t}`).classList.add('active');
   // Al volver a lista desde otro tab, limpiar form si no hay edición
@@ -2347,11 +2361,20 @@ function mkCard(item,opts={}){
   if(esComp)cls=`item-card comp-hoy ${_uc}`;
   if(esNuevo&&!esComp)cls+=` nuevo`;
   const _puedeElim=window._permisos?.eliminar;
-  const actions=esComp?`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>`:`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>${_puedeElim?`<button class="ia-sm del" onclick="eliminarItem('${item.fbKey}')" title="Eliminar">🗑</button>`:''}`;
+  const _rolMkCard=(window._rol||'usuario');
+  const _esUsuarioCard=_rolMkCard==='usuario';
+  const _miNombreMk=(window._nombreActual||'').toUpperCase().trim();
+  const _esPropiaMk=(item.quien||'').toUpperCase().trim()===_miNombreMk;
+  // usuario: en comprados solo puede editar los suyos propios
+  // admin+: puede editar cualquiera
+  const _puedeEditarEsteComp=!_esUsuarioCard||_esPropiaMk;
+  const actions=esComp
+    ?(_puedeEditarEsteComp?`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>`:'')
+    :`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>${_puedeElim?`<button class="ia-sm del" onclick="eliminarItem('${item.fbKey}')" title="Eliminar">🗑</button>`:''}`;
   const derecha=esComp?`<span class="item-precio">${precioStr}</span>`:`<button class="btn-comp-ahora" onclick="cambiarAComprado('${item.fbKey}')">☐ Marcar comprado</button>`;
   // usuario: en pendientes solo ve su propio "quien"; en comprados ve el suyo propio
   // admin+: ve todos
-  const _esUsuarioNormal=window._rol==='usuario';
+  const _esUsuarioNormal=(window._rol||'usuario')==='usuario'; // solo ocultar quien si es estrictamente usuario
   const _miNombre=(window._nombreActual||'').toUpperCase().trim();
   const _esPropio=(item.quien||'').toUpperCase().trim()===_miNombre;
   const _mostrarQuien=!_esUsuarioNormal||_esPropio;
@@ -2393,7 +2416,7 @@ function renderLista(){
       function rGC(items,key,label,icon){if(!items.length)return'';const open=gruposOpen[key]!==false;return `<div class="grupo-header" onclick="toggleGrupo('${key}')"><span class="grupo-title">${icon} ${label}<span class="grupo-badge">${items.length}</span></span><span class="grupo-arrow${open?' open':''}" id="garr-${key}">▼</span></div><div id="gbody-${key}" style="${open?'':'display:none'}">${items.map(it=>mkCard(it,{esComp:true,esNuevo:it.fbKey===ultimoKey})).join('')}</div>`;}
       lc.innerHTML=rGC(gDLC,'c-darlyn','Darlyn y Luz','👑')+rGC(gNosC,'c-nosotros','Nosotros','👥');
     }
-    const _esUsNorm=window._rol==='usuario';
+    const _esUsNorm=(window._rol||'usuario')==='usuario'; // solo filtrar si es estrictamente usuario
     const _miNombreCmp=(window._nombreActual||'').toUpperCase().trim();
     // usuario: solo ve su propio monto; admin+: ve total global
     const compParaTotal=_esUsNorm?compHoy.filter(i=>(i.quien||'').toUpperCase().trim()===_miNombreCmp):compHoy;
@@ -3627,9 +3650,11 @@ function renderStats(){
   // admin         → ver_stats_basicas: operativas (sin costos globales ni comparativas)
   // super_admin+  → ver_stats_avanzadas: todo
   const _rolStats=window._rol||'usuario';
-  const _statsAvanz=window._permisos?.verStatsAvanzadas;
-  const _statsBasic=window._permisos?.verStatsBasicas;
-  const _statsProp=window._permisos?.verStatsPropias;
+  // Calcular permisos directamente desde el rol, no desde _permisos
+  // Esto evita el timing issue si _permisos no se seteó aún
+  const _statsAvanz=(_rolStats==='super_admin'||_rolStats==='admin_supremo');
+  const _statsBasic=(_rolStats==='admin'||_rolStats==='super_admin'||_rolStats==='admin_supremo');
+  const _statsProp=true; // todos pueden ver sus propias stats
   const _miNombreStats=(window._nombreActual||'').toUpperCase().trim();
 
   // Para usuario: filtrar solo sus propios registros; para admin+: todos
