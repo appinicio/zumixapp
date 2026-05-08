@@ -1213,8 +1213,9 @@ details summary::-webkit-details-marker{display:none;}
         📄 PDF
       </button>
     </div>
-    <!-- Panel fechas colapsable -->
+    <!-- Panel filtros colapsable: fechas + usuario -->
     <div id="stats-extra-filters" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:10px 12px;margin-bottom:8px;gap:8px;flex-direction:column;">
+      <!-- Fechas -->
       <div style="display:flex;gap:8px;align-items:flex-end;">
         <div style="flex:1;">
           <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">Desde</div>
@@ -1225,6 +1226,29 @@ details summary::-webkit-details-marker{display:none;}
           <input type="date" id="stats-date-to" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
         </div>
         <button onclick="limpiarFiltrosStats()" style="flex-shrink:0;padding:6px 12px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕ Limpiar</button>
+      </div>
+      <!-- Filtro por usuario — visible solo para admin+ (se muestra/oculta desde JS) -->
+      <div id="stats-user-filter-wrap" style="display:none;border-top:1px solid var(--border);padding-top:8px;">
+        <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase;">👤 Filtrar por usuario</div>
+        <!-- Admin: mensaje de selección obligatoria -->
+        <div id="stats-user-required-note" style="display:none;font-size:.72rem;color:var(--orange);background:var(--orange-bg,rgba(255,152,0,.1));border-radius:8px;padding:6px 10px;margin-bottom:6px;">
+          ℹ️ Como Admin debés seleccionar un usuario para ver stats.
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="flex:1;position:relative;">
+            <!-- Input de búsqueda/autocompletado -->
+            <input type="text" id="stats-user-input" placeholder="Buscar usuario…"
+              autocomplete="off"
+              class="input-f" style="font-size:.82rem;padding:7px 10px;width:100%;box-sizing:border-box;"
+              oninput="filtrarSugerenciasUsuario()" onfocus="filtrarSugerenciasUsuario()" />
+            <!-- Dropdown de sugerencias -->
+            <div id="stats-user-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:99;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+          </div>
+          <button onclick="limpiarFiltroUsuarioStats()" id="btn-clear-user-stat"
+            style="display:none;flex-shrink:0;padding:6px 10px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
+        </div>
+        <!-- Chip del usuario seleccionado -->
+        <div id="stats-user-chip" style="display:none;margin-top:6px;"></div>
       </div>
     </div>
     <div class="stat-card"><div class="stat-title">🏆 Más comprados</div><div id="st-top"><p class="no-data">Sin datos</p></div></div>
@@ -1306,10 +1330,22 @@ onValue(rAcceso,snap=>{
   _correosAutorizados=new Set();
   if(ADMIN_SUPREMO_EMAIL)_correosAutorizados.add(ADMIN_SUPREMO_EMAIL);
   if(ADMIN_EMAIL)_correosAutorizados.add(ADMIN_EMAIL);
+  // Construir cache email→rol para el filtro de usuario en stats
+  window._usuariosAccesoCache={};
   if(snap.val()){
-    Object.values(snap.val()).forEach(v=>{
-      if(v&&v.email)_correosAutorizados.add(v.email.toLowerCase().trim());
+    Object.entries(snap.val()).forEach(([k,v])=>{
+      if(v&&v.email){
+        _correosAutorizados.add(v.email.toLowerCase().trim());
+        window._usuariosAccesoCache[k]={email:v.email,rol:v.rol||'usuario',_nombre:''};
+      }
     });
+    // Cruzar con usuarios/ para obtener nombres (si ya están cargados)
+    if(window._usuariosNombreCache){
+      Object.values(window._usuariosAccesoCache).forEach(entry=>{
+        const nombreMatch=window._usuariosNombreCache[entry.email.toLowerCase().trim()];
+        if(nombreMatch)entry._nombre=nombreMatch.toUpperCase();
+      });
+    }
   }
   if(!_accesoListo){
     _accesoListo=true;
@@ -1322,6 +1358,41 @@ onValue(rAcceso,snap=>{
     }
   }
   _recalcularRolAdmin();
+});
+
+// Cache nombre para cruzar con acceso/ y determinar rol por nombre
+window._usuariosNombreCache={}; // email.toLowerCase() → nombre
+onValue(ref(db,'usuarios'),snap=>{
+  if(!snap.val())return;
+  window._usuariosNombreCache={};
+  Object.values(snap.val()).forEach(v=>{
+    if(v&&v.email&&v.nombre){
+      window._usuariosNombreCache[v.email.toLowerCase().trim()]=v.nombre.toUpperCase().trim();
+    }
+  });
+  // Actualizar el cache de acceso con nombres recién cargados
+  if(window._usuariosAccesoCache){
+    Object.values(window._usuariosAccesoCache).forEach(entry=>{
+      const nombreMatch=window._usuariosNombreCache[entry.email.toLowerCase().trim()];
+      if(nombreMatch)entry._nombre=nombreMatch.toUpperCase();
+    });
+  }
+});
+
+// Cache nombre→email para cruzar con acceso/ y determinar rol por nombre en stats
+window._usuariosNombreCache={}; // email.toLowerCase() → nombre
+onValue(ref(db,'usuarios'),snap=>{
+  if(!snap.val())return;
+  window._usuariosNombreCache={};
+  Object.values(snap.val()).forEach(v=>{
+    if(v&&v.email&&v.nombre)window._usuariosNombreCache[v.email.toLowerCase().trim()]=v.nombre.toUpperCase().trim();
+  });
+  if(window._usuariosAccesoCache){
+    Object.values(window._usuariosAccesoCache).forEach(entry=>{
+      const n=window._usuariosNombreCache[entry.email.toLowerCase().trim()];
+      if(n)entry._nombre=n;
+    });
+  }
 });
 
 // Escuchar cambios en roles/ (estructura nueva de 4 niveles)
@@ -1427,6 +1498,23 @@ function _aplicarRol(rol){
   const compTotalDia=document.getElementById('comp-total-dia');
   // No ocultamos el contenedor, sino que controlamos el resumen por usuario en renderLista
 
+  // Actualizar visibilidad del filtro de usuario en stats
+  _actualizarVisibilidadFiltroUsuario();
+  // Si el rol es admin y hay un filtro global activo, limpiarlo (puede que no tenga permiso)
+  if(rol==='admin'&&window._filtroUsuarioStats){
+    const permitidos=_obtenerUsuariosPermitidosStats();
+    if(!permitidos.includes(window._filtroUsuarioStats)){
+      window._filtroUsuarioStats=null;
+      const chip=document.getElementById('stats-user-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+    }
+  }
+  // Actualizar visibilidad del filtro de usuario en stats
+  _actualizarVisibilidadFiltroUsuario();
+  // Si el rol es admin y hay filtro activo de un usuario no permitido, limpiar
+  if(rol==='admin'&&window._filtroUsuarioStats){
+    const _permitidos=_obtenerUsuariosPermitidosStats();
+    if(!_permitidos.includes(window._filtroUsuarioStats)){window._filtroUsuarioStats=null;const _chip=document.getElementById('stats-user-chip');if(_chip){_chip.style.display='none';_chip.innerHTML='';}}
+  }
   // Re-renderizar si ya hay datos cargados (para aplicar filtros de rol)
   if(typeof renderLista==='function'&&(typeof activos!=='undefined')&&activos.length){
     renderLista();
@@ -2881,6 +2969,189 @@ window.genWSP=function(tipo){
 window.copiarMsg=function(tipo){const txt=msgs[tipo];if(!txt)return;const id=tipo==='pend'?'cop-pend':'cop-comp';const done=()=>{const m=document.getElementById(id);m.classList.add('show');setTimeout(()=>m.classList.remove('show'),3000);};navigator.clipboard.writeText(txt).then(done).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();});};
 
 // STATS
+// ══ FILTRO DE USUARIO EN STATS ═══════════════════════════════════════════════
+// Variable global: nombre del usuario seleccionado (null = global / todos)
+window._filtroUsuarioStats=null;
+
+// Construye la lista de usuarios permitidos según rol + datos reales de acceso/
+function _obtenerUsuariosPermitidosStats(){
+  const rol=window._rol||'usuario';
+  const miNombre=(window._nombreActual||'').toUpperCase().trim();
+  // Obtener todos los nombres únicos que registraron compras
+  const nombresEnHistorial=new Set();
+  const todosH=todosComp();
+  todosH.forEach(i=>{if(i.quien&&i.quien.trim()!=='')nombresEnHistorial.add(i.quien.trim().toUpperCase());});
+  // Obtener roles de usuarios desde el cache de acceso (ya cargado)
+  // _usuariosAccesoCache se actualiza en onValue(rAcceso)
+  const cache=window._usuariosAccesoCache||{};
+  const getRolPorNombre=(nombre)=>{
+    const entry=Object.values(cache).find(v=>{
+      // Comparar por nombre registrado en usuarios/ si está disponible
+      return (v._nombre||'').toUpperCase()===nombre.toUpperCase();
+    });
+    return entry?.rol||'usuario';
+  };
+  let usuariosPermitidos=[];
+  if(rol==='admin_supremo'){
+    // Ve todos sin restricción
+    usuariosPermitidos=[...nombresEnHistorial];
+  }else if(rol==='super_admin'){
+    // Todos excepto admin_supremo
+    usuariosPermitidos=[...nombresEnHistorial].filter(n=>{
+      const r=getRolPorNombre(n);
+      return r!=='admin_supremo';
+    });
+  }else if(rol==='admin'){
+    // Solo usuarios normales + él mismo
+    usuariosPermitidos=[...nombresEnHistorial].filter(n=>{
+      if(n===miNombre)return true; // siempre incluirse a sí mismo
+      const r=getRolPorNombre(n);
+      return r==='usuario';
+    });
+  }
+  return usuariosPermitidos.sort();
+}
+
+// Mostrar/ocultar el bloque del filtro de usuario según rol, y marcar obligatorio para admin
+function _actualizarVisibilidadFiltroUsuario(){
+  const rol=window._rol||'usuario';
+  const wrap=document.getElementById('stats-user-filter-wrap');
+  const nota=document.getElementById('stats-user-required-note');
+  if(!wrap)return;
+  // admin+: mostrar el filtro
+  wrap.style.display=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo')?'':'none';
+  // admin: mostrar nota de selección obligatoria
+  if(nota)nota.style.display=(rol==='admin')?'block':'none';
+}
+
+// Filtrar sugerencias del autocomplete según texto escrito
+window.filtrarSugerenciasUsuario=function(){
+  const input=document.getElementById('stats-user-input');
+  const sug=document.getElementById('stats-user-suggestions');
+  if(!input||!sug)return;
+  const q=(input.value||'').toUpperCase().trim();
+  const lista=_obtenerUsuariosPermitidosStats();
+  const filtrada=q?lista.filter(n=>n.includes(q)):lista;
+  if(!filtrada.length){sug.style.display='none';return;}
+  sug.innerHTML=filtrada.map(n=>`
+    <div onclick="seleccionarUsuarioStats('${n.replace(/'/g,"\'")}') "
+      style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);"
+      onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">
+      👤 ${n}
+    </div>`).join('');
+  sug.style.display='block';
+};
+
+// Seleccionar un usuario del dropdown
+window.seleccionarUsuarioStats=function(nombre){
+  window._filtroUsuarioStats=nombre.toUpperCase().trim();
+  // Actualizar input y chip
+  const input=document.getElementById('stats-user-input');
+  if(input)input.value='';
+  const sug=document.getElementById('stats-user-suggestions');
+  if(sug)sug.style.display='none';
+  const chip=document.getElementById('stats-user-chip');
+  if(chip){
+    chip.style.display='flex';
+    chip.style.alignItems='center';
+    chip.style.gap='6px';
+    chip.innerHTML=`<span style="font-size:.78rem;background:var(--accent);color:#111;padding:4px 10px;border-radius:20px;font-weight:700;">👤 ${window._filtroUsuarioStats}</span>`;
+  }
+  const btnClear=document.getElementById('btn-clear-user-stat');
+  if(btnClear)btnClear.style.display='';
+  actualizarDotSFilt();
+  renderStats();
+};
+
+// Limpiar filtro de usuario
+window.limpiarFiltroUsuarioStats=function(){
+  window._filtroUsuarioStats=null;
+  const input=document.getElementById('stats-user-input');
+  if(input)input.value='';
+  const sug=document.getElementById('stats-user-suggestions');
+  if(sug)sug.style.display='none';
+  const chip=document.getElementById('stats-user-chip');
+  if(chip){chip.style.display='none';chip.innerHTML='';}
+  const btnClear=document.getElementById('btn-clear-user-stat');
+  if(btnClear)btnClear.style.display='none';
+  actualizarDotSFilt();
+  renderStats();
+};
+
+// Cerrar sugerencias al hacer click fuera
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#stats-user-filter-wrap')){
+    const sug=document.getElementById('stats-user-suggestions');
+    if(sug)sug.style.display='none';
+  }
+});
+
+// ══ FILTRO DE USUARIO EN STATS ═══════════════════════════════════════════════
+window._filtroUsuarioStats=null;
+
+function _obtenerUsuariosPermitidosStats(){
+  const rol=window._rol||'usuario';
+  const miNombre=(window._nombreActual||'').toUpperCase().trim();
+  const nombresEnHistorial=new Set();
+  todosComp().forEach(i=>{if(i.quien&&i.quien.trim()!=='')nombresEnHistorial.add(i.quien.trim().toUpperCase());});
+  const cache=window._usuariosAccesoCache||{};
+  const getRolPorNombre=(nombre)=>{
+    const entry=Object.values(cache).find(v=>(v._nombre||'').toUpperCase()===nombre.toUpperCase());
+    return entry?.rol||'usuario';
+  };
+  if(rol==='admin_supremo')return[...nombresEnHistorial].sort();
+  if(rol==='super_admin')return[...nombresEnHistorial].filter(n=>getRolPorNombre(n)!=='admin_supremo').sort();
+  if(rol==='admin')return[...nombresEnHistorial].filter(n=>{
+    if(n===miNombre)return true;
+    return getRolPorNombre(n)==='usuario';
+  }).sort();
+  return[];
+}
+
+function _actualizarVisibilidadFiltroUsuario(){
+  const rol=window._rol||'usuario';
+  const wrap=document.getElementById('stats-user-filter-wrap');
+  const nota=document.getElementById('stats-user-required-note');
+  if(!wrap)return;
+  wrap.style.display=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo')?'':'none';
+  if(nota)nota.style.display=(rol==='admin')?'block':'none';
+}
+
+window.filtrarSugerenciasUsuario=function(){
+  const input=document.getElementById('stats-user-input');
+  const sug=document.getElementById('stats-user-suggestions');
+  if(!input||!sug)return;
+  const q=(input.value||'').toUpperCase().trim();
+  const lista=_obtenerUsuariosPermitidosStats();
+  const filtrada=q?lista.filter(n=>n.includes(q)):lista;
+  if(!filtrada.length){sug.style.display='none';return;}
+  sug.innerHTML=filtrada.map(n=>`<div onclick="seleccionarUsuarioStats('${n.replace(/'/g,"\'")}') " style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">👤 ${n}</div>`).join('');
+  sug.style.display='block';
+};
+
+window.seleccionarUsuarioStats=function(nombre){
+  window._filtroUsuarioStats=nombre.toUpperCase().trim();
+  const input=document.getElementById('stats-user-input');if(input)input.value='';
+  const sug=document.getElementById('stats-user-suggestions');if(sug)sug.style.display='none';
+  const chip=document.getElementById('stats-user-chip');
+  if(chip){chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';chip.innerHTML=`<span style="font-size:.78rem;background:var(--accent);color:#111;padding:4px 10px;border-radius:20px;font-weight:700;">👤 ${window._filtroUsuarioStats}</span>`;}
+  const btnClear=document.getElementById('btn-clear-user-stat');if(btnClear)btnClear.style.display='';
+  actualizarDotSFilt();renderStats();
+};
+
+window.limpiarFiltroUsuarioStats=function(){
+  window._filtroUsuarioStats=null;
+  const input=document.getElementById('stats-user-input');if(input)input.value='';
+  const sug=document.getElementById('stats-user-suggestions');if(sug)sug.style.display='none';
+  const chip=document.getElementById('stats-user-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+  const btnClear=document.getElementById('btn-clear-user-stat');if(btnClear)btnClear.style.display='none';
+  actualizarDotSFilt();renderStats();
+};
+
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#stats-user-filter-wrap')){const sug=document.getElementById('stats-user-suggestions');if(sug)sug.style.display='none';}
+});
+
 window.setFS=function(el,v){document.querySelectorAll('#filt-stats .fbtn').forEach(b=>b.classList.remove('active'));el.classList.add('active');fStats=v;const df=document.getElementById('stats-date-from');const dt=document.getElementById('stats-date-to');if(df)df.value='';if(dt)dt.value='';actualizarDotSFilt();renderStats();};
 
 window.toggleStatsFiltros=function(){
@@ -2895,15 +3166,17 @@ window.toggleStatsFiltros=function(){
 window.actualizarDotSFilt=function(){
   const df=document.getElementById('stats-date-from')?.value||'';
   const dt=document.getElementById('stats-date-to')?.value||'';
-  const hayFecha=df||dt;
+  const hayFiltro=df||dt||window._filtroUsuarioStats;
   const dot=document.getElementById('sfilt-dot');
-  if(dot)dot.style.display=hayFecha?'block':'none';
-  if(hayFecha) document.querySelectorAll('#filt-stats .fbtn').forEach(b=>b.classList.remove('active'));
+  if(dot)dot.style.display=hayFiltro?'block':'none';
+  if(df||dt) document.querySelectorAll('#filt-stats .fbtn').forEach(b=>b.classList.remove('active'));
 };
 
 window.limpiarFiltrosStats=function(){
   const df=document.getElementById('stats-date-from');if(df)df.value='';
   const dt=document.getElementById('stats-date-to');if(dt)dt.value='';
+  // También limpiar filtro de usuario
+  limpiarFiltroUsuarioStats();
   document.querySelectorAll('#filt-stats .fbtn').forEach(b=>{
     const v=b.getAttribute('onclick')?.match(/'([^']+)'\)/)?.[1];
     b.classList.toggle('active',v===fStats);
@@ -2919,6 +3192,10 @@ window.generarReportePDF=function(){
   let todos=todosComp().filter(i=>(i.tsComprado||0)>=lim);
   if(sFrom){const d=new Date(sFrom+'T00:00:00');todos=todos.filter(i=>(i.tsComprado||0)>=d.getTime());}
   if(sTo){const d=new Date(sTo+'T23:59:59');todos=todos.filter(i=>(i.tsComprado||0)<=d.getTime());}
+  // Aplicar filtro de usuario si está activo
+  if(window._filtroUsuarioStats){
+    todos=todos.filter(i=>(i.quien||'').toUpperCase().trim()===window._filtroUsuarioStats.toUpperCase().trim());
+  }
   if(!todos.length){showModal('📄','Sin datos','No hay registros en el período seleccionado para generar el reporte.');return;}
 
   /* ─── SVG helpers ─── */
@@ -3648,11 +3925,22 @@ function renderStats(){
   if(sFrom){const d=new Date(sFrom+'T00:00:00');todos=todos.filter(i=>(i.tsComprado||0)>=d.getTime());}
   if(sTo){const d=new Date(sTo+'T23:59:59');todos=todos.filter(i=>(i.tsComprado||0)<=d.getTime());}
   const nd='<p class="no-data">Sin datos en este período</p>';
-  // admin y super_admin+ ven TODOS los registros sin filtrar
-  // (usuario no debería llegar acá — tab oculto — pero por seguridad filtramos)
-  if(_rolStats==='usuario'&&_miNombreStats){
-    todos=todos.filter(i=>(i.quien||'').toUpperCase().trim()===_miNombreStats);
+  // Actualizar visibilidad del filtro de usuario según rol
+  _actualizarVisibilidadFiltroUsuario();
+
+  // Admin: OBLIGATORIO seleccionar usuario — no ver stats globales
+  const _filtroUser=window._filtroUsuarioStats;
+  if(_rolStats==='admin'&&!_filtroUser){
+    const ids=['st-top','st-cant','st-freq','st-cat','st-emp','st-ticket','st-diasem'];
+    ids.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<p class="no-data" style="color:var(--orange);">👆 Seleccioná un usuario para ver sus stats</p>';});
+    return;
   }
+
+  // Aplicar filtro de usuario (para todos los roles que lo usen)
+  if(_filtroUser){
+    todos=todos.filter(i=>(i.quien||'').toUpperCase().trim()===_filtroUser.toUpperCase().trim());
+  }
+
   if(!todos.length){['st-top','st-cant','st-freq','st-cat','st-emp','st-ticket','st-diasem'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=nd;});return;}
   const cP={};todos.forEach(i=>{const n=norm(i.nombre||'');if(!cP[n])cP[n]={nombre:i.nombre,c:0};cP[n].c++;});
   const tP=Object.values(cP).sort((a,b)=>b.c-a.c).slice(0,8);const mP=tP[0]?.c||1;
