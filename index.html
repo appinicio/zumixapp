@@ -1505,25 +1505,6 @@ onValue(ref(db,'usuarios'),snap=>{
   if(!snap.val())return;
   window._usuariosNombreCache={};
   Object.values(snap.val()).forEach(v=>{
-    if(v&&v.email&&v.nombre){
-      window._usuariosNombreCache[v.email.toLowerCase().trim()]=v.nombre.toUpperCase().trim();
-    }
-  });
-  // Actualizar el cache de acceso con nombres recién cargados
-  if(window._usuariosAccesoCache){
-    Object.values(window._usuariosAccesoCache).forEach(entry=>{
-      const nombreMatch=window._usuariosNombreCache[entry.email.toLowerCase().trim()];
-      if(nombreMatch)entry._nombre=nombreMatch.toUpperCase();
-    });
-  }
-});
-
-// Cache nombre→email para cruzar con acceso/ y determinar rol por nombre en stats
-window._usuariosNombreCache={}; // email.toLowerCase() → nombre
-onValue(ref(db,'usuarios'),snap=>{
-  if(!snap.val())return;
-  window._usuariosNombreCache={};
-  Object.values(snap.val()).forEach(v=>{
     if(v&&v.email&&v.nombre)window._usuariosNombreCache[v.email.toLowerCase().trim()]=v.nombre.toUpperCase().trim();
   });
   if(window._usuariosAccesoCache){
@@ -1789,7 +1770,7 @@ window.switchTab=function(t){
   // Al volver a lista desde otro tab, limpiar form si no hay edición
   if(t==='lista'&&!editKey){limpiarForm();}
   if(t==='historial')renderHist();
-  if(t==='stats'){renderStats();renderComparaciones();}
+  if(t==='stats'){renderStats();setTimeout(()=>renderComparaciones(),0);}
 };
 window.switchST=function(t){
   // Activar stab correcto por ID
@@ -4964,12 +4945,11 @@ function mostrarLogin(){
   document.getElementById('screen-onboard').style.display='none';
   const tb=document.querySelector('.topbar');
   if(tb)tb.style.display='none';
-  // Resetear cache de accesos para que la próxima sesión siempre verifique Firebase fresco
-  _accesoListo=false;
+  // Limpiar cache de correos autorizados (pero NO resetear _accesoListo ni _accesoResolvers
+  // porque el listener onValue(rAcceso) ya no re-disparará y causaría un deadlock en el próximo login)
   _correosAutorizados=new Set();
   if(ADMIN_SUPREMO_EMAIL)_correosAutorizados.add(ADMIN_SUPREMO_EMAIL);
   if(ADMIN_EMAIL)_correosAutorizados.add(ADMIN_EMAIL);
-  _accesoResolvers=[];
   // Siempre resetear el botón de Google al mostrar login
   _resetBtnGoogle();
   document.getElementById('login-error').style.display='none';
