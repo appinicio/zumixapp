@@ -1250,11 +1250,10 @@ details summary::-webkit-details-marker{display:none;}
         </div>
         <div id="stats-user-chip" style="display:none;margin-top:6px;"></div>
       </div>
-      <!-- Filtro por tipo de usuario — super_admin+ -->
+      <!-- Filtro por tipo de usuario — super_admin+ — se oculta si hay usuario seleccionado -->
       <div id="stats-tipo-filter-wrap" style="display:none;border-top:1px solid var(--border);padding-top:8px;">
         <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase;">👥 Filtrar por tipo</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="fbtn" id="ftipo-todos" onclick="setFiltroTipoUsuario('todos',this)" style="font-size:.72rem;padding:6px 13px;">👁 Todos</button>
           <button class="fbtn" id="ftipo-admins" onclick="setFiltroTipoUsuario('admins',this)" style="font-size:.72rem;padding:6px 13px;">🧑‍💼 Admins</button>
           <button class="fbtn" id="ftipo-usuarios" onclick="setFiltroTipoUsuario('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios</button>
         </div>
@@ -1300,8 +1299,15 @@ details summary::-webkit-details-marker{display:none;}
 
   <!-- ─── SUBPANE: PERÍODOS (antes Comparaciones) ─────────────────────────── -->
   <div class="subpane" id="sp-comparaciones">
-    <div style="font-size:.72rem;color:var(--text3);margin-bottom:10px;padding:8px 10px;background:var(--surface2);border-radius:var(--rsm);border:1px solid var(--border);">
-      📌 Comparación automática de los últimos períodos (días, semanas, meses). Los datos reflejan el filtro de usuario activo.
+    <!-- Nota dinámica — se actualiza desde renderComparaciones() -->
+    <div id="comp-nota-contexto" style="font-size:.72rem;color:var(--text3);margin-bottom:10px;padding:9px 11px;background:var(--surface2);border-radius:var(--rsm);border:1px solid var(--border);line-height:1.6;">
+      📌 Comparación automática de los últimos períodos. Los datos reflejan el filtro de usuario activo.
+    </div>
+    <!-- Explicación de la lógica de comparación -->
+    <div style="font-size:.68rem;color:var(--text3);margin-bottom:10px;padding:8px 11px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);line-height:1.6;">
+      <strong style="color:var(--text2);">¿Cómo funciona?</strong> Cada columna muestra un período distinto (día, semana o mes).
+      El 📈 indica el período con <em>mayor gasto</em> y el 📉 el de <em>menor gasto</em>.
+      Si hay un filtro de usuario o tipo activo en ⚙️, las comparativas se calculan solo sobre esos datos.
     </div>
     <div class="stat-card"><div class="stat-title">📅 Últimos 3 días</div><div class="comp-grid" id="comp-dias"></div></div>
     <div class="stat-card"><div class="stat-title">📅 Últimas 3 semanas</div><div class="comp-grid" id="comp-sem"></div></div>
@@ -1359,8 +1365,23 @@ details summary::-webkit-details-marker{display:none;}
       <!-- Período para la comparación -->
       <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
         <button class="fbtn active" id="cmpf-7d" onclick="setCmpPer('7d',this)" style="font-size:.7rem;padding:5px 11px;">7 días</button>
+        <button class="fbtn" id="cmpf-15d" onclick="setCmpPer('15d',this)" style="font-size:.7rem;padding:5px 11px;">15 días</button>
         <button class="fbtn" id="cmpf-30d" onclick="setCmpPer('30d',this)" style="font-size:.7rem;padding:5px 11px;">Mes</button>
         <button class="fbtn" id="cmpf-todo" onclick="setCmpPer('todo',this)" style="font-size:.7rem;padding:5px 11px;">Todo</button>
+        <button class="fbtn" id="cmpf-rango" onclick="setCmpPer('rango',this)" style="font-size:.7rem;padding:5px 11px;">📅 Rango</button>
+      </div>
+      <!-- Rango de fechas personalizado — visible solo si se selecciona Rango -->
+      <div id="cmp-rango-wrap" style="display:none;margin-bottom:8px;gap:6px;display:none;flex-wrap:wrap;align-items:center;">
+        <div style="display:flex;gap:6px;align-items:center;flex:1;flex-wrap:wrap;">
+          <div style="flex:1;min-width:110px;">
+            <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
+            <input type="date" id="cmp-date-from" class="input-f" style="font-size:.78rem;padding:6px 8px;width:100%;box-sizing:border-box;"/>
+          </div>
+          <div style="flex:1;min-width:110px;">
+            <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
+            <input type="date" id="cmp-date-to" class="input-f" style="font-size:.78rem;padding:6px 8px;width:100%;box-sizing:border-box;"/>
+          </div>
+        </div>
       </div>
       <button onclick="ejecutarComparacion()" style="width:100%;padding:11px;background:var(--text);color:var(--bg);border:none;border-radius:var(--rmd);font-family:var(--ff);font-size:.85rem;font-weight:700;cursor:pointer;transition:var(--transition);">🔄 Comparar</button>
     </div>
@@ -3145,29 +3166,41 @@ function _nombresDeRol(tipoFiltro){
 }
 
 window.setFiltroTipoUsuario=function(tipo,btn){
-  window._filtroTipoUsuarioStats=tipo;
-  // Limpiar filtro individual de usuario cuando se cambia tipo
-  if(window._filtroUsuarioStats){
-    limpiarFiltroUsuarioStats();
+  // Si hay usuario seleccionado, limpiarlo primero
+  if(window._filtroUsuarioStats) limpiarFiltroUsuarioStats();
+  const yaActivo=btn&&btn.classList.contains('active');
+  // Toggle: si ya estaba activo, desactivar (volver a "todos")
+  if(yaActivo){
+    window._filtroTipoUsuarioStats='todos';
+    ['ftipo-admins','ftipo-usuarios'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
+    const chip=document.getElementById('stats-tipo-chip');
+    if(chip){chip.style.display='none';chip.innerHTML='';}
+    // Mostrar filtro de usuario nuevamente
+    const userWrap=document.getElementById('stats-user-filter-wrap');
+    if(userWrap)userWrap.style.display=_esRolConFiltroUser()?'':'none';
+    actualizarDotSFilt();renderStats();return;
   }
-  // Actualizar botones activos
-  ['ftipo-todos','ftipo-admins','ftipo-usuarios'].forEach(id=>{
-    const b=document.getElementById(id);if(b)b.classList.remove('active');
-  });
+  window._filtroTipoUsuarioStats=tipo;
+  ['ftipo-admins','ftipo-usuarios'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
   if(btn)btn.classList.add('active');
-  // Mostrar chip si no es "todos"
+  // Ocultar filtro de usuario mientras hay tipo activo
+  const userWrap=document.getElementById('stats-user-filter-wrap');
+  if(userWrap)userWrap.style.display='none';
+  // Mostrar chip
   const chip=document.getElementById('stats-tipo-chip');
   if(chip){
-    if(tipo==='todos'){chip.style.display='none';chip.innerHTML='';}
-    else{
-      const lbl=tipo==='admins'?'🧑‍💼 Administradores':'👷 Usuarios normales';
-      chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
-      chip.innerHTML=`<span style="font-size:.78rem;background:var(--blue);color:#fff;padding:4px 10px;border-radius:20px;font-weight:700;">${lbl}</span>`;
-    }
+    const lbl=tipo==='admins'?'🧑‍💼 Administradores':'👷 Usuarios normales';
+    chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
+    chip.innerHTML=`<span style="font-size:.78rem;background:var(--blue);color:#fff;padding:4px 10px;border-radius:20px;font-weight:700;">${lbl}</span>
+      <button onclick="setFiltroTipoUsuario('${tipo}',document.getElementById('ftipo-${tipo}'))" style="background:none;border:none;cursor:pointer;font-size:.78rem;color:var(--text3);">✕</button>`;
   }
-  actualizarDotSFilt();
-  renderStats();
+  actualizarDotSFilt();renderStats();
 };
+
+function _esRolConFiltroUser(){
+  const rol=window._rol||'usuario';
+  return rol==='admin'||rol==='super_admin'||rol==='admin_supremo';
+}
 
 // Construye la lista de usuarios permitidos según rol + datos reales de acceso/
 function _obtenerUsuariosPermitidosStats(){
@@ -3215,17 +3248,15 @@ function _actualizarVisibilidadFiltroUsuario(){
   const nota=document.getElementById('stats-user-required-note');
   const tipoWrap=document.getElementById('stats-tipo-filter-wrap');
   if(!wrap)return;
-  // admin+: mostrar el filtro
-  wrap.style.display=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo')?'':'none';
-  // admin: mostrar nota de selección obligatoria
+  const tipoActivo=(window._filtroTipoUsuarioStats&&window._filtroTipoUsuarioStats!=='todos');
+  const usuarioActivo=!!window._filtroUsuarioStats;
+  // Mostrar filtro usuario: solo si no hay tipo activo
+  const puedeVerFiltroUser=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo');
+  wrap.style.display=(puedeVerFiltroUser&&!tipoActivo)?'':'none';
   if(nota)nota.style.display=(rol==='admin')?'block':'none';
-  // Filtro de tipo: solo super_admin y admin_supremo
-  if(tipoWrap)tipoWrap.style.display=(rol==='super_admin'||rol==='admin_supremo')?'':'none';
-  // Inicializar botón "Todos" como activo si ninguno lo está
-  if(rol==='super_admin'||rol==='admin_supremo'){
-    const activo=document.querySelector('#stats-tipo-filter-wrap .fbtn.active');
-    if(!activo){const b=document.getElementById('ftipo-todos');if(b)b.classList.add('active');}
-  }
+  // Mostrar filtro tipo: solo super_admin+ y solo si no hay usuario activo
+  const puedeVerTipo=(rol==='super_admin'||rol==='admin_supremo');
+  if(tipoWrap)tipoWrap.style.display=(puedeVerTipo&&!usuarioActivo)?'':'none';
 }
 
 // Filtrar sugerencias del autocomplete según texto escrito
@@ -3249,37 +3280,35 @@ window.filtrarSugerenciasUsuario=function(){
 // Seleccionar un usuario del dropdown
 window.seleccionarUsuarioStats=function(nombre){
   window._filtroUsuarioStats=nombre.toUpperCase().trim();
-  // Actualizar input y chip
-  const input=document.getElementById('stats-user-input');
-  if(input)input.value='';
-  const sug=document.getElementById('stats-user-suggestions');
-  if(sug)sug.style.display='none';
+  // Limpiar tipo si había uno activo
+  window._filtroTipoUsuarioStats='todos';
+  ['ftipo-admins','ftipo-usuarios'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
+  const tipoChipOld=document.getElementById('stats-tipo-chip');if(tipoChipOld){tipoChipOld.style.display='none';tipoChipOld.innerHTML='';}
+  // Ocultar filtro de tipo mientras hay usuario seleccionado
+  const tipoWrap=document.getElementById('stats-tipo-filter-wrap');if(tipoWrap)tipoWrap.style.display='none';
+  const input=document.getElementById('stats-user-input');if(input)input.value='';
+  const sug=document.getElementById('stats-user-suggestions');if(sug)sug.style.display='none';
   const chip=document.getElementById('stats-user-chip');
   if(chip){
-    chip.style.display='flex';
-    chip.style.alignItems='center';
-    chip.style.gap='6px';
+    chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
     chip.innerHTML=`<span style="font-size:.78rem;background:var(--accent);color:#111;padding:4px 10px;border-radius:20px;font-weight:700;">👤 ${window._filtroUsuarioStats}</span>`;
   }
-  const btnClear=document.getElementById('btn-clear-user-stat');
-  if(btnClear)btnClear.style.display='';
-  actualizarDotSFilt();
-  renderStats();
+  const btnClear=document.getElementById('btn-clear-user-stat');if(btnClear)btnClear.style.display='';
+  actualizarDotSFilt();renderStats();
 };
 
 // Limpiar filtro de usuario
 window.limpiarFiltroUsuarioStats=function(){
   window._filtroUsuarioStats=null;
-  const input=document.getElementById('stats-user-input');
-  if(input)input.value='';
-  const sug=document.getElementById('stats-user-suggestions');
-  if(sug)sug.style.display='none';
-  const chip=document.getElementById('stats-user-chip');
-  if(chip){chip.style.display='none';chip.innerHTML='';}
-  const btnClear=document.getElementById('btn-clear-user-stat');
-  if(btnClear)btnClear.style.display='none';
-  actualizarDotSFilt();
-  renderStats();
+  const input=document.getElementById('stats-user-input');if(input)input.value='';
+  const sug=document.getElementById('stats-user-suggestions');if(sug)sug.style.display='none';
+  const chip=document.getElementById('stats-user-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+  const btnClear=document.getElementById('btn-clear-user-stat');if(btnClear)btnClear.style.display='none';
+  // Restaurar filtro de tipo si corresponde
+  const rol=window._rol||'usuario';
+  const tipoWrap=document.getElementById('stats-tipo-filter-wrap');
+  if(tipoWrap)tipoWrap.style.display=(rol==='super_admin'||rol==='admin_supremo')?'':'none';
+  actualizarDotSFilt();renderStats();
 };
 
 // Cerrar sugerencias al hacer click fuera
@@ -3772,15 +3801,27 @@ window.generarReportePDF=function(){
     <div><span class="brand-periodo">📅 ${periodoLabel}</span></div>
   </td>
   <td class="meta-right">
-    <div class="meta-empresa">🧃 ${empresa}</div>
-    <div class="meta-detail">
-      Generado: <strong>${fechaGen}</strong><br>
-      Filtrado por: <strong>${_pdfNombreHeader}</strong><br>
-      Período: <strong>${periodoLabel}</strong><br>
-      Registros analizados: <strong>${todos.length}</strong>
+    <div class="meta-detail" style="text-align:right;">
+      Generado por: <strong>${window._nombreActual||'—'}</strong><br>
+      Fecha: <strong>${fechaGen}</strong><br>
+      Registros: <strong>${todos.length}</strong>
     </div>
   </td>
 </tr></table>
+
+<!-- FILTRO ACTIVO — banner destacado -->
+<div style="margin:10pt 0 14pt;padding:10pt 14pt;background:#1e1a10;border-left:4pt solid #D4A843;border-radius:6pt;display:flex;align-items:center;gap:12pt;">
+  <div style="font-size:16pt;">🔍</div>
+  <div>
+    <div style="font-size:7pt;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3pt;">Alcance de este reporte</div>
+    <div style="font-size:11pt;font-weight:800;color:#D4A843;letter-spacing:-.01em;">${_pdfNombreHeader}</div>
+    <div style="font-size:7pt;color:#aaa;margin-top:2pt;">
+      ${_pdfFiltroUser?'Filtrado por usuario individual':''}
+      ${(!_pdfFiltroUser&&_pdfTipoFiltro!=='todos')?'Filtrado por tipo de usuario':''}
+      ${(!_pdfFiltroUser&&_pdfTipoFiltro==='todos')?'Datos globales — todos los usuarios':''}
+    </div>
+  </div>
+</div>
 
 <!-- ════ KPIs PRINCIPALES ════ -->
 <table class="kpi-table"><tr>
@@ -4254,14 +4295,17 @@ function renderComparaciones(){
   rComp('comp-dias',compPLocal([-2,-1,0].map(o=>{const d=new Date(hoy);d.setDate(d.getDate()+o);const f=new Date(d);f.setDate(f.getDate()+1);return{label:`${D[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}`,desde:d.getTime(),hasta:f.getTime()};})));
   rComp('comp-sem',compPLocal([-2,-1,0].map(o=>{const i2=new Date(lun);i2.setDate(i2.getDate()+o*7);const f=new Date(i2);f.setDate(f.getDate()+7);return{label:`${String(i2.getDate()).padStart(2,'0')}/${i2.getMonth()+1}`,desde:i2.getTime(),hasta:f.getTime()};})));
   rComp('comp-mes',compPLocal([-2,-1,0].map(o=>{const i2=new Date(hoy.getFullYear(),hoy.getMonth()+o,1);const f=new Date(hoy.getFullYear(),hoy.getMonth()+o+1,1);return{label:`${NM[i2.getMonth()]} ${i2.getFullYear()}`,desde:i2.getTime(),hasta:f.getTime()};})));
-  // Nota si hay filtro activo
-  const notaEl=document.querySelector('#sp-comparaciones > div:first-child');
+  // Nota contextual dinámica
+  const notaEl=document.getElementById('comp-nota-contexto');
   if(notaEl){
     const tipoF=window._filtroTipoUsuarioStats||'todos';
     const tipoLabel=tipoF==='admins'?'Administradores':tipoF==='usuarios'?'Usuarios normales':null;
-    if(_filtroUser)notaEl.textContent=`📌 Comparativas filtradas por usuario: ${_filtroUser}`;
-    else if(tipoLabel)notaEl.textContent=`📌 Comparativas filtradas por tipo: ${tipoLabel}`;
-    else notaEl.textContent=`📌 Comparación automática de períodos. Los datos reflejan el filtro activo.`;
+    if(_filtroUser)
+      notaEl.innerHTML=`📌 Mostrando comparativas solo de: <strong style="color:var(--accent);">👤 ${_filtroUser}</strong>. Cambiá el filtro en ⚙️ para ver otros datos.`;
+    else if(tipoLabel)
+      notaEl.innerHTML=`📌 Filtrando por tipo: <strong style="color:var(--blue);">${tipoLabel}</strong>. Solo se contabilizan registros de ese grupo.`;
+    else
+      notaEl.innerHTML=`📌 Mostrando datos <strong>globales</strong> (todos los usuarios). Podés filtrar por usuario o tipo desde ⚙️.`;
   }
 }
 
@@ -4386,8 +4430,130 @@ window._cmpUserB=null;
 
 window.setCmpPer=function(p,btn){
   window._cmpPerStr=p;
-  ['cmpf-7d','cmpf-30d','cmpf-todo'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
+  ['cmpf-7d','cmpf-15d','cmpf-30d','cmpf-todo','cmpf-rango'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
   if(btn)btn.classList.add('active');
+  // Mostrar/ocultar rango de fechas
+  const rangoWrap=document.getElementById('cmp-rango-wrap');
+  if(rangoWrap)rangoWrap.style.display=p==='rango'?'flex':'none';
+};
+
+window.ejecutarComparacion=function(){
+  const a=window._cmpUserA;const b=window._cmpUserB;
+  const res=document.getElementById('cmp-resultado');
+  if(!a&&!b){showModal('⚠️','Seleccionar usuario','Elige al menos un usuario para comparar.');return;}
+  if(a&&b&&a===b){showModal('⚠️','Mismo usuario','Selecciona dos usuarios distintos para comparar.');return;}
+  // Determinar límite de tiempo
+  const perStr=window._cmpPerStr||'7d';
+  let limDesde=0,limHasta=Date.now();
+  let periodoLabel='';
+  if(perStr==='rango'){
+    const df=document.getElementById('cmp-date-from')?.value;
+    const dt=document.getElementById('cmp-date-to')?.value;
+    if(!df&&!dt){showModal('⚠️','Rango vacío','Ingresá al menos una fecha para el rango.');return;}
+    if(df)limDesde=new Date(df+'T00:00:00').getTime();
+    if(dt)limHasta=new Date(dt+'T23:59:59').getTime();
+    periodoLabel=df&&dt?`${df} → ${dt}`:df?`desde ${df}`:`hasta ${dt}`;
+  }else{
+    limDesde=msL(perStr);
+    periodoLabel={'7d':'últimos 7 días','15d':'últimos 15 días','30d':'último mes','todo':'todo el historial'}[perStr]||perStr;
+  }
+  const todosP=todosComp().filter(i=>{const t=i.tsComprado||0;return t>=limDesde&&t<=limHasta;});
+  function statsUser(nombre){
+    const its=nombre?todosP.filter(i=>(i.quien||'').toUpperCase().trim()===nombre.toUpperCase()):[];
+    const gasto=its.reduce((s,i)=>s+getP(i),0);
+    const conP=its.filter(i=>getP(i)>0);
+    const avg=conP.length?gasto/conP.length:0;
+    const dias=new Set(its.map(i=>{const d=new Date(i.tsComprado||i.ts||0);return`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;})).size;
+    const cats={};its.forEach(i=>{const c=i.categoria||'OTROS';cats[c]=(cats[c]||0)+1;});
+    const favCat=Object.entries(cats).sort((a,b2)=>b2[1]-a[1])[0];
+    const alta=its.filter(i=>i.urgencia==='alta'||i.urgencia==='urgente').length;
+    return{nombre,compras:its.length,gasto,avg,dias,favCat,alta};
+  }
+  const sA=statsUser(a);
+  const sB=b?statsUser(b):null;
+  const colA='var(--blue)';const colB='var(--green)';
+  // Card por usuario
+  const card=(st,col)=>!st?'':`
+    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);padding:14px;flex:1;min-width:0;">
+      <div style="font-size:.65rem;font-weight:700;color:#fff;background:${col};border-radius:20px;padding:3px 10px;display:inline-block;margin-bottom:10px;">👤 ${st.nombre}</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:.75rem;color:var(--text3);">Compras</span>
+        <span style="font-size:.9rem;font-weight:800;color:var(--text);font-family:var(--ffmono);">${st.compras}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:.75rem;color:var(--text3);">Gasto total</span>
+        <span style="font-size:.9rem;font-weight:800;color:var(--accent);font-family:var(--ffmono);">S/ ${st.gasto.toFixed(2)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:.75rem;color:var(--text3);">Ticket promedio</span>
+        <span style="font-size:.88rem;font-weight:700;color:var(--text);font-family:var(--ffmono);">${st.avg>0?'S/ '+st.avg.toFixed(2):'—'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:.75rem;color:var(--text3);">Días activos</span>
+        <span style="font-size:.88rem;font-weight:700;color:var(--text);">${st.dias}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:.75rem;color:var(--text3);">Cat. favorita</span>
+        <span style="font-size:.78rem;font-weight:600;color:var(--text);">${st.favCat?`${EM[st.favCat[0]]||'⚙️'} ${st.favCat[0]}`:'—'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="font-size:.75rem;color:var(--text3);">Alta prioridad</span>
+        <span style="font-size:.88rem;font-weight:700;color:${st.alta>0?'var(--red)':'var(--text3)'};">${st.alta}</span>
+      </div>
+    </div>`;
+  // Ganador con explicación detallada
+  let ganadorHTML='';
+  if(sB){
+    const metricas=[
+      {nombre:'Compras',va:sA.compras,vb:sB.compras,fmt:v=>`${v}`,desc:'Quien registró más compras en el período'},
+      {nombre:'Gasto total',va:sA.gasto,vb:sB.gasto,fmt:v=>`S/ ${v.toFixed(2)}`,desc:'Quien manejó mayor volumen de gasto'},
+      {nombre:'Ticket promedio',va:sA.avg,vb:sB.avg,fmt:v=>v>0?`S/ ${v.toFixed(2)}`:'—',desc:'Quien compra productos de mayor precio unitario'},
+      {nombre:'Días activos',va:sA.dias,vb:sB.dias,fmt:v=>`${v}d`,desc:'Quien tuvo más presencia durante el período'},
+    ];
+    let ptsA=0,ptsB=0;
+    const detalles=metricas.map(m=>{
+      let ganM='empate',icono='➖';
+      if(m.va>m.vb){ganM=a;ptsA++;icono='✅';}
+      else if(m.vb>m.va){ganM=b;ptsB++;icono='✅';}
+      return{...m,ganM,icono};
+    });
+    const ganador=ptsA>ptsB?a:ptsB>ptsA?b:'empate';
+    const colGan=ganador===a?colA:ganador===b?colB:'var(--text3)';
+    const explicacionRows=detalles.map(m=>{
+      const ganCol=m.ganM===a?colA:m.ganM===b?colB:'var(--text3)';
+      return`<div style="padding:7px 0;border-bottom:1px solid var(--border);last-child:border:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+          <span style="font-size:.75rem;font-weight:700;color:var(--text);">${m.nombre}</span>
+          <span style="font-size:.7rem;color:${ganCol};font-weight:700;">${m.ganM==='empate'?'🤝 Empate':`${m.icono} ${m.ganM}`}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--text3);margin-bottom:2px;">
+          <span>${a}: <strong style="color:var(--text);">${m.fmt(m.va)}</strong></span>
+          ${b?`<span>${b}: <strong style="color:var(--text);">${m.fmt(m.vb)}</strong></span>`:''}
+        </div>
+        <div style="font-size:.65rem;color:var(--text3);font-style:italic;">${m.desc}</div>
+      </div>`;
+    }).join('');
+    ganadorHTML=`
+      <div style="margin-top:10px;background:var(--surface);border:1.5px solid ${ganador==='empate'?'var(--border)':colGan};border-radius:var(--rmd);overflow:hidden;">
+        <div style="padding:12px 14px;background:${ganador==='empate'?'var(--surface2)':colGan};text-align:center;">
+          <div style="font-size:.88rem;font-weight:800;color:${ganador==='empate'?'var(--text)':'#fff'};">
+            ${ganador==='empate'?'🤝 Empate técnico':`🏆 Mayor rendimiento global: ${ganador}`}
+          </div>
+          <div style="font-size:.68rem;color:${ganador==='empate'?'var(--text3)':'rgba(255,255,255,.8)'};margin-top:3px;">
+            ${ganador==='empate'?'Ambos usuarios tuvieron resultados equivalentes':`Ganó ${Math.max(ptsA,ptsB)} de ${metricas.length} métricas evaluadas`}
+          </div>
+        </div>
+        <div style="padding:10px 14px;">
+          <div style="font-size:.65rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">📊 Detalle por métrica</div>
+          ${explicacionRows}
+        </div>
+      </div>`;
+  }
+  res.style.display='block';
+  res.innerHTML=`
+    <div style="font-size:.65rem;color:var(--text3);margin-bottom:8px;text-align:center;padding:6px;background:var(--surface2);border-radius:var(--rsm);">📅 Período analizado: <strong>${periodoLabel}</strong> · ${todosP.length} registros totales</div>
+    <div style="display:flex;gap:8px;">${card(sA,colA)}${sB?card(sB,colB):''}</div>
+    ${ganadorHTML}`;
 };
 
 window.filtrarSugerenciasCmp=function(lado){
@@ -4503,9 +4669,6 @@ window.ejecutarComparacion=function(){
   res.innerHTML=`
     <div style="font-size:.65rem;color:var(--text3);margin-bottom:8px;text-align:center;">📅 Período: ${periodoLabel}</div>
     <div style="display:flex;gap:8px;">${card(sA,colA)}${b?card(sB,colB):''}</div>
-    ${ganadorHTML}`;
-};
-
 // ─── LOGS DEL SISTEMA (admin_supremo) ─────────────────────────────────────────
 const rLogs=ref(db,'logs');
 window._logFiltActual='todo';
@@ -5033,14 +5196,23 @@ window.quitarAcceso=async function(key){
   const snapCheck=await get(ref(db,`acceso/${key}`));
   if(snapCheck.exists()){
     const emailObjetivo=(snapCheck.val().email||'').toLowerCase().trim();
+    const emailActualQ=(auth.currentUser?.email||'').toLowerCase().trim();
     const protegidos=new Set([ADMIN_SUPREMO_EMAIL,ADMIN_EMAIL].filter(Boolean));
     if(protegidos.has(emailObjetivo)){
       showModal('🔒','Protegido','No se puede quitar el acceso al Admin Supremo.');return;
+    }
+    // Bloquear auto-quitarse (super_admin no puede quitarse a sí mismo)
+    if(emailObjetivo===emailActualQ){
+      showModal('🚫','No permitido','No podés quitarte el acceso a ti mismo. Para dejar el rol de Super Admin, transferilo a otro usuario desde la sección de transferencia.');return;
     }
     const rolObjetivo=snapCheck.val().rol||'usuario';
     // Admin no puede quitar a otros admins
     if((rolObjetivo==='admin'||rolObjetivo==='super_admin')&&!window._esSuperAdmin&&!window._esAdminSupremo){
       showModal('🔒','Sin permisos','Solo el Super Admin puede quitar acceso a un Administrador.');return;
+    }
+    // Super Admin no puede quitar a otro Super Admin
+    if(rolObjetivo==='super_admin'&&window._esSuperAdmin&&!window._esAdminSupremo){
+      showModal('🔒','Sin permisos','No podés quitar el acceso a otro Super Admin.');return;
     }
   }
   if(!confirm('¿Quitar acceso a este correo?'))return;
@@ -5139,13 +5311,20 @@ function renderListaAccesos(){
       const emailSafe=(v.email||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const porSafe=(v.agregadoPor||'admin').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const rolV=v.rol||'usuario';
-      const puedeQuitar=(rolV==='usuario')||(window._esSuperAdmin||window._esAdminSupremo);
+      const esElMismo=(v.email||'').toLowerCase().trim()===emailActual;
+      const esSuperAdminObj=rolV==='super_admin';
+      // No mostrar Quitar: si es el mismo usuario, si es super_admin viendo a otro super_admin, o si es admin viendo a admins
+      const puedeQuitar=!esElMismo&&
+        (rolV==='usuario'||(window._esSuperAdmin&&!esSuperAdminObj)||window._esAdminSupremo);
+      const btnQuitar=esElMismo
+        ? `<span style="font-size:.62rem;color:var(--text3);padding:4px 8px;background:var(--surface3);border-radius:8px;">Tú</span>`
+        : (puedeQuitar
+          ? `<button onclick="quitarAcceso('${k}')" style="background:var(--red);border:none;color:#fff;border-radius:8px;padding:6px 10px;font-size:.72rem;cursor:pointer;">Quitar</button>`
+          : `<span style="font-size:.65rem;color:var(--text3);padding:4px 8px;">🔒</span>`);
       return`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:10px;margin-bottom:8px;">`+
         `<div><div style="font-size:.82rem;font-weight:600;color:var(--text);">${emailSafe}${rolBadge(v)}</div>`+
         `<div style="font-size:.68rem;color:var(--text3);">Agregado por ${porSafe}</div></div>`+
-        (puedeQuitar?`<button onclick="quitarAcceso('${k}')" style="background:var(--red);border:none;color:#fff;border-radius:8px;padding:6px 10px;font-size:.72rem;cursor:pointer;">Quitar</button>`
-          :`<span style="font-size:.65rem;color:var(--text3);padding:4px 8px;">🔒</span>`)+
-        `</div>`;
+        btnQuitar+`</div>`;
     }).join('')||`<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:16px;">No hay usuarios adicionales</div>`;
 
     // Poblar select de transferencia
