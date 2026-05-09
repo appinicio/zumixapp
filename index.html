@@ -1250,6 +1250,16 @@ details summary::-webkit-details-marker{display:none;}
         <!-- Chip del usuario seleccionado -->
         <div id="stats-user-chip" style="display:none;margin-top:6px;"></div>
       </div>
+      <!-- Filtro por TIPO de usuario — visible solo para super_admin+ -->
+      <div id="stats-tipo-filter-wrap" style="display:none;border-top:1px solid var(--border);padding-top:8px;">
+        <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase;">👥 Filtrar por tipo de usuario</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="fbtn" id="ftipo-todos" onclick="setFiltroTipoUsuario('todos',this)" style="font-size:.72rem;padding:6px 13px;">👁 Todos</button>
+          <button class="fbtn" id="ftipo-admins" onclick="setFiltroTipoUsuario('admins',this)" style="font-size:.72rem;padding:6px 13px;">🧑‍💼 Admins</button>
+          <button class="fbtn" id="ftipo-usuarios" onclick="setFiltroTipoUsuario('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios normales</button>
+        </div>
+        <div id="stats-tipo-chip" style="display:none;margin-top:6px;"></div>
+      </div>
     </div>
     <div class="stat-card"><div class="stat-title">🏆 Más comprados</div><div id="st-top"><p class="no-data">Sin datos</p></div></div>
     <div class="stat-card"><div class="stat-title">📦 Cantidad total comprada</div><div id="st-cant"><p class="no-data">Sin datos</p></div></div>
@@ -1258,6 +1268,10 @@ details summary::-webkit-details-marker{display:none;}
     <div class="stat-card"><div class="stat-title">👤 Actividad por persona</div><div id="st-emp"><p class="no-data">Sin datos</p></div></div>
     <div class="stat-card"><div class="stat-title">🎯 Ticket promedio y dispersión</div><div id="st-ticket"><p class="no-data">Sin datos</p></div></div>
     <div class="stat-card"><div class="stat-title">📆 Gasto por día de semana</div><div id="st-diasem"><p class="no-data">Sin datos</p></div></div>
+    <!-- Métricas avanzadas: solo super_admin+ -->
+    <div class="stat-card" id="sec-ranking-usuarios" style="display:none;"><div class="stat-title">🏅 Ranking de usuarios por compras</div><div id="st-ranking-users"><p class="no-data">Sin datos</p></div></div>
+    <div class="stat-card" id="sec-gasto-usuarios" style="display:none;"><div class="stat-title">💳 Gasto acumulado por usuario</div><div id="st-gasto-users"><p class="no-data">Sin datos</p></div></div>
+    <div class="stat-card" id="sec-ticket-usuarios" style="display:none;"><div class="stat-title">🎯 Ticket promedio por usuario</div><div id="st-ticket-users"><p class="no-data">Sin datos</p></div></div>
   </div>
   <div class="subpane" id="sp-comparaciones">
     <div class="stat-card"><div class="stat-title">📅 Últimos 3 días</div><div class="comp-grid" id="comp-dias"></div></div>
@@ -2972,6 +2986,45 @@ window.copiarMsg=function(tipo){const txt=msgs[tipo];if(!txt)return;const id=tip
 // ══ FILTRO DE USUARIO EN STATS ═══════════════════════════════════════════════
 // Variable global: nombre del usuario seleccionado (null = global / todos)
 window._filtroUsuarioStats=null;
+// Filtro por tipo de usuario: 'todos' | 'admins' | 'usuarios'
+window._filtroTipoUsuarioStats='todos';
+
+// Obtener nombres de usuarios de un tipo específico
+function _nombresDeRol(tipoFiltro){
+  const cache=window._usuariosAccesoCache||{};
+  if(tipoFiltro==='todos')return null; // null = sin restricción
+  const rolTarget=tipoFiltro==='admins'?['admin','super_admin','admin_supremo']:['usuario'];
+  const nombres=new Set();
+  Object.values(cache).forEach(v=>{
+    if(rolTarget.includes(v.rol||'usuario')&&v._nombre)nombres.add(v._nombre.toUpperCase());
+  });
+  return nombres.size?nombres:null;
+}
+
+window.setFiltroTipoUsuario=function(tipo,btn){
+  window._filtroTipoUsuarioStats=tipo;
+  // Limpiar filtro individual de usuario cuando se cambia tipo
+  if(window._filtroUsuarioStats){
+    limpiarFiltroUsuarioStats();
+  }
+  // Actualizar botones activos
+  ['ftipo-todos','ftipo-admins','ftipo-usuarios'].forEach(id=>{
+    const b=document.getElementById(id);if(b)b.classList.remove('active');
+  });
+  if(btn)btn.classList.add('active');
+  // Mostrar chip si no es "todos"
+  const chip=document.getElementById('stats-tipo-chip');
+  if(chip){
+    if(tipo==='todos'){chip.style.display='none';chip.innerHTML='';}
+    else{
+      const lbl=tipo==='admins'?'🧑‍💼 Administradores':'👷 Usuarios normales';
+      chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
+      chip.innerHTML=`<span style="font-size:.78rem;background:var(--blue);color:#fff;padding:4px 10px;border-radius:20px;font-weight:700;">${lbl}</span>`;
+    }
+  }
+  actualizarDotSFilt();
+  renderStats();
+};
 
 // Construye la lista de usuarios permitidos según rol + datos reales de acceso/
 function _obtenerUsuariosPermitidosStats(){
@@ -3017,11 +3070,19 @@ function _actualizarVisibilidadFiltroUsuario(){
   const rol=window._rol||'usuario';
   const wrap=document.getElementById('stats-user-filter-wrap');
   const nota=document.getElementById('stats-user-required-note');
+  const tipoWrap=document.getElementById('stats-tipo-filter-wrap');
   if(!wrap)return;
   // admin+: mostrar el filtro
   wrap.style.display=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo')?'':'none';
   // admin: mostrar nota de selección obligatoria
   if(nota)nota.style.display=(rol==='admin')?'block':'none';
+  // Filtro de tipo: solo super_admin y admin_supremo
+  if(tipoWrap)tipoWrap.style.display=(rol==='super_admin'||rol==='admin_supremo')?'':'none';
+  // Inicializar botón "Todos" como activo si ninguno lo está
+  if(rol==='super_admin'||rol==='admin_supremo'){
+    const activo=document.querySelector('#stats-tipo-filter-wrap .fbtn.active');
+    if(!activo){const b=document.getElementById('ftipo-todos');if(b)b.classList.add('active');}
+  }
 }
 
 // Filtrar sugerencias del autocomplete según texto escrito
@@ -3100,7 +3161,7 @@ window.toggleStatsFiltros=function(){
 window.actualizarDotSFilt=function(){
   const df=document.getElementById('stats-date-from')?.value||'';
   const dt=document.getElementById('stats-date-to')?.value||'';
-  const hayFiltro=df||dt||window._filtroUsuarioStats;
+  const hayFiltro=df||dt||window._filtroUsuarioStats||(window._filtroTipoUsuarioStats&&window._filtroTipoUsuarioStats!=='todos');
   const dot=document.getElementById('sfilt-dot');
   if(dot)dot.style.display=hayFiltro?'block':'none';
   if(df||dt) document.querySelectorAll('#filt-stats .fbtn').forEach(b=>b.classList.remove('active'));
@@ -3111,6 +3172,13 @@ window.limpiarFiltrosStats=function(){
   const dt=document.getElementById('stats-date-to');if(dt)dt.value='';
   // También limpiar filtro de usuario
   limpiarFiltroUsuarioStats();
+  // Limpiar filtro de tipo
+  window._filtroTipoUsuarioStats='todos';
+  ['ftipo-todos','ftipo-admins','ftipo-usuarios'].forEach(id=>{
+    const b=document.getElementById(id);if(b)b.classList.remove('active');
+  });
+  const ftTodos=document.getElementById('ftipo-todos');if(ftTodos)ftTodos.classList.add('active');
+  const tipoChip=document.getElementById('stats-tipo-chip');if(tipoChip){tipoChip.style.display='none';tipoChip.innerHTML='';}
   document.querySelectorAll('#filt-stats .fbtn').forEach(b=>{
     const v=b.getAttribute('onclick')?.match(/'([^']+)'\)/)?.[1];
     b.classList.toggle('active',v===fStats);
@@ -3126,9 +3194,20 @@ window.generarReportePDF=function(){
   let todos=todosComp().filter(i=>(i.tsComprado||0)>=lim);
   if(sFrom){const d=new Date(sFrom+'T00:00:00');todos=todos.filter(i=>(i.tsComprado||0)>=d.getTime());}
   if(sTo){const d=new Date(sTo+'T23:59:59');todos=todos.filter(i=>(i.tsComprado||0)<=d.getTime());}
+  // Determinar etiqueta del "filtrado por"
+  const _pdfFiltroUser=window._filtroUsuarioStats;
+  const _pdfTipoFiltro=window._filtroTipoUsuarioStats||'todos';
+  let _pdfNombreHeader='';// para el header derecho del PDF
   // Aplicar filtro de usuario si está activo
-  if(window._filtroUsuarioStats){
-    todos=todos.filter(i=>(i.quien||'').toUpperCase().trim()===window._filtroUsuarioStats.toUpperCase().trim());
+  if(_pdfFiltroUser){
+    todos=todos.filter(i=>(i.quien||'').toUpperCase().trim()===_pdfFiltroUser.toUpperCase().trim());
+    _pdfNombreHeader=_pdfFiltroUser;
+  }else if(_pdfTipoFiltro!=='todos'){
+    const npt=_nombresDeRol(_pdfTipoFiltro);
+    if(npt&&npt.size)todos=todos.filter(i=>npt.has((i.quien||'').toUpperCase().trim()));
+    _pdfNombreHeader=_pdfTipoFiltro==='admins'?'Administradores':'Usuarios normales';
+  }else{
+    _pdfNombreHeader='Global';
   }
   if(!todos.length){showModal('📄','Sin datos','No hay registros en el período seleccionado para generar el reporte.');return;}
 
@@ -3223,9 +3302,9 @@ window.generarReportePDF=function(){
   const fN={};todos.forEach(i=>{const n=(i.nombre||'').toLowerCase().trim();if(!fN[n])fN[n]={nombre:i.nombre,ts:[]};fN[n].ts.push(i.tsComprado||i.ts||0);});
   const freqs=Object.values(fN).filter(p=>p.ts.length>=2).map(p=>{p.ts.sort((a,b)=>a-b);const diffs=[];for(let j=1;j<p.ts.length;j++)diffs.push((p.ts[j]-p.ts[j-1])/864e5);return{nombre:p.nombre,avg:diffs.reduce((s,d)=>s+d,0)/diffs.length,c:p.ts.length};}).sort((a,b)=>a.avg-b.avg).slice(0,8);
 
-  // Comparativas
+  // Comparativas — calculadas sobre el set ya filtrado por usuario/tipo
   const hoy=new Date();hoy.setHours(0,0,0,0);
-  const compPer=(desde,hasta)=>{const its=todosComp().filter(i=>{const t=i.tsComprado||0;return t>=desde&&t<hasta;});return{compras:its.length,gasto:its.reduce((s,i)=>s+getP(i),0)};};
+  const compPer=(desde,hasta)=>{const its=todos.filter(i=>{const t=i.tsComprado||0;return t>=desde&&t<hasta;});return{compras:its.length,gasto:its.reduce((s,i)=>s+getP(i),0)};};
   const lun=new Date(hoy);lun.setDate(lun.getDate()-((lun.getDay()+6)%7));
   const semAct=compPer(lun.getTime(),lun.getTime()+7*864e5);
   const semAnt=compPer(lun.getTime()-7*864e5,lun.getTime());
@@ -3553,6 +3632,7 @@ window.generarReportePDF=function(){
     <div class="meta-empresa">🧃 ${empresa}</div>
     <div class="meta-detail">
       Generado: <strong>${fechaGen}</strong><br>
+      Filtrado por: <strong>${_pdfNombreHeader}</strong><br>
       Período: <strong>${periodoLabel}</strong><br>
       Registros analizados: <strong>${todos.length}</strong>
     </div>
@@ -3874,6 +3954,22 @@ function renderStats(){
   if(_filtroUser){
     todos=todos.filter(i=>(i.quien||'').toUpperCase().trim()===_filtroUser.toUpperCase().trim());
   }
+  // Aplicar filtro de tipo de usuario (solo super_admin+)
+  const _tipoFiltro=(_statsAvanz)?(window._filtroTipoUsuarioStats||'todos'):'todos';
+  if(_tipoFiltro!=='todos'&&!_filtroUser){
+    const nombresPorTipo=_nombresDeRol(_tipoFiltro);
+    if(nombresPorTipo&&nombresPorTipo.size){
+      todos=todos.filter(i=>nombresPorTipo.has((i.quien||'').toUpperCase().trim()));
+    }
+  }
+
+  // Mostrar/ocultar secciones avanzadas de usuarios
+  const secRanking=document.getElementById('sec-ranking-usuarios');
+  const secGastoU=document.getElementById('sec-gasto-usuarios');
+  const secTicketU=document.getElementById('sec-ticket-usuarios');
+  if(secRanking)secRanking.style.display=_statsAvanz&&!_filtroUser?'':'none';
+  if(secGastoU)secGastoU.style.display=_statsAvanz&&!_filtroUser?'':'none';
+  if(secTicketU)secTicketU.style.display=_statsAvanz&&!_filtroUser?'':'none';
 
   if(!todos.length){['st-top','st-cant','st-freq','st-cat','st-emp','st-ticket','st-diasem'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=nd;});return;}
   const cP={};todos.forEach(i=>{const n=norm(i.nombre||'');if(!cP[n])cP[n]={nombre:i.nombre,c:0};cP[n].c++;});
@@ -3976,6 +4072,46 @@ function renderStats(){
       }
     });
   });
+
+  // ══ NUEVAS MÉTRICAS AVANZADAS: Ranking / Gasto / Ticket por usuario (super_admin+) ══
+  if(_statsAvanz&&!_filtroUser){
+    // Construir mapa por usuario de TODOS los registros del período (sin filtro tipo pero con filtro fecha)
+    const sFrom2=document.getElementById('stats-date-from')?.value;
+    const sTo2=document.getElementById('stats-date-to')?.value;
+    const lim2=sFrom2||sTo2?0:msL(fStats);
+    let todosU=todosComp().filter(i=>(i.tsComprado||0)>=lim2);
+    if(sFrom2){const d=new Date(sFrom2+'T00:00:00');todosU=todosU.filter(i=>(i.tsComprado||0)>=d.getTime());}
+    if(sTo2){const d=new Date(sTo2+'T23:59:59');todosU=todosU.filter(i=>(i.tsComprado||0)<=d.getTime());}
+    // Si hay filtro de tipo, restringir aquí también
+    if(_tipoFiltro!=='todos'){
+      const npt=_nombresDeRol(_tipoFiltro);
+      if(npt&&npt.size)todosU=todosU.filter(i=>npt.has((i.quien||'').toUpperCase().trim()));
+    }
+    const gUsuario={};const _fb2=(window._nombreActual||'DESCONOCIDO').toUpperCase();
+    todosU.forEach(i=>{const u=(i.quien&&i.quien.trim()!==''?i.quien.trim():_fb2).toUpperCase();if(!gUsuario[u])gUsuario[u]={t:0,g:0,precios:[]};gUsuario[u].t++;const p=getP(i);if(p>0){gUsuario[u].g+=p;gUsuario[u].precios.push(p);}});
+    const nd2='<p class="no-data">Sin datos</p>';
+    // Ranking por compras
+    const rankingU=Object.entries(gUsuario).sort((a,b)=>b[1].t-a[1].t);
+    const mRank=rankingU[0]?.[1].t||1;
+    const medals=['🥇','🥈','🥉'];
+    const stRankEl=document.getElementById('st-ranking-users');
+    if(stRankEl)stRankEl.innerHTML=rankingU.length?rankingU.map(([u,d],i)=>`<div class="sr" style="align-items:center;">
+      <span style="font-size:.85rem;font-weight:800;width:22px;flex-shrink:0;text-align:center;">${i<3?medals[i]:i+1+'.'}</span>
+      <span class="sr-n">👤 ${u}</span>
+      <div class="sr-bg"><div class="sr-bar" style="width:${Math.round(d.t/mRank*100)}%"></div></div>
+      <span class="sr-v">${d.t}</span>
+    </div>`).join(''):nd2;
+    // Gasto por usuario
+    const gastoU=Object.entries(gUsuario).sort((a,b)=>b[1].g-a[1].g);
+    const mGasto=gastoU[0]?.[1].g||1;
+    const stGastoEl=document.getElementById('st-gasto-users');
+    if(stGastoEl)stGastoEl.innerHTML=gastoU.length?gastoU.map(([u,d])=>`<div class="sr"><span class="sr-n">👤 ${u}</span><div class="sr-bg"><div class="sr-bar" style="width:${Math.round(d.g/mGasto*100)}%"></div></div><span class="sr-v" style="width:auto;font-size:.72rem;">S/ ${d.g.toFixed(2)}</span></div>`).join(''):nd2;
+    // Ticket promedio por usuario
+    const ticketU=Object.entries(gUsuario).filter(([u,d])=>d.precios.length>0).map(([u,d])=>{const avg=d.precios.reduce((s,p)=>s+p,0)/d.precios.length;return{u,avg,cnt:d.t};}).sort((a,b)=>b.avg-a.avg);
+    const mTicket=ticketU[0]?.avg||1;
+    const stTicketEl2=document.getElementById('st-ticket-users');
+    if(stTicketEl2)stTicketEl2.innerHTML=ticketU.length?ticketU.map(d=>`<div class="sr"><span class="sr-n">👤 ${d.u}</span><div class="sr-bg"><div class="sr-bar" style="width:${Math.round(d.avg/mTicket*100)}%"></div></div><span class="sr-v" style="width:auto;font-size:.72rem;">S/ ${d.avg.toFixed(2)}</span><span class="sr-e">${d.cnt}x</span></div>`).join(''):nd2;
+  }
 
 }
 
