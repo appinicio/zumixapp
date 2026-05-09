@@ -1190,20 +1190,26 @@ details summary::-webkit-details-marker{display:none;}
 
 <!-- PANE STATS -->
 <div class="pane" id="pane-stats">
-  <div class="subtabs">
-    <div class="stab active" onclick="switchST('metricas')">📊 Métricas</div>
-    <div class="stab" onclick="switchST('comparaciones')">📅 Comparaciones</div>
+  <!-- Subtabs dinámicos por rol (se ajustan desde _aplicarRol) -->
+  <div class="subtabs" id="stats-subtabs" style="overflow-x:auto;flex-wrap:nowrap;gap:5px;scrollbar-width:none;">
+    <div class="stab active" id="stab-metricas" onclick="switchST('metricas')" style="white-space:nowrap;flex-shrink:0;">📊 Análisis</div>
+    <div class="stab" id="stab-comparaciones" onclick="switchST('comparaciones')" style="white-space:nowrap;flex-shrink:0;">📅 Períodos</div>
+    <div class="stab" id="stab-usuarios" onclick="switchST('usuarios')" style="display:none;white-space:nowrap;flex-shrink:0;">👥 Usuarios</div>
+    <div class="stab" id="stab-comparar" onclick="switchST('comparar')" style="display:none;white-space:nowrap;flex-shrink:0;">🔄 Comparar</div>
+    <div class="stab" id="stab-logs" onclick="switchST('logs')" style="display:none;white-space:nowrap;flex-shrink:0;">🛠 Logs</div>
   </div>
+
+  <!-- ─── SUBPANE: ANÁLISIS (antes Métricas) ─────────────────────────────── -->
   <div class="subpane active" id="sp-metricas">
-    <!-- Filtros stats: períodos + toggle fechas + PDF -->
+    <!-- Filtros: períodos + toggle + PDF -->
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
       <div id="filt-stats" style="display:flex;gap:6px;overflow-x:auto;flex:1;padding-bottom:2px;scrollbar-width:none;">
-        <button class="fbtn active" onclick="setFS(this,'7d')">Semana</button>
-        <button class="fbtn" onclick="setFS(this,'15d')">Quincenal</button>
-        <button class="fbtn" onclick="setFS(this,'30d')">Mensual</button>
+        <button class="fbtn active" onclick="setFS(this,'7d')">7 días</button>
+        <button class="fbtn" onclick="setFS(this,'15d')">15 días</button>
+        <button class="fbtn" onclick="setFS(this,'30d')">Mes</button>
         <button class="fbtn" onclick="setFS(this,'todo')">Todo</button>
       </div>
-      <button id="btn-toggle-sfiltros" onclick="toggleStatsFiltros()" title="Filtro por fechas"
+      <button id="btn-toggle-sfiltros" onclick="toggleStatsFiltros()" title="Filtros avanzados"
         style="flex-shrink:0;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--transition);position:relative;">
         ⚙️
         <span id="sfilt-dot" style="display:none;position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:var(--accent);border:1.5px solid var(--surface);"></span>
@@ -1213,9 +1219,8 @@ details summary::-webkit-details-marker{display:none;}
         📄 PDF
       </button>
     </div>
-    <!-- Panel filtros colapsable: fechas + usuario -->
+    <!-- Panel filtros colapsable -->
     <div id="stats-extra-filters" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:10px 12px;margin-bottom:8px;gap:8px;flex-direction:column;">
-      <!-- Fechas -->
       <div style="display:flex;gap:8px;align-items:flex-end;">
         <div style="flex:1;">
           <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">Desde</div>
@@ -1227,56 +1232,155 @@ details summary::-webkit-details-marker{display:none;}
         </div>
         <button onclick="limpiarFiltrosStats()" style="flex-shrink:0;padding:6px 12px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕ Limpiar</button>
       </div>
-      <!-- Filtro por usuario — visible solo para admin+ (se muestra/oculta desde JS) -->
+      <!-- Filtro por usuario — admin+ -->
       <div id="stats-user-filter-wrap" style="display:none;border-top:1px solid var(--border);padding-top:8px;">
         <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase;">👤 Filtrar por usuario</div>
-        <!-- Admin: mensaje de selección obligatoria -->
         <div id="stats-user-required-note" style="display:none;font-size:.72rem;color:var(--orange);background:var(--orange-bg,rgba(255,152,0,.1));border-radius:8px;padding:6px 10px;margin-bottom:6px;">
-          ℹ️ Como Admin debés seleccionar un usuario para ver stats.
+          ℹ️ Como Admin debés seleccionar un usuario para ver sus stats.
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
           <div style="flex:1;position:relative;">
-            <!-- Input de búsqueda/autocompletado -->
-            <input type="text" id="stats-user-input" placeholder="Buscar usuario…"
-              autocomplete="off"
+            <input type="text" id="stats-user-input" placeholder="Buscar usuario…" autocomplete="off"
               class="input-f" style="font-size:.82rem;padding:7px 10px;width:100%;box-sizing:border-box;"
               oninput="filtrarSugerenciasUsuario()" onfocus="filtrarSugerenciasUsuario()" />
-            <!-- Dropdown de sugerencias -->
             <div id="stats-user-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:99;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
           </div>
           <button onclick="limpiarFiltroUsuarioStats()" id="btn-clear-user-stat"
             style="display:none;flex-shrink:0;padding:6px 10px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
         </div>
-        <!-- Chip del usuario seleccionado -->
         <div id="stats-user-chip" style="display:none;margin-top:6px;"></div>
       </div>
-      <!-- Filtro por TIPO de usuario — visible solo para super_admin+ -->
+      <!-- Filtro por tipo de usuario — super_admin+ -->
       <div id="stats-tipo-filter-wrap" style="display:none;border-top:1px solid var(--border);padding-top:8px;">
-        <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase;">👥 Filtrar por tipo de usuario</div>
+        <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase;">👥 Filtrar por tipo</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button class="fbtn" id="ftipo-todos" onclick="setFiltroTipoUsuario('todos',this)" style="font-size:.72rem;padding:6px 13px;">👁 Todos</button>
           <button class="fbtn" id="ftipo-admins" onclick="setFiltroTipoUsuario('admins',this)" style="font-size:.72rem;padding:6px 13px;">🧑‍💼 Admins</button>
-          <button class="fbtn" id="ftipo-usuarios" onclick="setFiltroTipoUsuario('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios normales</button>
+          <button class="fbtn" id="ftipo-usuarios" onclick="setFiltroTipoUsuario('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios</button>
         </div>
         <div id="stats-tipo-chip" style="display:none;margin-top:6px;"></div>
       </div>
     </div>
+
+    <!-- KPI RESUMEN — visible siempre (admin+) -->
+    <div id="st-kpi-resumen" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);padding:13px 12px;box-shadow:var(--sh);">
+        <div style="font-size:.58rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;">💰 Gasto total</div>
+        <div id="kpi-gasto" style="font-size:1.35rem;font-weight:800;color:var(--text);font-family:var(--ffmono);letter-spacing:-.03em;">—</div>
+        <div id="kpi-gasto-sub" style="font-size:.62rem;color:var(--text3);margin-top:2px;"></div>
+      </div>
+      <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);padding:13px 12px;box-shadow:var(--sh);">
+        <div style="font-size:.58rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;">🛒 Compras</div>
+        <div id="kpi-compras" style="font-size:1.35rem;font-weight:800;color:var(--text);font-family:var(--ffmono);letter-spacing:-.03em;">—</div>
+        <div id="kpi-compras-sub" style="font-size:.62rem;color:var(--text3);margin-top:2px;"></div>
+      </div>
+      <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);padding:13px 12px;box-shadow:var(--sh);">
+        <div style="font-size:.58rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;">🎯 Ticket promedio</div>
+        <div id="kpi-ticket" style="font-size:1.35rem;font-weight:800;color:var(--accent);font-family:var(--ffmono);letter-spacing:-.03em;">—</div>
+        <div id="kpi-ticket-sub" style="font-size:.62rem;color:var(--text3);margin-top:2px;"></div>
+      </div>
+      <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);padding:13px 12px;box-shadow:var(--sh);">
+        <div style="font-size:.58rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;">📅 Días activos</div>
+        <div id="kpi-dias" style="font-size:1.35rem;font-weight:800;color:var(--text);font-family:var(--ffmono);letter-spacing:-.03em;">—</div>
+        <div id="kpi-dias-sub" style="font-size:.62rem;color:var(--text3);margin-top:2px;"></div>
+      </div>
+    </div>
+
+    <!-- Cards de análisis -->
     <div class="stat-card"><div class="stat-title">🏆 Más comprados</div><div id="st-top"><p class="no-data">Sin datos</p></div></div>
-    <div class="stat-card"><div class="stat-title">📦 Cantidad total comprada</div><div id="st-cant"><p class="no-data">Sin datos</p></div></div>
-    <div class="stat-card"><div class="stat-title">⏱ Frecuencia de recompra</div><div id="st-freq"><p class="no-data">Sin datos</p></div></div>
     <div class="stat-card"><div class="stat-title">💰 Gasto por categoría</div><div id="st-cat"><p class="no-data">Sin datos</p></div></div>
-    <div class="stat-card"><div class="stat-title">👤 Actividad por persona</div><div id="st-emp"><p class="no-data">Sin datos</p></div></div>
-    <div class="stat-card"><div class="stat-title">🎯 Ticket promedio y dispersión</div><div id="st-ticket"><p class="no-data">Sin datos</p></div></div>
+    <div class="stat-card"><div class="stat-title">⏱ Frecuencia de recompra</div><div id="st-freq"><p class="no-data">Sin datos</p></div></div>
+    <div class="stat-card"><div class="stat-title">📦 Cantidad acumulada</div><div id="st-cant"><p class="no-data">Sin datos</p></div></div>
     <div class="stat-card"><div class="stat-title">📆 Gasto por día de semana</div><div id="st-diasem"><p class="no-data">Sin datos</p></div></div>
-    <!-- Métricas avanzadas: solo super_admin+ -->
-    <div class="stat-card" id="sec-ranking-usuarios" style="display:none;"><div class="stat-title">🏅 Ranking de usuarios por compras</div><div id="st-ranking-users"><p class="no-data">Sin datos</p></div></div>
-    <div class="stat-card" id="sec-gasto-usuarios" style="display:none;"><div class="stat-title">💳 Gasto acumulado por usuario</div><div id="st-gasto-users"><p class="no-data">Sin datos</p></div></div>
-    <div class="stat-card" id="sec-ticket-usuarios" style="display:none;"><div class="stat-title">🎯 Ticket promedio por usuario</div><div id="st-ticket-users"><p class="no-data">Sin datos</p></div></div>
+    <!-- Ticket: solo admin+ (reemplaza la versión anterior, ahora más compacta debajo de KPIs) -->
+    <div class="stat-card" id="sec-ticket-card"><div class="stat-title">🎯 Dispersión de precios</div><div id="st-ticket"><p class="no-data">Sin datos</p></div></div>
+    <!-- Actividad por persona: solo super_admin+ -->
+    <div class="stat-card" id="sec-emp-card" style="display:none;"><div class="stat-title">👤 Actividad por persona</div><div id="st-emp"><p class="no-data">Sin datos</p></div></div>
   </div>
+
+  <!-- ─── SUBPANE: PERÍODOS (antes Comparaciones) ─────────────────────────── -->
   <div class="subpane" id="sp-comparaciones">
+    <div style="font-size:.72rem;color:var(--text3);margin-bottom:10px;padding:8px 10px;background:var(--surface2);border-radius:var(--rsm);border:1px solid var(--border);">
+      📌 Comparación automática de los últimos períodos (días, semanas, meses). Los datos reflejan el filtro de usuario activo.
+    </div>
     <div class="stat-card"><div class="stat-title">📅 Últimos 3 días</div><div class="comp-grid" id="comp-dias"></div></div>
     <div class="stat-card"><div class="stat-title">📅 Últimas 3 semanas</div><div class="comp-grid" id="comp-sem"></div></div>
     <div class="stat-card"><div class="stat-title">📅 Últimos 3 meses</div><div class="comp-grid" id="comp-mes"></div></div>
+  </div>
+
+  <!-- ─── SUBPANE: USUARIOS (super_admin+) ────────────────────────────────── -->
+  <div class="subpane" id="sp-usuarios">
+    <!-- Filtro tipo dentro de la tab de usuarios -->
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+      <button class="fbtn active" id="ufilt-todos" onclick="setUFiltTipo('todos',this)" style="font-size:.72rem;padding:6px 13px;">👁 Todos</button>
+      <button class="fbtn" id="ufilt-admins" onclick="setUFiltTipo('admins',this)" style="font-size:.72rem;padding:6px 13px;">🧑‍💼 Admins</button>
+      <button class="fbtn" id="ufilt-usuarios" onclick="setUFiltTipo('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios</button>
+    </div>
+    <!-- KPI resumen global de la sección usuarios -->
+    <div id="u-kpi-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;"></div>
+    <!-- Ranking compras -->
+    <div class="stat-card"><div class="stat-title">🏅 Ranking — N° de compras</div><div id="st-ranking-users"><p class="no-data">Sin datos</p></div></div>
+    <!-- Ranking gasto -->
+    <div class="stat-card"><div class="stat-title">💳 Ranking — Gasto acumulado</div><div id="st-gasto-users"><p class="no-data">Sin datos</p></div></div>
+    <!-- Ticket por usuario -->
+    <div class="stat-card"><div class="stat-title">🎯 Ticket promedio por usuario</div><div id="st-ticket-users"><p class="no-data">Sin datos</p></div></div>
+    <!-- Días activos por usuario -->
+    <div class="stat-card"><div class="stat-title">📅 Días activos por usuario</div><div id="st-dias-users"><p class="no-data">Sin datos</p></div></div>
+    <!-- Categoría favorita por usuario -->
+    <div class="stat-card"><div class="stat-title">🏷 Categoría favorita por usuario</div><div id="st-cat-users"><p class="no-data">Sin datos</p></div></div>
+  </div>
+
+  <!-- ─── SUBPANE: COMPARAR USUARIOS (super_admin+) ────────────────────────── -->
+  <div class="subpane" id="sp-comparar">
+    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:14px;box-shadow:var(--sh);margin-bottom:10px;">
+      <div style="font-size:.68rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">👥 Seleccionar usuarios a comparar</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <div style="flex:1;">
+          <div style="font-size:.62rem;color:var(--text3);font-weight:700;margin-bottom:4px;">Usuario A</div>
+          <div style="position:relative;">
+            <input type="text" id="cmp-user-a-input" placeholder="Buscar…" autocomplete="off"
+              class="input-f" style="font-size:.82rem;padding:7px 10px;width:100%;box-sizing:border-box;"
+              oninput="filtrarSugerenciasCmp('a')" onfocus="filtrarSugerenciasCmp('a')" />
+            <div id="cmp-sug-a" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:99;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:140px;overflow-y:auto;"></div>
+          </div>
+          <div id="cmp-chip-a" style="display:none;margin-top:5px;"></div>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:.62rem;color:var(--text3);font-weight:700;margin-bottom:4px;">Usuario B</div>
+          <div style="position:relative;">
+            <input type="text" id="cmp-user-b-input" placeholder="Buscar…" autocomplete="off"
+              class="input-f" style="font-size:.82rem;padding:7px 10px;width:100%;box-sizing:border-box;"
+              oninput="filtrarSugerenciasCmp('b')" onfocus="filtrarSugerenciasCmp('b')" />
+            <div id="cmp-sug-b" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:99;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:140px;overflow-y:auto;"></div>
+          </div>
+          <div id="cmp-chip-b" style="display:none;margin-top:5px;"></div>
+        </div>
+      </div>
+      <!-- Período para la comparación -->
+      <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+        <button class="fbtn active" id="cmpf-7d" onclick="setCmpPer('7d',this)" style="font-size:.7rem;padding:5px 11px;">7 días</button>
+        <button class="fbtn" id="cmpf-30d" onclick="setCmpPer('30d',this)" style="font-size:.7rem;padding:5px 11px;">Mes</button>
+        <button class="fbtn" id="cmpf-todo" onclick="setCmpPer('todo',this)" style="font-size:.7rem;padding:5px 11px;">Todo</button>
+      </div>
+      <button onclick="ejecutarComparacion()" style="width:100%;padding:11px;background:var(--text);color:var(--bg);border:none;border-radius:var(--rmd);font-family:var(--ff);font-size:.85rem;font-weight:700;cursor:pointer;transition:var(--transition);">🔄 Comparar</button>
+    </div>
+    <div id="cmp-resultado" style="display:none;"></div>
+  </div>
+
+  <!-- ─── SUBPANE: LOGS (admin_supremo ONLY) ──────────────────────────────── -->
+  <div class="subpane" id="sp-logs">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:.72rem;color:var(--text3);">Registro de actividad del sistema</div>
+      <button onclick="renderLogs()" style="font-size:.72rem;padding:5px 11px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);color:var(--text2);cursor:pointer;font-family:var(--ff);font-weight:700;">↺ Actualizar</button>
+    </div>
+    <!-- Filtro por tipo de acción -->
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+      <button class="fbtn active" id="lfilt-todo" onclick="setLogFilt('todo',this)" style="font-size:.7rem;padding:5px 11px;">Todo</button>
+      <button class="fbtn" id="lfilt-eliminar" onclick="setLogFilt('eliminar',this)" style="font-size:.7rem;padding:5px 11px;">🗑 Eliminaciones</button>
+      <button class="fbtn" id="lfilt-editar" onclick="setLogFilt('editar',this)" style="font-size:.7rem;padding:5px 11px;">✏️ Ediciones</button>
+      <button class="fbtn" id="lfilt-exportar" onclick="setLogFilt('exportar',this)" style="font-size:.7rem;padding:5px 11px;">📊 Exportaciones</button>
+    </div>
+    <div id="lista-logs"><p class="no-data">Cargando logs…</p></div>
   </div>
 </div>
 </div>
@@ -1491,6 +1595,17 @@ function _aplicarRol(rol){
   // El tab siempre está visible; el contenido se adapta en renderStats()
   // Solo ocultamos si no tiene NINGÚN permiso de stats (no debería ocurrir)
 
+  // ── Subtabs de Stats dinámicos según rol ─────────────────────────────────────
+  // admin: solo Análisis + Períodos
+  // super_admin: + Usuarios + Comparar
+  // admin_supremo: + Logs
+  const stTabUsuarios=document.getElementById('stab-usuarios');
+  const stTabComparar=document.getElementById('stab-comparar');
+  const stTabLogs=document.getElementById('stab-logs');
+  if(stTabUsuarios)stTabUsuarios.style.display=(rol==='super_admin'||rol==='admin_supremo')?'':'none';
+  if(stTabComparar)stTabComparar.style.display=(rol==='super_admin'||rol==='admin_supremo')?'':'none';
+  if(stTabLogs)stTabLogs.style.display=(rol==='admin_supremo')?'':'none';
+
   // 📊 Botón PDF en stats — solo super_admin+ (exportar_datos)
   const btnPDF=document.querySelector('[onclick*="generarReportePDF"]');
   if(btnPDF)btnPDF.style.display=puedeExportar?'':'none';
@@ -1652,12 +1767,23 @@ window.switchTab=function(t){
   document.getElementById(`pane-${t}`).classList.add('active');
   // Al volver a lista desde otro tab, limpiar form si no hay edición
   if(t==='lista'&&!editKey){limpiarForm();}
-  if(t==='historial')renderHist();if(t==='stats')renderStats();
+  if(t==='historial')renderHist();
+  if(t==='stats'){renderStats();renderComparaciones();}
 };
 window.switchST=function(t){
-  document.querySelectorAll('.stab').forEach((el,i)=>el.classList.toggle('active',['metricas','comparaciones'][i]===t));
+  // Activar stab correcto por ID
+  ['metricas','comparaciones','usuarios','comparar','logs'].forEach(id=>{
+    const el=document.getElementById(`stab-${id}`);
+    if(el)el.classList.toggle('active',id===t);
+  });
   document.querySelectorAll('.subpane').forEach(p=>p.classList.remove('active'));
-  document.getElementById(`sp-${t}`).classList.add('active');
+  const sp=document.getElementById(`sp-${t}`);
+  if(sp)sp.classList.add('active');
+  // Renderizar sección al activar
+  if(t==='metricas')renderStats();
+  if(t==='comparaciones')renderComparaciones();
+  if(t==='usuarios')renderUsuariosTab();
+  if(t==='logs')renderLogs();
 };
 let _skipLimpiarForm=false;
 window.switchLista=function(t){
@@ -2627,7 +2753,13 @@ window.exportarExcel=function(){
   const cols=['Nombre','Cantidad','Formato','Contenido/formato','Unidad base','Total calculado','Categoría','Urgencia','Precio total','Costo unitario','Quién','Responsable','Fecha compra'];
   const esc=v=>'"'+(String(v||'').replace(/"/g,'""'))+'"';
   const rows=todos.map(it=>{const d=new Date(it.tsComprado||it.ts||0);const fT=`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;const cant=it.compra?.cantidad||it.cantidad||1;const fmt=it.compra?.formato||it.unidad||'und';const cc=parseFloat(it.contenido_por_formato?.cantidad)||0;const cu2=it.contenido_por_formato?.unidad||it.unidad_base||'';const total=parseFloat(it.total_calculado)||0;const p=getP(it);const cunit=p&&total?formatCostoUnitario(p,total,cu2):'';const ccDisp=cc&&cu2?formatearUnidad(cc,cu2):'';const totalDisp=total&&cu2?formatearUnidad(total,cu2):'';return [it.nombre,cant,fmt,ccDisp,cu2,totalDisp,it.categoria||'',it.urgencia||'normal',p?`S/ ${p.toFixed(2)}`:'',cunit,it.quien||'',it.responsable||'',fT].map(esc).join(',');});
-  const csv='\uFEFF'+cols.map(esc).join(',')+'\n'+rows.join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');const now=new Date();const M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];a.href=url;a.download=`zumix_${now.getDate()}${M[now.getMonth()]}${now.getFullYear()}.csv`;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  const csv='\uFEFF'+cols.map(esc).join(',')+'\n'+rows.join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  const now=new Date();const M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  a.href=url;a.download=`zumix_${now.getDate()}${M[now.getMonth()]}${now.getFullYear()}.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  escribirLog('exportar',`Excel: ${todos.length} registros exportados`);
 };
 
 // MODAL EDICIÓN HISTORIAL
@@ -2883,10 +3015,21 @@ window.guardarEditHist=function(){
   const payload={nombre:nom,cantidad:cant,unidad:fmt,precio:pre,precio_total:pre,categoria:cat,urgencia:urg,responsable:resp,quien,quienEdito:quienEditoVal,tsEdito:tsEditoVal,tsComprado,ts:editHistItem.ts||tsComprado,compra:{cantidad:cant,formato:fmt},contenido_por_formato:{cantidad:contCant,unidad:contUnd},unidad_base:contUnd,total_calculado:totalCalc,variaciones:varsGuardadas};
   const _ref=editHistItem._tipo==='activo'?`faltantes/${editHistItem.fbKey}`:`archivo/${editHistItem.fbKey}`;
   if(editHistItem._tipo==='activo'){payload.comprado=true;}update(ref(db,_ref),payload);
+  escribirLog('editar',`"${nom}" (quien: ${quien})`);
   if(adminModeActive)modifiedInSession.add(editHistItem.fbKey);
   closeHEdit();showModal('✅','Registro corregido','Los cambios se guardaron correctamente.');
 };
-window.eliminarHist=function(){if(!editHistItem)return;if(!window._permisos?.eliminar){showModal('🔒','Sin permisos','Solo el Super Admin puede eliminar registros.');return;}if(!confirm('¿Eliminar este registro permanentemente?'))return;if(editHistItem._tipo==='hist')remove(ref(db,`archivo/${editHistItem.fbKey}`));else remove(ref(db,`faltantes/${editHistItem.fbKey}`));closeHEdit();};
+window.eliminarHist=function(){
+  if(!editHistItem)return;
+  if(!window._permisos?.eliminar){showModal('🔒','Sin permisos','Solo el Super Admin puede eliminar registros.');return;}
+  if(!confirm('¿Eliminar este registro permanentemente?'))return;
+  const nombre=editHistItem.nombre||'sin nombre';
+  const quien=editHistItem.quien||'—';
+  escribirLog('eliminar',`"${nombre}" (registrado por ${quien})`);
+  if(editHistItem._tipo==='hist')remove(ref(db,`archivo/${editHistItem.fbKey}`));
+  else remove(ref(db,`faltantes/${editHistItem.fbKey}`));
+  closeHEdit();
+};
 window.closeHEdit=function(){document.getElementById('overlay-hedit').classList.remove('show');editHistItem=null;renderHist();};
 
 // Listener delegado para botones de edición en historial (evita problemas de escapado)
@@ -3903,6 +4046,7 @@ ${secHeader('🕐','Compras recientes del período',`Últimas ${Math.min(10,todo
   if(!win){showModal('⚠️','Ventana bloqueada','Permite ventanas emergentes para generar el PDF.');return;}
   win.document.write(html);
   win.document.close();
+  escribirLog('pdf',`PDF "${_pdfNombreHeader}" — ${todos.length} registros — ${periodoLabel}`);
 };
 
 function compP(periodos){return periodos.map(p=>{const its=todosComp().filter(i=>{const t=i.tsComprado||0;return t>=p.desde&&t<p.hasta;});return{label:p.label,compras:its.length,gasto:its.reduce((s,i)=>s+getP(i),0)};});}
@@ -3963,15 +4107,25 @@ function renderStats(){
     }
   }
 
-  // Mostrar/ocultar secciones avanzadas de usuarios
-  const secRanking=document.getElementById('sec-ranking-usuarios');
-  const secGastoU=document.getElementById('sec-gasto-usuarios');
-  const secTicketU=document.getElementById('sec-ticket-usuarios');
-  if(secRanking)secRanking.style.display=_statsAvanz&&!_filtroUser?'':'none';
-  if(secGastoU)secGastoU.style.display=_statsAvanz&&!_filtroUser?'':'none';
-  if(secTicketU)secTicketU.style.display=_statsAvanz&&!_filtroUser?'':'none';
+  if(!todos.length){['st-top','st-cant','st-freq','st-cat','st-emp','st-ticket','st-diasem'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=nd;});
+    // KPIs vacios
+    ['kpi-gasto','kpi-compras','kpi-ticket','kpi-dias'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
+    return;}
 
-  if(!todos.length){['st-top','st-cant','st-freq','st-cat','st-emp','st-ticket','st-diasem'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=nd;});return;}
+  // ── KPI RESUMEN ────────────────────────────────────────────────────────────
+  const _gastoKpi=todos.reduce((s,i)=>s+getP(i),0);
+  const _conPrecioKpi=todos.filter(i=>getP(i)>0);
+  const _avgKpi=_conPrecioKpi.length?_gastoKpi/_conPrecioKpi.length:0;
+  const _diasActivosKpi=new Set(todos.map(i=>{const d=new Date(i.tsComprado||i.ts||0);return`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;})).size;
+  const _periodoKpiLabel=_filtroUser?`de ${_filtroUser}`:(_tipoFiltro!=='todos'?(_tipoFiltro==='admins'?'admins':'usuarios'):'general');
+  const _kpiGastoEl=document.getElementById('kpi-gasto');if(_kpiGastoEl)_kpiGastoEl.textContent=`S/ ${_gastoKpi.toFixed(2)}`;
+  const _kpiGastoSub=document.getElementById('kpi-gasto-sub');if(_kpiGastoSub)_kpiGastoSub.textContent=`${_conPrecioKpi.length} de ${todos.length} con precio`;
+  const _kpiCompEl=document.getElementById('kpi-compras');if(_kpiCompEl)_kpiCompEl.textContent=todos.length;
+  const _kpiCompSub=document.getElementById('kpi-compras-sub');if(_kpiCompSub)_kpiCompSub.textContent=_periodoKpiLabel;
+  const _kpiTickEl=document.getElementById('kpi-ticket');if(_kpiTickEl)_kpiTickEl.textContent=_avgKpi>0?`S/ ${_avgKpi.toFixed(2)}`:'—';
+  const _kpiTickSub=document.getElementById('kpi-ticket-sub');if(_kpiTickSub)_kpiTickSub.textContent=`promedio por compra`;
+  const _kpiDiasEl=document.getElementById('kpi-dias');if(_kpiDiasEl)_kpiDiasEl.textContent=_diasActivosKpi;
+  const _kpiDiasSub=document.getElementById('kpi-dias-sub');if(_kpiDiasSub)_kpiDiasSub.textContent=`con al menos 1 compra`;
   const cP={};todos.forEach(i=>{const n=norm(i.nombre||'');if(!cP[n])cP[n]={nombre:i.nombre,c:0};cP[n].c++;});
   const tP=Object.values(cP).sort((a,b)=>b.c-a.c).slice(0,8);const mP=tP[0]?.c||1;
   document.getElementById('st-top').innerHTML=tP.map(p=>`<div class="sr"><span class="sr-n">${p.nombre}</span><div class="sr-bg"><div class="sr-bar" style="width:${Math.round(p.c/mP*100)}%"></div></div><span class="sr-v">${p.c}x</span></div>`).join('');
@@ -4009,8 +4163,7 @@ function renderStats(){
   // usuario: ya filtrado a sus propios registros arriba, igual se muestra su propia actividad
   const _fallbackNombre=(window._nombreActual||'DESCONOCIDO').toUpperCase();
   const stEmpEl=document.getElementById('st-emp');
-  // Ocultar sección completa de "por persona" para admin (evita comparaciones entre empleados)
-  const _secEmp=stEmpEl?.closest('.stat-card');
+  const _secEmp=document.getElementById('sec-emp-card');
   if(_secEmp)_secEmp.style.display=_statsAvanz?'':'none';
   if(_statsAvanz){
     const gE={};todos.forEach(i=>{const raw=(i.quien&&i.quien.trim()!==''?i.quien.trim():_fallbackNombre).toUpperCase();const e=(raw===''||raw==='SIN NOMBRE')?_fallbackNombre:raw;if(!gE[e])gE[e]={t:0,u:0,g:0};gE[e].t++;if(i.urgencia==='alta'||i.urgencia==='urgente')gE[e].u++;const p=getP(i);if(p>0)gE[e].g+=p;});
@@ -4020,7 +4173,7 @@ function renderStats(){
 
   // Ticket promedio y dispersión — solo admin+ (super_admin ve todo, admin ve básico)
   const stTicketEl=document.getElementById('st-ticket');
-  const _secTicket=stTicketEl?.closest('.stat-card');
+  const _secTicket=document.getElementById('sec-ticket-card');
   if(_secTicket)_secTicket.style.display=_statsBasic?'':'none';
   const conPrecio=todos.filter(i=>getP(i)>0);if(_statsBasic&&conPrecio.length){
     const precios=conPrecio.map(i=>getP(i)).sort((a,b)=>a-b);
@@ -4073,47 +4226,346 @@ function renderStats(){
     });
   });
 
-  // ══ NUEVAS MÉTRICAS AVANZADAS: Ranking / Gasto / Ticket por usuario (super_admin+) ══
-  if(_statsAvanz&&!_filtroUser){
-    // Construir mapa por usuario de TODOS los registros del período (sin filtro tipo pero con filtro fecha)
-    const sFrom2=document.getElementById('stats-date-from')?.value;
-    const sTo2=document.getElementById('stats-date-to')?.value;
-    const lim2=sFrom2||sTo2?0:msL(fStats);
-    let todosU=todosComp().filter(i=>(i.tsComprado||0)>=lim2);
-    if(sFrom2){const d=new Date(sFrom2+'T00:00:00');todosU=todosU.filter(i=>(i.tsComprado||0)>=d.getTime());}
-    if(sTo2){const d=new Date(sTo2+'T23:59:59');todosU=todosU.filter(i=>(i.tsComprado||0)<=d.getTime());}
-    // Si hay filtro de tipo, restringir aquí también
-    if(_tipoFiltro!=='todos'){
-      const npt=_nombresDeRol(_tipoFiltro);
-      if(npt&&npt.size)todosU=todosU.filter(i=>npt.has((i.quien||'').toUpperCase().trim()));
-    }
-    const gUsuario={};const _fb2=(window._nombreActual||'DESCONOCIDO').toUpperCase();
-    todosU.forEach(i=>{const u=(i.quien&&i.quien.trim()!==''?i.quien.trim():_fb2).toUpperCase();if(!gUsuario[u])gUsuario[u]={t:0,g:0,precios:[]};gUsuario[u].t++;const p=getP(i);if(p>0){gUsuario[u].g+=p;gUsuario[u].precios.push(p);}});
-    const nd2='<p class="no-data">Sin datos</p>';
-    // Ranking por compras
-    const rankingU=Object.entries(gUsuario).sort((a,b)=>b[1].t-a[1].t);
-    const mRank=rankingU[0]?.[1].t||1;
-    const medals=['🥇','🥈','🥉'];
-    const stRankEl=document.getElementById('st-ranking-users');
-    if(stRankEl)stRankEl.innerHTML=rankingU.length?rankingU.map(([u,d],i)=>`<div class="sr" style="align-items:center;">
-      <span style="font-size:.85rem;font-weight:800;width:22px;flex-shrink:0;text-align:center;">${i<3?medals[i]:i+1+'.'}</span>
-      <span class="sr-n">👤 ${u}</span>
-      <div class="sr-bg"><div class="sr-bar" style="width:${Math.round(d.t/mRank*100)}%"></div></div>
-      <span class="sr-v">${d.t}</span>
-    </div>`).join(''):nd2;
-    // Gasto por usuario
-    const gastoU=Object.entries(gUsuario).sort((a,b)=>b[1].g-a[1].g);
-    const mGasto=gastoU[0]?.[1].g||1;
-    const stGastoEl=document.getElementById('st-gasto-users');
-    if(stGastoEl)stGastoEl.innerHTML=gastoU.length?gastoU.map(([u,d])=>`<div class="sr"><span class="sr-n">👤 ${u}</span><div class="sr-bg"><div class="sr-bar" style="width:${Math.round(d.g/mGasto*100)}%"></div></div><span class="sr-v" style="width:auto;font-size:.72rem;">S/ ${d.g.toFixed(2)}</span></div>`).join(''):nd2;
-    // Ticket promedio por usuario
-    const ticketU=Object.entries(gUsuario).filter(([u,d])=>d.precios.length>0).map(([u,d])=>{const avg=d.precios.reduce((s,p)=>s+p,0)/d.precios.length;return{u,avg,cnt:d.t};}).sort((a,b)=>b.avg-a.avg);
-    const mTicket=ticketU[0]?.avg||1;
-    const stTicketEl2=document.getElementById('st-ticket-users');
-    if(stTicketEl2)stTicketEl2.innerHTML=ticketU.length?ticketU.map(d=>`<div class="sr"><span class="sr-n">👤 ${d.u}</span><div class="sr-bg"><div class="sr-bar" style="width:${Math.round(d.avg/mTicket*100)}%"></div></div><span class="sr-v" style="width:auto;font-size:.72rem;">S/ ${d.avg.toFixed(2)}</span><span class="sr-e">${d.cnt}x</span></div>`).join(''):nd2;
-  }
+  // ══ BLOQUE USUARIO MÉTRICAS: movido a renderUsuariosTab() ══
 
 }
+
+// ─── RENDERIZAR COMPARACIONES (tab Períodos) ──────────────────────────────────
+function renderComparaciones(){
+  const _filtroUser=window._filtroUsuarioStats;
+  const hoy=new Date();hoy.setHours(0,0,0,0);
+  const _fb=(window._nombreActual||'DESCONOCIDO').toUpperCase();
+  // Dataset base filtrado por usuario si aplica
+  const _base=()=>{
+    let t=todosComp();
+    if(_filtroUser)t=t.filter(i=>(i.quien||'').toUpperCase().trim()===_filtroUser.toUpperCase().trim());
+    const tipoF=window._filtroTipoUsuarioStats||'todos';
+    if(tipoF!=='todos'&&!_filtroUser){
+      const npt=_nombresDeRol(tipoF);
+      if(npt&&npt.size)t=t.filter(i=>npt.has((i.quien||'').toUpperCase().trim()));
+    }
+    return t;
+  };
+  const compPerLocal=(desde,hasta)=>{const its=_base().filter(i=>{const t=i.tsComprado||0;return t>=desde&&t<hasta;});return{compras:its.length,gasto:its.reduce((s,i)=>s+getP(i),0)};};
+  const compPLocal=(periodos)=>periodos.map(p=>({label:p.label,...compPerLocal(p.desde,p.hasta)}));
+  const lun=new Date(hoy);lun.setDate(lun.getDate()-((lun.getDay()+6)%7));
+  const D=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const NM=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  rComp('comp-dias',compPLocal([-2,-1,0].map(o=>{const d=new Date(hoy);d.setDate(d.getDate()+o);const f=new Date(d);f.setDate(f.getDate()+1);return{label:`${D[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}`,desde:d.getTime(),hasta:f.getTime()};})));
+  rComp('comp-sem',compPLocal([-2,-1,0].map(o=>{const i2=new Date(lun);i2.setDate(i2.getDate()+o*7);const f=new Date(i2);f.setDate(f.getDate()+7);return{label:`${String(i2.getDate()).padStart(2,'0')}/${i2.getMonth()+1}`,desde:i2.getTime(),hasta:f.getTime()};})));
+  rComp('comp-mes',compPLocal([-2,-1,0].map(o=>{const i2=new Date(hoy.getFullYear(),hoy.getMonth()+o,1);const f=new Date(hoy.getFullYear(),hoy.getMonth()+o+1,1);return{label:`${NM[i2.getMonth()]} ${i2.getFullYear()}`,desde:i2.getTime(),hasta:f.getTime()};})));
+  // Nota si hay filtro activo
+  const notaEl=document.querySelector('#sp-comparaciones > div:first-child');
+  if(notaEl){
+    const tipoF=window._filtroTipoUsuarioStats||'todos';
+    const tipoLabel=tipoF==='admins'?'Administradores':tipoF==='usuarios'?'Usuarios normales':null;
+    if(_filtroUser)notaEl.textContent=`📌 Comparativas filtradas por usuario: ${_filtroUser}`;
+    else if(tipoLabel)notaEl.textContent=`📌 Comparativas filtradas por tipo: ${tipoLabel}`;
+    else notaEl.textContent=`📌 Comparación automática de períodos. Los datos reflejan el filtro activo.`;
+  }
+}
+
+// ─── RENDER TAB USUARIOS (super_admin+) ──────────────────────────────────────
+window._uFiltTipo='todos';
+window.setUFiltTipo=function(tipo,btn){
+  window._uFiltTipo=tipo;
+  ['ufilt-todos','ufilt-admins','ufilt-usuarios'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  renderUsuariosTab();
+};
+
+function renderUsuariosTab(){
+  if(!window._permisos?.verStatsAvanzadas)return;
+  const nd='<p class="no-data">Sin datos</p>';
+  const medals=['🥇','🥈','🥉'];
+  const _fb=(window._nombreActual||'DESCONOCIDO').toUpperCase();
+  // Obtener todos los datos sin restricción de período (siempre "todo el historial")
+  let todosU=todosComp();
+  // Filtrar por tipo
+  const tipoU=window._uFiltTipo||'todos';
+  if(tipoU!=='todos'){
+    const npt=_nombresDeRol(tipoU);
+    if(npt&&npt.size)todosU=todosU.filter(i=>npt.has((i.quien||'').toUpperCase().trim()));
+  }
+  // Construir mapa por usuario
+  const gU={};
+  todosU.forEach(i=>{
+    const u=(i.quien&&i.quien.trim()!==''?i.quien.trim():_fb).toUpperCase();
+    if(!gU[u])gU[u]={t:0,g:0,precios:[],dias:new Set(),cats:{}};
+    gU[u].t++;
+    const p=getP(i);if(p>0){gU[u].g+=p;gU[u].precios.push(p);}
+    const d=new Date(i.tsComprado||i.ts||0);
+    gU[u].dias.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+    const cat=i.categoria||'OTROS';
+    gU[u].cats[cat]=(gU[u].cats[cat]||0)+1;
+  });
+  const usuarios=Object.entries(gU);
+  const totalRegistros=todosU.length||1;
+  const totalGasto=todosU.reduce((s,i)=>s+getP(i),0)||1;
+  // KPI row
+  const kpiRow=document.getElementById('u-kpi-row');
+  if(kpiRow){
+    kpiRow.innerHTML=`
+      <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);padding:11px 10px;text-align:center;box-shadow:var(--sh);">
+        <div style="font-size:1.2rem;font-weight:800;color:var(--text);font-family:var(--ffmono);">${usuarios.length}</div>
+        <div style="font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;font-weight:700;">Usuarios</div>
+      </div>
+      <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);padding:11px 10px;text-align:center;box-shadow:var(--sh);">
+        <div style="font-size:1.2rem;font-weight:800;color:var(--text);font-family:var(--ffmono);">${todosU.length}</div>
+        <div style="font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;font-weight:700;">Compras total</div>
+      </div>
+      <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);padding:11px 10px;text-align:center;box-shadow:var(--sh);">
+        <div style="font-size:1.2rem;font-weight:800;color:var(--accent);font-family:var(--ffmono);">S/ ${todosU.reduce((s,i)=>s+getP(i),0).toFixed(0)}</div>
+        <div style="font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;font-weight:700;">Gasto total</div>
+      </div>`;
+  }
+  if(!usuarios.length){
+    ['st-ranking-users','st-gasto-users','st-ticket-users','st-dias-users','st-cat-users'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=nd;});
+    return;
+  }
+  // Ranking por compras
+  const rankingU=usuarios.sort((a,b)=>b[1].t-a[1].t);
+  const mRank=rankingU[0]?.[1].t||1;
+  document.getElementById('st-ranking-users').innerHTML=rankingU.map(([u,d],i)=>`
+    <div class="sr" style="align-items:center;padding:4px 0;">
+      <span style="font-size:.82rem;font-weight:800;width:20px;flex-shrink:0;text-align:center;color:${i<3?'var(--accent)':'var(--text3)'};">${i<3?medals[i]:(i+1)+'.'}</span>
+      <span class="sr-n" style="font-size:.84rem;">👤 ${u}</span>
+      <div class="sr-bg"><div class="sr-bar" style="width:${Math.round(d.t/mRank*100)}%"></div></div>
+      <span class="sr-v">${d.t}x</span>
+      <span class="sr-e">${totalRegistros>0?(d.t/totalRegistros*100).toFixed(0)+'%':''}</span>
+    </div>`).join('');
+  // Ranking por gasto
+  const gastoU=[...usuarios].sort((a,b)=>b[1].g-a[1].g);
+  const mGasto=gastoU[0]?.[1].g||1;
+  document.getElementById('st-gasto-users').innerHTML=gastoU.map(([u,d],i)=>`
+    <div class="sr" style="align-items:center;padding:4px 0;">
+      <span style="font-size:.82rem;font-weight:800;width:20px;flex-shrink:0;text-align:center;color:${i<3?'var(--accent)':'var(--text3)'};">${i<3?medals[i]:(i+1)+'.'}</span>
+      <span class="sr-n" style="font-size:.84rem;">👤 ${u}</span>
+      <div class="sr-bg"><div class="sr-bar" style="width:${Math.round(d.g/mGasto*100)}%"></div></div>
+      <span class="sr-v" style="width:auto;font-size:.72rem;">S/ ${d.g.toFixed(2)}</span>
+      <span class="sr-e">${totalGasto>0?(d.g/totalGasto*100).toFixed(0)+'%':''}</span>
+    </div>`).join('');
+  // Ticket promedio por usuario
+  const ticketU=[...usuarios].filter(([u,d])=>d.precios.length>0).map(([u,d])=>{const avg=d.precios.reduce((s,p)=>s+p,0)/d.precios.length;return[u,avg,d.t];}).sort((a,b)=>b[1]-a[1]);
+  const mTick=ticketU[0]?.[1]||1;
+  const elTick=document.getElementById('st-ticket-users');
+  if(elTick)elTick.innerHTML=ticketU.length?ticketU.map(([u,avg,cnt])=>`
+    <div class="sr" style="padding:4px 0;">
+      <span class="sr-n" style="font-size:.84rem;">👤 ${u}</span>
+      <div class="sr-bg"><div class="sr-bar" style="width:${Math.round(avg/mTick*100)}%"></div></div>
+      <span class="sr-v" style="width:auto;font-size:.72rem;">S/ ${avg.toFixed(2)}</span>
+      <span class="sr-e">${cnt}x</span>
+    </div>`).join(''):nd;
+  // Días activos por usuario
+  const diasU=[...usuarios].map(([u,d])=>[u,d.dias.size,d.t]).sort((a,b)=>b[1]-a[1]);
+  const mDias=diasU[0]?.[1]||1;
+  const elDias=document.getElementById('st-dias-users');
+  if(elDias)elDias.innerHTML=diasU.length?diasU.map(([u,dias,compras])=>`
+    <div class="sr" style="padding:4px 0;">
+      <span class="sr-n" style="font-size:.84rem;">👤 ${u}</span>
+      <div class="sr-bg"><div class="sr-bar" style="width:${Math.round(dias/mDias*100)}%"></div></div>
+      <span class="sr-v">${dias}d</span>
+      <span class="sr-e">${dias>0?(compras/dias).toFixed(1)+' comp/día':''}</span>
+    </div>`).join(''):nd;
+  // Categoría favorita por usuario
+  const elCat=document.getElementById('st-cat-users');
+  if(elCat)elCat.innerHTML=usuarios.length?usuarios.map(([u,d])=>{
+    const favCat=Object.entries(d.cats).sort((a,b)=>b[1]-a[1])[0];
+    if(!favCat)return'';
+    return`<div class="sr" style="padding:4px 0;">
+      <span class="sr-n" style="font-size:.84rem;">👤 ${u}</span>
+      <span style="font-size:.75rem;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;white-space:nowrap;">${EM[favCat[0]]||'⚙️'} ${favCat[0]}</span>
+      <span class="sr-e">${favCat[1]}x</span>
+    </div>`}).join(''):nd;
+}
+
+// ─── COMPARAR DOS USUARIOS (tab Comparar) ─────────────────────────────────────
+window._cmpPerStr='7d';
+window._cmpUserA=null;
+window._cmpUserB=null;
+
+window.setCmpPer=function(p,btn){
+  window._cmpPerStr=p;
+  ['cmpf-7d','cmpf-30d','cmpf-todo'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+};
+
+window.filtrarSugerenciasCmp=function(lado){
+  const input=document.getElementById(`cmp-user-${lado}-input`);
+  const sug=document.getElementById(`cmp-sug-${lado}`);
+  if(!input||!sug)return;
+  const q=(input.value||'').toUpperCase().trim();
+  const lista=_obtenerUsuariosPermitidosStats();
+  const filtrada=q?lista.filter(n=>n.includes(q)):lista;
+  if(!filtrada.length){sug.style.display='none';return;}
+  sug.innerHTML=filtrada.map(n=>`
+    <div onclick="seleccionarUsuarioCmp('${lado}','${n.replace(/'/g,"\\'")}')"
+      style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);"
+      onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">
+      👤 ${n}
+    </div>`).join('');
+  sug.style.display='block';
+};
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#sp-comparar')){
+    ['a','b'].forEach(l=>{const s=document.getElementById(`cmp-sug-${l}`);if(s)s.style.display='none';});
+  }
+});
+window.seleccionarUsuarioCmp=function(lado,nombre){
+  if(lado==='a')window._cmpUserA=nombre;else window._cmpUserB=nombre;
+  const input=document.getElementById(`cmp-user-${lado}-input`);
+  if(input)input.value='';
+  const sug=document.getElementById(`cmp-sug-${lado}`);
+  if(sug)sug.style.display='none';
+  const chip=document.getElementById(`cmp-chip-${lado}`);
+  if(chip){
+    chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
+    const color=lado==='a'?'var(--blue)':'var(--green)';
+    chip.innerHTML=`<span style="font-size:.78rem;background:${color};color:#fff;padding:4px 10px;border-radius:20px;font-weight:700;">👤 ${nombre}</span>
+      <button onclick="limpiarCmpUser('${lado}')" style="background:none;border:none;cursor:pointer;font-size:.78rem;color:var(--text3);">✕</button>`;
+  }
+};
+window.limpiarCmpUser=function(lado){
+  if(lado==='a')window._cmpUserA=null;else window._cmpUserB=null;
+  const chip=document.getElementById(`cmp-chip-${lado}`);if(chip){chip.style.display='none';chip.innerHTML='';}
+  const input=document.getElementById(`cmp-user-${lado}-input`);if(input)input.value='';
+};
+
+window.ejecutarComparacion=function(){
+  const a=window._cmpUserA;const b=window._cmpUserB;
+  const res=document.getElementById('cmp-resultado');
+  if(!a&&!b){showModal('⚠️','Selecciona usuarios','Elige al menos un usuario para comparar.');return;}
+  if(a===b){showModal('⚠️','Mismo usuario','Selecciona dos usuarios distintos para comparar.');return;}
+  const lim=msL(window._cmpPerStr||'7d');
+  let todosP=todosComp().filter(i=>(i.tsComprado||0)>=lim);
+  function statsUser(nombre){
+    const its=nombre?todosP.filter(i=>(i.quien||'').toUpperCase().trim()===nombre.toUpperCase()):[];
+    const gasto=its.reduce((s,i)=>s+getP(i),0);
+    const conP=its.filter(i=>getP(i)>0);
+    const avg=conP.length?gasto/conP.length:0;
+    const dias=new Set(its.map(i=>{const d=new Date(i.tsComprado||i.ts||0);return`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;})).size;
+    const cats={};its.forEach(i=>{const c=i.categoria||'OTROS';cats[c]=(cats[c]||0)+1;});
+    const favCat=Object.entries(cats).sort((a,b2)=>b2[1]-a[1])[0];
+    const alta=its.filter(i=>i.urgencia==='alta'||i.urgencia==='urgente').length;
+    return{nombre,compras:its.length,gasto,avg,dias,favCat,alta};
+  }
+  const sA=statsUser(a);const sB=statsUser(b||null);
+  // Determinar ganador en cada métrica
+  const winClass=(va,vb,inv=false)=>{if(va===vb)return['',''];const w=inv?(va<vb?'var(--green)':'var(--red)'):(va>vb?'var(--green)':'var(--red)');return va>vb?(inv?['var(--red)','var(--green)']:['var(--green)','var(--red)']):(inv?['var(--green)','var(--red)']:['var(--red)','var(--green)']);};
+  const [cCA,cCB]=b?winClass(sA.compras,sB.compras):[['','']];
+  const [cGA,cGB]=b?winClass(sA.gasto,sB.gasto):[['','']];
+  const [cTA,cTB]=b?winClass(sA.avg,sB.avg):[['','']];
+  const periodoLabel={'7d':'últimos 7 días','30d':'último mes','todo':'todo el historial'}[window._cmpPerStr||'7d'];
+  const colA='var(--blue)';const colB='var(--green)';
+  const card=(st,col)=>!st.nombre?'':`
+    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);padding:14px;flex:1;">
+      <div style="font-size:.65rem;font-weight:700;color:#fff;background:${col};border-radius:20px;padding:3px 10px;display:inline-block;margin-bottom:10px;">👤 ${st.nombre}</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:.75rem;color:var(--text3);">Compras</span>
+        <span style="font-size:.9rem;font-weight:800;color:var(--text);font-family:var(--ffmono);">${st.compras}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:.75rem;color:var(--text3);">Gasto total</span>
+        <span style="font-size:.9rem;font-weight:800;color:var(--accent);font-family:var(--ffmono);">S/ ${st.gasto.toFixed(2)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:.75rem;color:var(--text3);">Ticket promedio</span>
+        <span style="font-size:.88rem;font-weight:700;color:var(--text);font-family:var(--ffmono);">${st.avg>0?'S/ '+st.avg.toFixed(2):'—'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:.75rem;color:var(--text3);">Días activos</span>
+        <span style="font-size:.88rem;font-weight:700;color:var(--text);">${st.dias}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:.75rem;color:var(--text3);">Cat. favorita</span>
+        <span style="font-size:.78rem;font-weight:600;color:var(--text);">${st.favCat?`${EM[st.favCat[0]]||'⚙️'} ${st.favCat[0]}`:'—'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="font-size:.75rem;color:var(--text3);">Alta prioridad</span>
+        <span style="font-size:.88rem;font-weight:700;color:${st.alta>0?'var(--red)':'var(--text3)'};">${st.alta}</span>
+      </div>
+    </div>`;
+  // Ganador general
+  let ganadorHTML='';
+  if(a&&b){
+    const pts={a:0,b:0};
+    if(sA.compras>sB.compras)pts.a++;else if(sB.compras>sA.compras)pts.b++;
+    if(sA.gasto>sB.gasto)pts.a++;else if(sB.gasto>sA.gasto)pts.b++;
+    if(sA.avg>sB.avg)pts.a++;else if(sB.avg>sA.avg)pts.b++;
+    if(sA.dias>sB.dias)pts.a++;else if(sB.dias>sA.dias)pts.b++;
+    const ganador=pts.a>pts.b?a:pts.b>pts.a?b:'empate';
+    ganadorHTML=`<div style="background:${ganador==='empate'?'var(--surface2)':'var(--accent-bg)'};border:1.5px solid ${ganador==='empate'?'var(--border)':'var(--accent)'};border-radius:var(--rmd);padding:12px 14px;text-align:center;margin-top:10px;">
+      ${ganador==='empate'?'🤝 <strong>Empate técnico</strong>':
+        `🏆 <strong>Mayor rendimiento: ${ganador}</strong> <span style="font-size:.72rem;color:var(--text3);">(${Math.max(pts.a,pts.b)} de 4 métricas)</span>`}
+    </div>`;
+  }
+  res.style.display='block';
+  res.innerHTML=`
+    <div style="font-size:.65rem;color:var(--text3);margin-bottom:8px;text-align:center;">📅 Período: ${periodoLabel}</div>
+    <div style="display:flex;gap:8px;">${card(sA,colA)}${b?card(sB,colB):''}</div>
+    ${ganadorHTML}`;
+};
+
+// ─── LOGS DEL SISTEMA (admin_supremo) ─────────────────────────────────────────
+const rLogs=ref(db,'logs');
+window._logFiltActual='todo';
+
+// Escribir un log en Firebase
+async function escribirLog(accion,detalle){
+  try{
+    const logEntry={
+      ts:Date.now(),
+      accion,// 'eliminar' | 'editar' | 'exportar' | 'pdf'
+      detalle,
+      usuario:(window._nombreActual||'DESCONOCIDO').toUpperCase(),
+      email:auth.currentUser?.email||'',
+      rol:window._rol||'usuario'
+    };
+    const newRef=ref(db,`logs/${Date.now()}_${Math.random().toString(36).slice(2,7)}`);
+    await set(newRef,logEntry);
+  }catch(e){console.warn('Log error:',e);}
+}
+
+window.setLogFilt=function(tipo,btn){
+  window._logFiltActual=tipo;
+  ['lfilt-todo','lfilt-eliminar','lfilt-editar','lfilt-exportar'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  renderLogs();
+};
+
+window.renderLogs=function(){
+  if(window._rol!=='admin_supremo')return;
+  const lista=document.getElementById('lista-logs');
+  if(!lista)return;
+  lista.innerHTML='<p class="no-data">Cargando…</p>';
+  get(rLogs).then(snap=>{
+    const d=snap.val()||{};
+    let entries=Object.entries(d).map(([k,v])=>({...v,_key:k})).sort((a,b)=>b.ts-a.ts);
+    const filt=window._logFiltActual||'todo';
+    if(filt!=='todo')entries=entries.filter(e=>e.accion===filt);
+    if(!entries.length){lista.innerHTML='<p class="no-data">Sin logs registrados</p>';return;}
+    const iconAcc={eliminar:'🗑',editar:'✏️',exportar:'📊',pdf:'📄'};
+    const colorAcc={eliminar:'var(--red)',editar:'var(--blue)',exportar:'var(--green)',pdf:'var(--orange)'};
+    const bgAcc={eliminar:'var(--red-bg)',editar:'var(--blue-bg)',exportar:'var(--green-bg)',pdf:'var(--orange-bg)'};
+    lista.innerHTML=entries.slice(0,80).map(e=>{
+      const d=new Date(e.ts);
+      const M2=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+      const fT=`${d.getDate()} ${M2[d.getMonth()]} · ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const ic=iconAcc[e.accion]||'📝';const col=colorAcc[e.accion]||'var(--text3)';const bg=bgAcc[e.accion]||'var(--surface2)';
+      return`<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);margin-bottom:7px;box-shadow:var(--sh);">
+        <div style="font-size:1.1rem;flex-shrink:0;width:28px;height:28px;background:${bg};border-radius:8px;display:flex;align-items:center;justify-content:center;">${ic}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+            <span style="font-size:.72rem;font-weight:700;color:${col};text-transform:uppercase;letter-spacing:.04em;">${e.accion||'acción'}</span>
+            <span style="font-size:.65rem;color:var(--text3);font-family:var(--ffmono);">${fT}</span>
+          </div>
+          <div style="font-size:.82rem;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(e.detalle||'—')}</div>
+          <div style="font-size:.68rem;color:var(--text3);margin-top:2px;">👤 ${e.usuario||'—'} · ${e.rol||'—'}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }).catch(()=>{lista.innerHTML='<p class="no-data" style="color:var(--red);">Error cargando logs</p>';});
+};
 
 // DÍA DE SEMANA — toggle interactivo
 window.toggleDiaSem=function(idx){
