@@ -881,12 +881,11 @@ details summary::-webkit-details-marker{display:none;}
          Admin: ve solo Usuarios Normales                              -->
     <div id="sec-lista" style="display:none;">
       <div class="field-label" style="font-size:.72rem;margin-bottom:8px;">👥 Usuarios con acceso</div>
-      <!-- Fila Admin Supremo — solo visible para Admin Supremo y Super Admin -->
+      <!-- Fila Admin Supremo — solo visible para Admin Supremo -->
       <div id="admin-supremo-row" style="display:none;background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
         <div style="display:flex;align-items:center;justify-content:space-between;">
           <div>
-            <div style="font-size:.82rem;font-weight:600;color:var(--text1);" id="admin-supremo-email">Cargando…</div>
-            <div style="font-size:.68rem;color:var(--accent);">👑 Admin Supremo · Acceso permanente</div>
+            <div style="font-size:.68rem;color:var(--accent);font-weight:700;">👑 Admin Supremo · Acceso permanente</div>
           </div>
         </div>
       </div>
@@ -1203,11 +1202,23 @@ details summary::-webkit-details-marker{display:none;}
   <div class="subpane active" id="sp-metricas">
     <!-- Filtros: períodos + toggle + PDF -->
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <!-- Fila de filtros: usuario A LA IZQUIERDA (solo admin), luego períodos, luego rango y ⚙️ -->
+      <!-- Selector de usuario inline para admin (se muestra/oculta por JS según rol) -->
+      <div id="stats-user-inline-wrap" style="display:none;flex-shrink:0;">
+        <div style="position:relative;">
+          <input type="text" id="stats-user-inline-input" placeholder="👤 Usuario…" autocomplete="off"
+            class="input-f" style="font-size:.78rem;padding:6px 10px;width:120px;box-sizing:border-box;border-color:var(--accent);"
+            oninput="filtrarSugerenciasUsuarioInline()" onfocus="filtrarSugerenciasUsuarioInline()" />
+          <div id="stats-user-inline-sug" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
+        </div>
+      </div>
       <div id="filt-stats" style="display:flex;gap:6px;overflow-x:auto;flex:1;padding-bottom:2px;scrollbar-width:none;">
         <button class="fbtn active" onclick="setFS(this,'7d')">7 días</button>
         <button class="fbtn" onclick="setFS(this,'15d')">15 días</button>
         <button class="fbtn" onclick="setFS(this,'30d')">Mes</button>
         <button class="fbtn" onclick="setFS(this,'todo')">Todo</button>
+        <!-- Botón rango de fecha — solo para admin -->
+        <button class="fbtn" id="btn-stats-rango-admin" onclick="toggleStatsRangoAdmin(this)" style="display:none;white-space:nowrap;">📅 Rango</button>
       </div>
       <button id="btn-toggle-sfiltros" onclick="toggleStatsFiltros()" title="Filtros avanzados"
         style="flex-shrink:0;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--transition);position:relative;">
@@ -1219,16 +1230,29 @@ details summary::-webkit-details-marker{display:none;}
         📄 PDF
       </button>
     </div>
-    <!-- Panel filtros colapsable -->
+    <!-- Rango de fecha inline para admin (aparece al pulsar Rango) -->
+    <div id="stats-rango-admin-wrap" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:8px 12px;margin-bottom:8px;gap:8px;flex-direction:row;align-items:center;flex-wrap:wrap;">
+      <div style="flex:1;min-width:110px;">
+        <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
+        <input type="date" id="stats-date-from" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
+      </div>
+      <div style="flex:1;min-width:110px;">
+        <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
+        <input type="date" id="stats-date-to" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
+      </div>
+      <button onclick="limpiarRangoAdmin()" style="flex-shrink:0;padding:6px 12px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕ Limpiar</button>
+    </div>
+    <!-- Panel filtros colapsable (super_admin+) -->
     <div id="stats-extra-filters" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:10px 12px;margin-bottom:8px;gap:8px;flex-direction:column;">
-      <div style="display:flex;gap:8px;align-items:flex-end;">
+      <!-- Fecha: solo para super_admin+ -->
+      <div id="stats-fecha-panel" style="display:flex;gap:8px;align-items:flex-end;">
         <div style="flex:1;">
           <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">Desde</div>
-          <input type="date" id="stats-date-from" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
+          <input type="date" id="stats-date-from-adv" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="syncAdvDateToMain();actualizarDotSFilt();renderStats()"/>
         </div>
         <div style="flex:1;">
           <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">Hasta</div>
-          <input type="date" id="stats-date-to" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
+          <input type="date" id="stats-date-to-adv" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="syncAdvDateToMain();actualizarDotSFilt();renderStats()"/>
         </div>
         <button onclick="limpiarFiltrosStats()" style="flex-shrink:0;padding:6px 12px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕ Limpiar</button>
       </div>
@@ -1637,6 +1661,8 @@ function _aplicarRol(rol){
     if(!permitidos.includes(window._filtroUsuarioStats)){
       window._filtroUsuarioStats=null;
       const chip=document.getElementById('stats-user-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+      // Limpiar también el input inline
+      const inlineInp=document.getElementById('stats-user-inline-input');if(inlineInp)inlineInp.value='';
     }
   }
   // Actualizar visibilidad del filtro de usuario en stats
@@ -1644,8 +1670,10 @@ function _aplicarRol(rol){
   // Si el rol es admin y hay filtro activo de un usuario no permitido, limpiar
   if(rol==='admin'&&window._filtroUsuarioStats){
     const _permitidos=_obtenerUsuariosPermitidosStats();
-    if(!_permitidos.includes(window._filtroUsuarioStats)){window._filtroUsuarioStats=null;const _chip=document.getElementById('stats-user-chip');if(_chip){_chip.style.display='none';_chip.innerHTML='';}}
+    if(!_permitidos.includes(window._filtroUsuarioStats)){window._filtroUsuarioStats=null;const _chip=document.getElementById('stats-user-chip');if(_chip){_chip.style.display='none';_chip.innerHTML='';}const _inlineI=document.getElementById('stats-user-inline-input');if(_inlineI)_inlineI.value='';}
   }
+  // Aplicar UX de filtros según rol
+  if(typeof _aplicarUXFiltrosStats==='function')_aplicarUXFiltrosStats(rol);
   // Re-renderizar si ya hay datos cargados (para aplicar filtros de rol)
   if(typeof renderLista==='function'&&(typeof activos!=='undefined')&&activos.length){
     renderLista();
@@ -3081,7 +3109,44 @@ window.genWSP=function(tipo){
     L.push(S);L.push(`🔴 Alta: ${alta}   🔵 Media: ${media}   🟢 Puede esperar: ${baja}`);if(nota){L.push('');L.push(`📝 _${nota}_`);}L.push(S2);L.push('_Enviado desde Zumix Stock_ ✅');
     msgs.pend=L.join('\n');document.getElementById('pt-pend').textContent=msgs.pend;document.getElementById('prev-pend').classList.add('show');setTimeout(()=>document.getElementById('prev-pend').scrollIntoView({behavior:'smooth',block:'start'}),50);
   }else{
-    const hI=new Date();hI.setHours(0,0,0,0);const comp=activos.filter(i=>i.comprado&&(i.tsComprado||0)>=hI.getTime());if(!comp.length){showModal('📋','Sin compras hoy','No hay productos comprados hoy.');return;}
+    const hI=new Date();hI.setHours(0,0,0,0);const hT=hI.getTime();
+    let compAll=activos.filter(i=>i.comprado&&(i.tsComprado||0)>=hT);
+    if(!compAll.length){showModal('📋','Sin compras hoy','No hay productos comprados hoy.');return;}
+    const _rolWSP=window._rol||'usuario';
+    const _miNombreWSP=(window._nombreActual||'').toUpperCase().trim();
+    const _emailWSP=(window._auth?.currentUser?.email||'').toLowerCase().trim();
+    // Filtrar según rol
+    // Obtener emails de roles protegidos desde el cache
+    const _cache=window._usuariosAccesoCache||{};
+    const _emailsSupremo=Object.values(_cache).filter(v=>v.rol==='admin_supremo').map(v=>(v.email||'').toLowerCase().trim());
+    const _emailsSuperAdmin=Object.values(_cache).filter(v=>v.rol==='super_admin').map(v=>(v.email||'').toLowerCase().trim());
+    const _nombresSupremo=new Set();const _nombresSuperAdmin=new Set();
+    Object.values(_cache).forEach(v=>{
+      const nombreV=(v._nombre||'').toUpperCase().trim();
+      if(v.rol==='admin_supremo'&&nombreV)_nombresSupremo.add(nombreV);
+      if(v.rol==='super_admin'&&nombreV)_nombresSuperAdmin.add(nombreV);
+    });
+    let comp;
+    if(_rolWSP==='usuario'){
+      // Solo sus propias compras
+      comp=compAll.filter(i=>(i.quien||'').toUpperCase().trim()===_miNombreWSP);
+    }else if(_rolWSP==='admin'){
+      // Todo excepto super_admin y admin_supremo
+      comp=compAll.filter(i=>{
+        const quien=(i.quien||'').toUpperCase().trim();
+        return !_nombresSupremo.has(quien)&&!_nombresSuperAdmin.has(quien);
+      });
+    }else if(_rolWSP==='super_admin'){
+      // Todo excepto admin_supremo
+      comp=compAll.filter(i=>{
+        const quien=(i.quien||'').toUpperCase().trim();
+        return !_nombresSupremo.has(quien);
+      });
+    }else{
+      // admin_supremo: todo sin excepción
+      comp=compAll;
+    }
+    if(!comp.length){showModal('📋','Sin compras','No hay compras para generar con tu nivel de acceso.');return;}
     const nota=document.getElementById('nota-comp').value.trim();const total=comp.reduce((s,i)=>s+getP(i),0);
     let L=[`🧃 *JUGERÍA ZUMIX*`,S2,`✅ *COMPRADO HOY*`,`📅 ${fd}   🕐 ${fh}`,S,''];
     const _urgLblC={alta:'🔴 ALTA PRIORIDAD',media:'🔵 PRIORIDAD MEDIA',baja:'🟢 PUEDE ESPERAR'};
@@ -3269,6 +3334,8 @@ window.seleccionarUsuarioStats=function(nombre){
   const tipoWrap=document.getElementById('stats-tipo-filter-wrap');if(tipoWrap)tipoWrap.style.display='none';
   const input=document.getElementById('stats-user-input');if(input)input.value='';
   const sug=document.getElementById('stats-user-suggestions');if(sug)sug.style.display='none';
+  // Sync inline input
+  const inlineInput=document.getElementById('stats-user-inline-input');if(inlineInput)inlineInput.value=window._filtroUsuarioStats;
   const chip=document.getElementById('stats-user-chip');
   if(chip){
     chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
@@ -3285,6 +3352,8 @@ window.limpiarFiltroUsuarioStats=function(){
   const sug=document.getElementById('stats-user-suggestions');if(sug)sug.style.display='none';
   const chip=document.getElementById('stats-user-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
   const btnClear=document.getElementById('btn-clear-user-stat');if(btnClear)btnClear.style.display='none';
+  // Limpiar inline input
+  const inlineInput=document.getElementById('stats-user-inline-input');if(inlineInput)inlineInput.value='';
   // Restaurar filtro de tipo si corresponde
   const rol=window._rol||'usuario';
   const tipoWrap=document.getElementById('stats-tipo-filter-wrap');
@@ -3310,6 +3379,93 @@ window.toggleStatsFiltros=function(){
   btn.style.background=abierto?'var(--surface)':'var(--surface3)';
   btn.style.borderColor=abierto?'var(--border)':'var(--border2)';
 };
+
+// Sync advanced date fields to the canonical stats-date-from/to (used by renderStats)
+window.syncAdvDateToMain=function(){
+  const f=document.getElementById('stats-date-from-adv');const t=document.getElementById('stats-date-to-adv');
+  const mf=document.getElementById('stats-date-from');const mt=document.getElementById('stats-date-to');
+  if(f&&mf)mf.value=f.value;if(t&&mt)mt.value=t.value;
+};
+
+// Toggle inline rango for admin
+window.toggleStatsRangoAdmin=function(btn){
+  const wrap=document.getElementById('stats-rango-admin-wrap');
+  if(!wrap)return;
+  const open=wrap.style.display==='flex';
+  wrap.style.display=open?'none':'flex';
+  if(btn)btn.classList.toggle('active',!open);
+  if(open){
+    // Limpiar fechas al cerrar
+    const df=document.getElementById('stats-date-from');const dt=document.getElementById('stats-date-to');
+    if(df)df.value='';if(dt)dt.value='';
+    actualizarDotSFilt();renderStats();
+  }
+};
+
+window.limpiarRangoAdmin=function(){
+  const df=document.getElementById('stats-date-from');const dt=document.getElementById('stats-date-to');
+  if(df)df.value='';if(dt)dt.value='';
+  const btn=document.getElementById('btn-stats-rango-admin');
+  if(btn)btn.classList.remove('active');
+  const wrap=document.getElementById('stats-rango-admin-wrap');
+  if(wrap)wrap.style.display='none';
+  actualizarDotSFilt();renderStats();
+};
+
+// Inline user selector for admin (visible above preset filters)
+window.filtrarSugerenciasUsuarioInline=function(){
+  const input=document.getElementById('stats-user-inline-input');
+  const sug=document.getElementById('stats-user-inline-sug');
+  if(!input||!sug)return;
+  const q=(input.value||'').toUpperCase().trim();
+  const lista=_obtenerUsuariosPermitidosStats();
+  const filtrada=q?lista.filter(n=>n.includes(q)):lista;
+  if(!filtrada.length){sug.style.display='none';return;}
+  sug.innerHTML=filtrada.map(n=>`
+    <div onclick="seleccionarUsuarioStatsInline('${n.replace(/'/g,"\'")}')"
+      style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);"
+      onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">
+      👤 ${n}
+    </div>`).join('');
+  sug.style.display='block';
+};
+
+window.seleccionarUsuarioStatsInline=function(nombre){
+  // Redirect to the main seleccionarUsuarioStats
+  seleccionarUsuarioStats(nombre);
+  // Update the inline input to show the selected user
+  const input=document.getElementById('stats-user-inline-input');
+  if(input)input.value=nombre;
+  const sug=document.getElementById('stats-user-inline-sug');
+  if(sug)sug.style.display='none';
+};
+
+// Close inline suggestions when clicking outside
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#stats-user-inline-wrap')){
+    const sug=document.getElementById('stats-user-inline-sug');
+    if(sug)sug.style.display='none';
+  }
+});
+
+// Apply admin UX layout based on role
+function _aplicarUXFiltrosStats(rol){
+  const inlineWrap=document.getElementById('stats-user-inline-wrap');
+  const rangoBtn=document.getElementById('btn-stats-rango-admin');
+  const btnToggle=document.getElementById('btn-toggle-sfiltros');
+  const fechaPanel=document.getElementById('stats-fecha-panel');
+  if(rol==='admin'){
+    if(inlineWrap)inlineWrap.style.display='flex';
+    if(rangoBtn)rangoBtn.style.display='';
+    if(btnToggle)btnToggle.style.display='none'; // admin no necesita ⚙️ panel
+    if(fechaPanel)fechaPanel.style.display='none';
+  }else{
+    if(inlineWrap)inlineWrap.style.display='none';
+    if(rangoBtn)rangoBtn.style.display='none';
+    if(btnToggle)btnToggle.style.display='flex';
+    if(fechaPanel)fechaPanel.style.display='flex';
+  }
+}
 
 window.actualizarDotSFilt=function(){
   const df=document.getElementById('stats-date-from')?.value||'';
@@ -4094,10 +4250,25 @@ function renderStats(){
   // (se aplica después de cargar todos)
 
   const hoy=new Date();hoy.setHours(0,0,0,0);
-  rComp('comp-dias',compP([-2,-1,0].map(o=>{const d=new Date(hoy);d.setDate(d.getDate()+o);const f=new Date(d);f.setDate(f.getDate()+1);const D=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];return{label:`${D[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}`,desde:d.getTime(),hasta:f.getTime()};})));
-  const lun=new Date(hoy);lun.setDate(lun.getDate()-((lun.getDay()+6)%7));
-  rComp('comp-sem',compP([-2,-1,0].map(o=>{const i=new Date(lun);i.setDate(i.getDate()+o*7);const f=new Date(i);f.setDate(f.getDate()+7);return{label:`${String(i.getDate()).padStart(2,'0')}/${i.getMonth()+1}`,desde:i.getTime(),hasta:f.getTime()};})));
-  rComp('comp-mes',compP([-2,-1,0].map(o=>{const i=new Date(hoy.getFullYear(),hoy.getMonth()+o,1);const f=new Date(hoy.getFullYear(),hoy.getMonth()+o+1,1);const NM=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];return{label:`${NM[i.getMonth()]} ${i.getFullYear()}`,desde:i.getTime(),hasta:f.getTime()};})));
+  // Admin: OBLIGATORIO seleccionar usuario — no renderizar comparaciones globales
+  const _filtroUserEarly=window._filtroUsuarioStats;
+  if(_rolStats==='admin'&&!_filtroUserEarly){
+    // Limpiar KPIs
+    ['kpi-gasto','kpi-compras','kpi-ticket','kpi-dias'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
+    ['kpi-gasto-sub','kpi-compras-sub','kpi-ticket-sub','kpi-dias-sub'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='';});
+    // Limpiar comparaciones (períodos)
+    ['comp-dias','comp-sem','comp-mes'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<p class="no-data" style="color:var(--orange);">👆 Seleccioná un usuario primero</p>';});
+    const nd2='<p class="no-data" style="color:var(--orange);">👆 Seleccioná un usuario para ver sus stats</p>';
+    ['st-top','st-cant','st-freq','st-cat','st-emp','st-ticket','st-diasem'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=nd2;});
+    _actualizarVisibilidadFiltroUsuario();
+    return;
+  }
+  if(_rolStats!=='admin'){
+    rComp('comp-dias',compP([-2,-1,0].map(o=>{const d=new Date(hoy);d.setDate(d.getDate()+o);const f=new Date(d);f.setDate(f.getDate()+1);const D=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];return{label:`${D[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}`,desde:d.getTime(),hasta:f.getTime()};})));
+    const lun2=new Date(hoy);lun2.setDate(lun2.getDate()-((lun2.getDay()+6)%7));
+    rComp('comp-sem',compP([-2,-1,0].map(o=>{const i=new Date(lun2);i.setDate(i.getDate()+o*7);const f=new Date(i);f.setDate(f.getDate()+7);return{label:`${String(i.getDate()).padStart(2,'0')}/${i.getMonth()+1}`,desde:i.getTime(),hasta:f.getTime()};})));
+    rComp('comp-mes',compP([-2,-1,0].map(o=>{const i=new Date(hoy.getFullYear(),hoy.getMonth()+o,1);const f=new Date(hoy.getFullYear(),hoy.getMonth()+o+1,1);const NM=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];return{label:`${NM[i.getMonth()]} ${i.getFullYear()}`,desde:i.getTime(),hasta:f.getTime()};})));
+  }
   const sFrom=document.getElementById('stats-date-from')?.value;
   const sTo=document.getElementById('stats-date-to')?.value;
   const lim=sFrom||sTo?0:msL(fStats);
@@ -4255,6 +4426,17 @@ function renderStats(){
 // ─── RENDERIZAR COMPARACIONES (tab Períodos) ──────────────────────────────────
 function renderComparaciones(){
   const _filtroUser=window._filtroUsuarioStats;
+  const _rolComp=window._rol||'usuario';
+  // Admin sin usuario seleccionado: mostrar placeholder vacío
+  if(_rolComp==='admin'&&!_filtroUser){
+    ['comp-dias','comp-sem','comp-mes'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.innerHTML='<p class="no-data" style="color:var(--orange);">👆 Seleccioná un usuario primero</p>';
+    });
+    const notaEl=document.getElementById('comp-nota-contexto');
+    if(notaEl)notaEl.innerHTML=`📌 Seleccioná un usuario desde ⚙️ para ver sus comparativas de períodos.`;
+    return;
+  }
   const hoy=new Date();hoy.setHours(0,0,0,0);
   const _fb=(window._nombreActual||'DESCONOCIDO').toUpperCase();
   // Dataset base filtrado por usuario si aplica
@@ -4578,80 +4760,6 @@ window.limpiarCmpUser=function(lado){
   const input=document.getElementById(`cmp-user-${lado}-input`);if(input)input.value='';
 };
 
-window.ejecutarComparacion=function(){
-  const a=window._cmpUserA;const b=window._cmpUserB;
-  const res=document.getElementById('cmp-resultado');
-  if(!a&&!b){showModal('⚠️','Selecciona usuarios','Elige al menos un usuario para comparar.');return;}
-  if(a===b){showModal('⚠️','Mismo usuario','Selecciona dos usuarios distintos para comparar.');return;}
-  const lim=msL(window._cmpPerStr||'7d');
-  let todosP=todosComp().filter(i=>(i.tsComprado||0)>=lim);
-  function statsUser(nombre){
-    const its=nombre?todosP.filter(i=>(i.quien||'').toUpperCase().trim()===nombre.toUpperCase()):[];
-    const gasto=its.reduce((s,i)=>s+getP(i),0);
-    const conP=its.filter(i=>getP(i)>0);
-    const avg=conP.length?gasto/conP.length:0;
-    const dias=new Set(its.map(i=>{const d=new Date(i.tsComprado||i.ts||0);return`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;})).size;
-    const cats={};its.forEach(i=>{const c=i.categoria||'OTROS';cats[c]=(cats[c]||0)+1;});
-    const favCat=Object.entries(cats).sort((a,b2)=>b2[1]-a[1])[0];
-    const alta=its.filter(i=>i.urgencia==='alta'||i.urgencia==='urgente').length;
-    return{nombre,compras:its.length,gasto,avg,dias,favCat,alta};
-  }
-  const sA=statsUser(a);const sB=statsUser(b||null);
-  // Determinar ganador en cada métrica
-  const winClass=(va,vb,inv=false)=>{if(va===vb)return['',''];const w=inv?(va<vb?'var(--green)':'var(--red)'):(va>vb?'var(--green)':'var(--red)');return va>vb?(inv?['var(--red)','var(--green)']:['var(--green)','var(--red)']):(inv?['var(--green)','var(--red)']:['var(--red)','var(--green)']);};
-  const [cCA,cCB]=b?winClass(sA.compras,sB.compras):[['','']];
-  const [cGA,cGB]=b?winClass(sA.gasto,sB.gasto):[['','']];
-  const [cTA,cTB]=b?winClass(sA.avg,sB.avg):[['','']];
-  const periodoLabel={'7d':'últimos 7 días','30d':'último mes','todo':'todo el historial'}[window._cmpPerStr||'7d'];
-  const colA='var(--blue)';const colB='var(--green)';
-  const card=(st,col)=>!st.nombre?'':`
-    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);padding:14px;flex:1;">
-      <div style="font-size:.65rem;font-weight:700;color:#fff;background:${col};border-radius:20px;padding:3px 10px;display:inline-block;margin-bottom:10px;">👤 ${st.nombre}</div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
-        <span style="font-size:.75rem;color:var(--text3);">Compras</span>
-        <span style="font-size:.9rem;font-weight:800;color:var(--text);font-family:var(--ffmono);">${st.compras}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
-        <span style="font-size:.75rem;color:var(--text3);">Gasto total</span>
-        <span style="font-size:.9rem;font-weight:800;color:var(--accent);font-family:var(--ffmono);">S/ ${st.gasto.toFixed(2)}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
-        <span style="font-size:.75rem;color:var(--text3);">Ticket promedio</span>
-        <span style="font-size:.88rem;font-weight:700;color:var(--text);font-family:var(--ffmono);">${st.avg>0?'S/ '+st.avg.toFixed(2):'—'}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
-        <span style="font-size:.75rem;color:var(--text3);">Días activos</span>
-        <span style="font-size:.88rem;font-weight:700;color:var(--text);">${st.dias}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
-        <span style="font-size:.75rem;color:var(--text3);">Cat. favorita</span>
-        <span style="font-size:.78rem;font-weight:600;color:var(--text);">${st.favCat?`${EM[st.favCat[0]]||'⚙️'} ${st.favCat[0]}`:'—'}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;">
-        <span style="font-size:.75rem;color:var(--text3);">Alta prioridad</span>
-        <span style="font-size:.88rem;font-weight:700;color:${st.alta>0?'var(--red)':'var(--text3)'};">${st.alta}</span>
-      </div>
-    </div>`;
-  // Ganador general
-  let ganadorHTML='';
-  if(a&&b){
-    const pts={a:0,b:0};
-    if(sA.compras>sB.compras)pts.a++;else if(sB.compras>sA.compras)pts.b++;
-    if(sA.gasto>sB.gasto)pts.a++;else if(sB.gasto>sA.gasto)pts.b++;
-    if(sA.avg>sB.avg)pts.a++;else if(sB.avg>sA.avg)pts.b++;
-    if(sA.dias>sB.dias)pts.a++;else if(sB.dias>sA.dias)pts.b++;
-    const ganador=pts.a>pts.b?a:pts.b>pts.a?b:'empate';
-    ganadorHTML=`<div style="background:${ganador==='empate'?'var(--surface2)':'var(--accent-bg)'};border:1.5px solid ${ganador==='empate'?'var(--border)':'var(--accent)'};border-radius:var(--rmd);padding:12px 14px;text-align:center;margin-top:10px;">
-      ${ganador==='empate'?'🤝 <strong>Empate técnico</strong>':
-        `🏆 <strong>Mayor rendimiento: ${ganador}</strong> <span style="font-size:.72rem;color:var(--text3);">(${Math.max(pts.a,pts.b)} de 4 métricas)</span>`}
-    </div>`;
-  }
-  res.style.display='block';
-  res.innerHTML=`
-    <div style="font-size:.65rem;color:var(--text3);margin-bottom:8px;text-align:center;">📅 Período: ${periodoLabel}</div>
-    <div style="display:flex;gap:8px;">${card(sA,colA)}${b?card(sB,colB):''}</div>
-    ${ganadorHTML}`;
-};
 // ─── LOGS DEL SISTEMA (admin_supremo) ─────────────────────────────────────────
 const rLogs=ref(db,'logs');
 window._logFiltActual='todo';
@@ -5123,10 +5231,7 @@ function _adaptarModalPorRol(){
   if(secLista)secLista.style.display='block';
   // Fila Admin Supremo: solo visible para admin_supremo y super_admin
   const rowSupremo=document.getElementById('admin-supremo-row');
-  if(rowSupremo)rowSupremo.style.display=(rol==='admin_supremo'||rol==='super_admin')?'block':'none';
-  // Actualizar email en la fila del Admin Supremo
-  const emailSupremoEl=document.getElementById('admin-supremo-email');
-  if(emailSupremoEl)emailSupremoEl.textContent=ADMIN_SUPREMO_EMAIL||ADMIN_EMAIL||'—';
+  if(rowSupremo)rowSupremo.style.display=(rol==='admin_supremo')?'block':'none';
 
   // Solicitudes y proponer: removidos del modal
 
@@ -5137,9 +5242,15 @@ function _adaptarModalPorRol(){
   const botonesTransf=document.getElementById('sec-botones-transferir');
   if(rol==='admin_supremo'){
     if(secTransf)secTransf.style.display='block';
-    if(tituloTransf)tituloTransf.textContent='👑 Transferir Admin Supremo';
-    if(descTransf)descTransf.innerHTML='Esta acción es <strong>irreversible</strong>. Transferís tu rol de Admin Supremo a otra persona y no podrás recuperarlo a menos que el nuevo Admin Supremo te lo ceda.';
-    if(botonesTransf)botonesTransf.innerHTML=`<button class="mbtn danger" style="flex:1;padding:10px;font-size:.8rem;" onclick="transferirAdminSupremo()">👑 Transferir mi rol de Admin Supremo</button>`;
+    if(tituloTransf)tituloTransf.textContent='👑 Gestión de Roles';
+    if(descTransf)descTransf.innerHTML='Podés <strong>designar Super Admin</strong>, <strong>promover/degradar Admins</strong>, o <strong>transferir tu rol</strong> de Admin Supremo (irreversible).';
+    if(botonesTransf)botonesTransf.innerHTML=
+      `<button class="mbtn secondary" style="flex:1;padding:10px;font-size:.78rem;" onclick="designarSuperAdmin()">⭐ Designar Super Admin</button>`+
+      `<button class="mbtn secondary" style="flex:1;padding:10px;font-size:.78rem;" onclick="compartirAdmin()">🤝 Promover a Admin</button>`+
+      `<button class="mbtn danger" style="flex:1;padding:10px;font-size:.78rem;margin-top:6px;" onclick="transferirAdminSupremo()">👑 Transferir Admin Supremo</button>`;
+    // Ajustar el select para incluir todos los usuarios
+    const selT=document.getElementById('admin-transfer-email');
+    if(selT)selT.setAttribute('data-ctx','admin_supremo');
   }else if(rol==='super_admin'){
     if(secTransf)secTransf.style.display='block';
     if(tituloTransf)tituloTransf.textContent='🔑 Transferir Super Admin';
@@ -5353,6 +5464,40 @@ function renderSolicitudes(){
     }).join('');
   });
 }
+
+// Designar Super Admin (solo Admin Supremo — sin ceder su propio rol)
+window.designarSuperAdmin=async function(){
+  if(!window._esAdminSupremo){
+    showModal('🔒','Sin permisos','Solo el Admin Supremo puede designar el Super Admin.');
+    return;
+  }
+  const email=(document.getElementById('admin-transfer-email')?.value||'').trim().toLowerCase();
+  const fb=document.getElementById('admin-transfer-feedback');
+  if(!email){if(fb){fb.style.display='block';fb.style.color='var(--red)';fb.style.background='var(--red-bg)';fb.textContent='⚠️ Seleccioná un usuario primero.';}return;}
+  const snap=await get(rAcceso);const d=snap.val()||{};
+  const entry=Object.entries(d).find(([k,v])=>(v.email||'').toLowerCase().trim()===email);
+  if(!entry){if(fb){fb.style.display='block';fb.style.color='var(--red)';fb.style.background='var(--red-bg)';fb.textContent='❌ Usuario no encontrado.';}return;}
+  const rolActual=entry[1].rol||'usuario';
+  if(rolActual==='super_admin'){
+    if(fb){fb.style.display='block';fb.style.color='var(--orange)';fb.style.background='var(--orange-bg)';fb.textContent=`ℹ️ ${email} ya es Super Admin.`;setTimeout(()=>fb.style.display='none',4000);}
+    return;
+  }
+  if(rolActual==='admin_supremo'){
+    if(fb){fb.style.display='block';fb.style.color='var(--red)';fb.style.background='var(--red-bg)';fb.textContent='❌ No podés designar al Admin Supremo como Super Admin.';}
+    return;
+  }
+  // Bajar el Super Admin anterior (si existe) a admin
+  for(const [k,v] of Object.entries(d)){
+    if((v.rol||'usuario')==='super_admin'){
+      await update(ref(db,`acceso/${k}`),{rol:'admin',esAdmin:true});
+    }
+  }
+  // Actualizar en config/
+  await set(ref(db,'config/adminEmail'),email);
+  // Promover al nuevo Super Admin
+  await update(ref(db,`acceso/${entry[0]}`),{esAdmin:true,rol:'super_admin',adminDesde:Date.now(),promovidoPor:auth.currentUser?.email||''});
+  if(fb){fb.style.display='block';fb.style.color='var(--green)';fb.style.background='var(--green-bg)';fb.textContent=`✅ ${email} ahora es Super Admin.`;setTimeout(()=>fb.style.display='none',5000);}
+};
 
 // Compartir admin: marca al usuario seleccionado como co-admin en Firebase
 window.compartirAdmin=async function(){
