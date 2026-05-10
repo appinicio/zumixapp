@@ -1789,6 +1789,8 @@ aplicarTema(localStorage.getItem(TEMA_KEY)||'light');
 // ONBOARDING / PERFIL DE USUARIO
 const EEK='zumix_emp_edit';
 function hoyKey(){const d=new Date();return`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;}
+// Clave de límite diario POR CUENTA (usa UID para que cada cuenta tenga su propio contador)
+function _eekPorUid(){const uid=auth.currentUser?.uid||'anon';return`${EEK}_${uid}`;}
 function _uid(){return auth.currentUser?.uid||null;}
 function _rPerfil(uid){return ref(db,`usuarios/${uid||_uid()}`);}
 window._nombreActual='';
@@ -1810,7 +1812,7 @@ window.registrarNombre=async function(){
 };
 document.getElementById('ob-input').addEventListener('keydown',e=>{if(e.key==='Enter')window.registrarNombre();});
 window.pedirEditEmp=function(){
-  if(localStorage.getItem(EEK)===hoyKey()){showModal('\U0001f512','No puedes editar m\u00e1s hoy','Solo puedes cambiar tu nombre una vez al d\u00eda.');return;}
+  if(localStorage.getItem(_eekPorUid())===hoyKey()){showModal('\U0001f512','No puedes editar m\u00e1s hoy','Solo puedes cambiar tu nombre una vez al d\u00eda.');return;}
   showModal('\u270f\ufe0f','Editar tu nombre',
     `<input id="edit-name-input" class="input-f" type="text" maxlength="30" placeholder="Nuevo nombre..." style="width:100%;margin-top:8px;" value="${window._nombreActual||''}"/>
     <div style="font-size:.72rem;color:var(--text3);margin-top:6px;">Solo puedes cambiarlo una vez al d\u00eda. Tu nombre se actualizar\u00e1 en todos tus registros existentes.</div>`,
@@ -1823,17 +1825,48 @@ window.pedirEditEmp=function(){
       const uid=_uid();
       if(!uid){showModal('\u274c','Error','No hay sesi\u00f3n activa.');return;}
       await update(_rPerfil(uid),{nombre:nuevoNombre,tsEditado:Date.now()});
+      // Guardar límite por UID (1 cambio por cuenta por día)
+      localStorage.setItem(_eekPorUid(),hoyKey());
+      // Actualizar nombre en UI y variable global
+      const nombreAnterior=window._nombreActual;
       window._nombreActual=nuevoNombre;
-      localStorage.setItem(EEK,hoyKey());
       document.getElementById('brand-user').textContent=nuevoNombre;
       let actualizados=0;
       try{
         const updates={};
+        // Actualizar en faltantes (activos)
         const snapAct=await get(ref(db,'faltantes'));
         if(snapAct.exists()){snapAct.forEach(child=>{const d=child.val();if(d.quien_id===uid){updates[`faltantes/${child.key}/quien`]=nuevoNombre;actualizados++;}if(d.quienEdito_id===uid){updates[`faltantes/${child.key}/quienEdito`]=nuevoNombre;}});}
+        // Actualizar en archivo
         const snapArch=await get(ref(db,'archivo'));
         if(snapArch.exists()){snapArch.forEach(child=>{const d=child.val();if(d.quien_id===uid){updates[`archivo/${child.key}/quien`]=nuevoNombre;actualizados++;}if(d.quienEdito_id===uid){updates[`archivo/${child.key}/quienEdito`]=nuevoNombre;}});}
+        // Actualizar en historial (nodo separado si existe)
+        const snapHist=await get(ref(db,'historial'));
+        if(snapHist.exists()){snapHist.forEach(child=>{const d=child.val();if(d.quien_id===uid){updates[`historial/${child.key}/quien`]=nuevoNombre;actualizados++;}if(d.quienEdito_id===uid){updates[`historial/${child.key}/quienEdito`]=nuevoNombre;}});}
         if(Object.keys(updates).length)await update(ref(db),updates);
+        // Refrescar cache de usuarios para que el filtro muestre el nuevo nombre
+        if(window._usuariosAccesoCache){
+          const cacheEntry=Object.values(window._usuariosAccesoCache).find(v=>(v._nombre||'').toUpperCase()===nombreAnterior.toUpperCase());
+          if(cacheEntry)cacheEntry._nombre=nuevoNombre;
+        }
+        // Refrescar el chip de filtro de usuario activo si coincide con el nombre anterior
+        if((window._filtroUsuarioStats||'').toUpperCase()===nombreAnterior.toUpperCase()){
+          window._filtroUsuarioStats=nuevoNombre;
+          const chip=document.getElementById('stats-user-chip');
+          if(chip&&chip.style.display!=='none'){
+            const chipText=chip.querySelector('span');if(chipText)chipText.textContent=`👤 ${nuevoNombre}`;
+          }
+        }
+        // Refrescar el chip en historial si coincide
+        if((window._filtroUsuarioHist||'').toUpperCase()===nombreAnterior.toUpperCase()){
+          window._filtroUsuarioHist=nuevoNombre;
+          const chipH=document.getElementById('hist-user-chip');
+          if(chipH&&chipH.style.display!=='none'){
+            const chipHText=chipH.querySelector('span');if(chipHText)chipHText.textContent=`👤 ${nuevoNombre}`;
+          }
+        }
+        // Re-renderizar historial para reflejar el nuevo nombre en los registros
+        if(typeof renderHist==='function')setTimeout(()=>renderHist(),300);
         const msg=actualizados>0
           ?`Nombre actualizado a <strong>${nuevoNombre}</strong>.<br><span style="font-size:.8rem;color:var(--text3);">${actualizados} registro${actualizados!==1?'s':''} actualizado${actualizados!==1?'s':''}.</span>`
           :`Nombre actualizado a <strong>${nuevoNombre}</strong>.`;
