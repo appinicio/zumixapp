@@ -1123,24 +1123,26 @@ details summary::-webkit-details-marker{display:none;}
 
 <!-- PANE HISTORIAL -->
 <div class="pane" id="pane-historial">
-  <!-- Filtros principales: períodos en scroll horizontal -->
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-    <div id="filt-hist" style="display:flex;gap:6px;overflow-x:auto;flex:1;padding-bottom:2px;scrollbar-width:none;">
-      <button class="fbtn active" onclick="setFH(this,'hoy')">Hoy</button>
-      <button class="fbtn" onclick="setFH(this,'3d')">3 días</button>
-      <button class="fbtn" onclick="setFH(this,'7d')">Semana</button>
-      <button class="fbtn" onclick="setFH(this,'15d')">Quincenal</button>
-      <button class="fbtn" onclick="setFH(this,'30d')">Mensual</button>
-      <button class="fbtn" onclick="setFH(this,'todo')">Todo</button>
+  <!-- Fila 1: períodos predefinidos + botón 📅 Rango (solo super_admin/admin_supremo) -->
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;">
+    <div id="filt-hist" style="display:flex;gap:6px;flex-shrink:0;">
+      <button class="fbtn active" id="fhbtn-hoy" onclick="setFH(this,'hoy')">Hoy</button>
+      <button class="fbtn" id="fhbtn-3d" onclick="setFH(this,'3d')">3 días</button>
+      <button class="fbtn" id="fhbtn-7d" onclick="setFH(this,'7d')">Semana</button>
+      <button class="fbtn" id="fhbtn-15d" onclick="setFH(this,'15d')">Quincenal</button>
+      <button class="fbtn" id="fhbtn-30d" onclick="setFH(this,'30d')">Mensual</button>
+      <!-- Botón Todo: oculto para admin, visible para super_admin+ -->
+      <button class="fbtn" id="fhbtn-todo" onclick="setFH(this,'todo')" style="display:none;">Todo</button>
     </div>
-    <button id="btn-toggle-hfiltros" onclick="toggleHistFiltros()" title="Filtros avanzados"
-      style="flex-shrink:0;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--transition);position:relative;">
-      ⚙️
-      <span id="hfilt-dot" style="display:none;position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:var(--accent);border:1.5px solid var(--surface);"></span>
+    <!-- Botón Rango: solo super_admin / admin_supremo -->
+    <button id="btn-hist-rango" onclick="toggleHistRango(this)" title="Filtro por rango de fechas"
+      style="display:none;flex-shrink:0;padding:5px 11px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.72rem;font-weight:700;border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);white-space:nowrap;transition:var(--transition);position:relative;">
+      📅 Rango
+      <span id="hfilt-dot" style="display:none;position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;background:var(--accent);border:1.5px solid var(--surface);"></span>
     </button>
   </div>
-  <!-- Filtros secundarios: colapsables -->
-  <div id="hist-extra-filters" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:10px 12px;margin-bottom:8px;gap:8px;flex-direction:column;">
+  <!-- Panel rango de fechas: solo super_admin / admin_supremo, colapsable -->
+  <div id="hist-rango-panel" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:10px 12px;margin-bottom:6px;">
     <div style="display:flex;gap:8px;">
       <div style="flex:1;">
         <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">Desde</div>
@@ -1150,12 +1152,13 @@ details summary::-webkit-details-marker{display:none;}
         <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">Hasta</div>
         <input type="date" id="hist-date-to" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="renderHist();actualizarDotHFilt()"/>
       </div>
+      <button onclick="limpiarRangoHist()" style="flex-shrink:0;align-self:flex-end;padding:6px 10px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
     </div>
-    <div style="display:flex;gap:8px;align-items:flex-end;">
-      <div style="flex:1;">
-        <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">Usuario</div>
-        <select id="hist-filter-user" class="select-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="renderHist();actualizarDotHFilt()"><option value="">— Todos —</option></select>
-      </div>
+  </div>
+  <!-- Fila 2: Filtro por usuario (segunda línea, siempre visible para admin+) -->
+  <div id="hist-user-row" style="display:none;margin-bottom:8px;">
+    <div style="display:flex;gap:8px;align-items:center;">
+      <select id="hist-filter-user" class="select-f" style="font-size:.78rem;padding:6px 9px;flex:1;" onchange="renderHist();actualizarDotHFilt()"><option value="">— Todos —</option></select>
       <button onclick="limpiarFiltrosHist()" style="flex-shrink:0;padding:6px 12px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕ Limpiar</button>
     </div>
   </div>
@@ -1277,22 +1280,23 @@ details summary::-webkit-details-marker{display:none;}
           <button class="fbtn active" onclick="setFS(this,'7d')" data-admin-filt>7 días</button>
           <button class="fbtn" onclick="setFS(this,'15d')" data-admin-filt>15 días</button>
           <button class="fbtn" onclick="setFS(this,'30d')" data-admin-filt>Mes</button>
-          <button class="fbtn" onclick="setFS(this,'todo')" data-admin-filt>Todo</button>
-          <button class="fbtn" id="btn-stats-rango-admin" onclick="toggleStatsRangoAdmin(this)" style="display:none;white-space:nowrap;">📅 Rango</button>
+          <!-- "Todo" OCULTO para admin — el rango está acotado a 30 días -->
+          <button class="fbtn" id="btn-stats-rango-admin" onclick="toggleStatsRangoAdmin(this)" style="white-space:nowrap;">📅 Rango</button>
         </div>
       </div>
-      <!-- Rango de fecha inline para admin -->
+      <!-- Rango de fecha inline para admin — acotado a 30 días -->
       <div id="stats-rango-admin-wrap" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:8px 12px;margin-top:6px;gap:8px;flex-direction:row;align-items:center;flex-wrap:wrap;">
         <div style="flex:1;min-width:110px;">
           <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
-          <input type="date" id="stats-date-from-admin" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="syncAdminDateToMain();actualizarDotSFilt();renderStats()"/>
+          <input type="date" id="stats-date-from-admin" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="validarRangoAdmin();syncAdminDateToMain();actualizarDotSFilt();renderStats()"/>
         </div>
         <div style="flex:1;min-width:110px;">
           <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
-          <input type="date" id="stats-date-to-admin" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="syncAdminDateToMain();actualizarDotSFilt();renderStats()"/>
+          <input type="date" id="stats-date-to-admin" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="validarRangoAdmin();syncAdminDateToMain();actualizarDotSFilt();renderStats()"/>
         </div>
         <button onclick="limpiarRangoAdmin()" style="flex-shrink:0;padding:6px 12px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕ Limpiar</button>
       </div>
+      <div id="admin-rango-warn" style="display:none;font-size:.72rem;color:var(--red);font-weight:600;background:var(--red-bg);border-radius:var(--rsm);padding:5px 9px;margin-top:4px;">⚠️ El rango no puede superar 30 días (mes actual).</div>
     </div>
     <!-- Botón PDF — solo super_admin+ — debajo de la barra global, en sección análisis -->
     <div id="stats-pdf-wrap" style="display:none;margin-bottom:8px;">
@@ -1340,24 +1344,33 @@ details summary::-webkit-details-marker{display:none;}
 
   <!-- ─── SUBPANE: PERÍODOS (antes Comparaciones) ─────────────────────────── -->
   <div class="subpane" id="sp-comparaciones">
-    <!-- Filtros para rol ADMIN en Períodos (copia independiente, estado propio) -->
+    <!-- Filtros para rol ADMIN en Períodos: solo filtro usuario -->
     <div id="stats-admin-filters-periodos-wrap" style="display:none;margin-bottom:8px;">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;">
-        <div style="flex-shrink:0;position:relative;">
-          <input type="text" id="stats-user-inline-input-per" placeholder="👤 Usuario…" autocomplete="off"
-            class="input-f" style="font-size:.78rem;padding:6px 10px;width:120px;box-sizing:border-box;border-color:var(--accent);"
-            oninput="filtrarSugerenciasUsuarioInlinePer()" onfocus="filtrarSugerenciasUsuarioInlinePer()" />
-          <div id="stats-user-inline-sug-per" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
-        </div>
-        <div style="display:flex;gap:6px;overflow-x:auto;flex:1;padding-bottom:2px;scrollbar-width:none;">
-          <button class="fbtn active" onclick="setFSPer(this,'7d')">7 días</button>
-          <button class="fbtn" onclick="setFSPer(this,'15d')">15 días</button>
-          <button class="fbtn" onclick="setFSPer(this,'30d')">Mes</button>
-          <button class="fbtn" onclick="setFSPer(this,'todo')">Todo</button>
-          <button class="fbtn" id="btn-stats-rango-admin-per" onclick="toggleStatsRangoAdminPer(this)" style="white-space:nowrap;">📅 Rango</button>
-        </div>
+      <div style="position:relative;">
+        <input type="text" id="stats-user-inline-input-per" placeholder="👤 Usuario…" autocomplete="off"
+          class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;border-color:var(--accent);"
+          oninput="filtrarSugerenciasUsuarioInlinePer()" onfocus="filtrarSugerenciasUsuarioInlinePer()" />
+        <div id="stats-user-inline-sug-per" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
       </div>
-      <div id="stats-rango-admin-per-wrap" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:8px 12px;margin-top:6px;gap:8px;flex-direction:row;align-items:center;flex-wrap:wrap;">
+      <div id="stats-per-user-chip" style="display:none;margin-top:5px;"></div>
+    </div>
+    <!-- Filtros para super_admin / admin_supremo en Períodos: usuario + botón Rango -->
+    <div id="stats-superadmin-filters-periodos-wrap" style="display:none;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;">
+        <div style="flex:1;position:relative;">
+          <input type="text" id="stats-user-inline-input-per-sa" placeholder="👤 Usuario…" autocomplete="off"
+            class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;border-color:var(--accent);"
+            oninput="filtrarSugerenciasUsuarioInlinePerSA()" onfocus="filtrarSugerenciasUsuarioInlinePerSA()" />
+          <div id="stats-user-inline-sug-per-sa" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
+        </div>
+        <button id="btn-per-rango-sa" onclick="togglePerRangoSA(this)"
+          style="flex-shrink:0;padding:5px 11px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.72rem;font-weight:700;border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);white-space:nowrap;transition:var(--transition);">
+          📅 Rango
+        </button>
+      </div>
+      <div id="stats-per-user-chip-sa" style="display:none;margin-top:5px;"></div>
+      <!-- Panel rango fechas para super_admin+ en Períodos -->
+      <div id="stats-per-rango-panel-sa" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:8px 12px;margin-top:6px;gap:8px;flex-direction:row;align-items:center;flex-wrap:wrap;">
         <div style="flex:1;min-width:110px;">
           <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
           <input type="date" id="stats-date-from-per" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="renderComparaciones()"/>
@@ -1404,7 +1417,17 @@ details summary::-webkit-details-marker{display:none;}
   <!-- ─── SUBPANE: COMPARAR USUARIOS (super_admin+) ────────────────────────── -->
   <div class="subpane" id="sp-comparar">
     <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:14px;box-shadow:var(--sh);margin-bottom:10px;">
-      <div style="font-size:.68rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">👥 Seleccionar usuarios a comparar</div>
+      <!-- Filtrar por tipo — primera línea -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">👥 Filtrar por tipo</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="fbtn" id="cmp-ftipo-admins" onclick="setCmpTipo('admins',this)" style="font-size:.72rem;padding:6px 13px;">🧑‍💼 Admins</button>
+          <button class="fbtn" id="cmp-ftipo-usuarios" onclick="setCmpTipo('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios</button>
+          <button onclick="ejecutarComparacionGrupal()" style="font-size:.72rem;padding:6px 13px;background:var(--accent);color:#111;border:none;border-radius:var(--rmd);font-family:var(--ff);font-weight:700;cursor:pointer;white-space:nowrap;transition:var(--transition);">🔄 Admins vs Usuarios</button>
+        </div>
+      </div>
+      <!-- Seleccionar usuarios a comparar -->
+      <div style="font-size:.68rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">👤 Seleccionar usuarios a comparar</div>
       <div style="display:flex;gap:8px;margin-bottom:8px;">
         <div style="flex:1;">
           <div style="font-size:.62rem;color:var(--text3);font-weight:700;margin-bottom:4px;">Usuario A</div>
@@ -1436,7 +1459,7 @@ details summary::-webkit-details-marker{display:none;}
         <button class="fbtn" id="cmpf-rango" onclick="setCmpPer('rango',this)" style="font-size:.7rem;padding:5px 11px;">📅 Rango</button>
       </div>
       <!-- Rango de fechas personalizado — visible solo si se selecciona Rango -->
-      <div id="cmp-rango-wrap" style="display:none;margin-bottom:8px;gap:6px;display:none;flex-wrap:wrap;align-items:center;">
+      <div id="cmp-rango-wrap" style="display:none;margin-bottom:8px;gap:6px;flex-wrap:wrap;align-items:center;">
         <div style="display:flex;gap:6px;align-items:center;flex:1;flex-wrap:wrap;">
           <div style="flex:1;min-width:110px;">
             <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
@@ -2765,6 +2788,11 @@ window.limpiarFiltrosHist=function(){
   const df=document.getElementById('hist-date-from');if(df)df.value='';
   const dt=document.getElementById('hist-date-to');if(dt)dt.value='';
   const du=document.getElementById('hist-filter-user');if(du)du.value='';
+  // Cerrar panel de rango si está abierto
+  const panelRango=document.getElementById('hist-rango-panel');
+  if(panelRango)panelRango.style.display='none';
+  const btnRango=document.getElementById('btn-hist-rango');
+  if(btnRango)btnRango.classList.remove('active');
   // Restaurar el botón de período activo según fHist actual
   document.querySelectorAll('#filt-hist .fbtn').forEach(b=>{
     const v=b.getAttribute('onclick')?.match(/'([^']+)'\)/)?.[1];
@@ -2775,15 +2803,12 @@ window.limpiarFiltrosHist=function(){
 };
 
 window.toggleHistFiltros=function(){
-  const panel=document.getElementById('hist-extra-filters');
-  const btn=document.getElementById('btn-toggle-hfiltros');
-  const abierto=panel.style.display==='flex';
-  panel.style.display=abierto?'none':'flex';
-  btn.style.background=abierto?'var(--surface)':'var(--surface3)';
-  btn.style.borderColor=abierto?'var(--border)':'var(--border2)';
+  // Legacy: ya reemplazado por toggleHistRango; mantener por compatibilidad
+  toggleHistRango(document.getElementById('btn-hist-rango'));
 };
 
 window.actualizarDotHFilt=function(){
+  if(typeof _validarRangoHistAdmin==='function')_validarRangoHistAdmin();
   const df=document.getElementById('hist-date-from')?.value||'';
   const dt=document.getElementById('hist-date-to')?.value||'';
   const du=document.getElementById('hist-filter-user')?.value||'';
@@ -5604,7 +5629,642 @@ function renderSolicitudes(){
   });
 }
 
-// Designar Super Admin (solo Admin Supremo — sin ceder su propio rol)
+// ─── HISTORIAL: nuevo sistema de filtros ──────────────────────────────────────
+
+// Toggle del panel de rango de fechas en Historial (solo super_admin+)
+window.toggleHistRango=function(btn){
+  const panel=document.getElementById('hist-rango-panel');
+  if(!panel)return;
+  const open=panel.style.display==='block';
+  panel.style.display=open?'none':'block';
+  if(btn)btn.classList.toggle('active',!open);
+  if(open){limpiarRangoHist();}
+};
+
+// Limpiar solo el rango de fechas en historial
+window.limpiarRangoHist=function(){
+  const df=document.getElementById('hist-date-from');const dt=document.getElementById('hist-date-to');
+  if(df)df.value='';if(dt)dt.value='';
+  const btn=document.getElementById('btn-hist-rango');if(btn)btn.classList.remove('active');
+  actualizarDotHFilt();renderHist();
+};
+
+// Aplicar visibilidad de filtros de historial según rol
+function _aplicarFiltrosHistorialRol(rol){
+  const btnTodo=document.getElementById('fhbtn-todo');
+  const btnRango=document.getElementById('btn-hist-rango');
+  const histUserRow=document.getElementById('hist-user-row');
+  // Botón "Todo": solo super_admin y admin_supremo
+  if(btnTodo)btnTodo.style.display=(rol==='super_admin'||rol==='admin_supremo')?'':'none';
+  // Botón "📅 Rango": solo super_admin y admin_supremo
+  if(btnRango)btnRango.style.display=(rol==='super_admin'||rol==='admin_supremo')?'':'none';
+  // Fila de filtro usuario: visible para todos los admin+
+  if(histUserRow)histUserRow.style.display=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo')?'':'none';
+  // Para admin: asegurar que el filtro por defecto sea 'hoy'
+  if(rol==='admin'){
+    fHist='hoy';
+    document.querySelectorAll('#filt-hist .fbtn').forEach(b=>{
+      const v=b.getAttribute('onclick')?.match(/'([^']+)'\)/)?.[1];
+      b.classList.toggle('active',v==='hoy');
+    });
+  }
+}
+
+// Validar que el rango admin no supere 30 días
+window.validarRangoAdmin=function(){
+  const df=document.getElementById('stats-date-from-admin');
+  const dt=document.getElementById('stats-date-to-admin');
+  const warn=document.getElementById('admin-rango-warn');
+  if(!df||!dt||!warn)return;
+  if(!df.value||!dt.value){warn.style.display='none';return;}
+  const desde=new Date(df.value+'T00:00:00');
+  const hasta=new Date(dt.value+'T23:59:59');
+  const diffDias=(hasta-desde)/(1000*60*60*24);
+  if(diffDias>30){
+    warn.style.display='block';
+    // Ajustar 'hasta' para que no supere 30 días desde 'desde'
+    const maxHasta=new Date(desde);maxHasta.setDate(maxHasta.getDate()+30);
+    dt.value=maxHasta.toISOString().split('T')[0];
+  }else{
+    warn.style.display='none';
+  }
+};
+
+// Validar que el rango historial para admin no supere 30 días
+function _validarRangoHistAdmin(){
+  if(window._rol!=='admin')return;
+  const df=document.getElementById('hist-date-from');
+  const dt=document.getElementById('hist-date-to');
+  if(!df||!dt||!df.value||!dt.value)return;
+  const desde=new Date(df.value+'T00:00:00');
+  const hasta=new Date(dt.value+'T23:59:59');
+  const diffDias=(hasta-desde)/(1000*60*60*24);
+  if(diffDias>30){
+    const maxHasta=new Date(desde);maxHasta.setDate(maxHasta.getDate()+30);
+    dt.value=maxHasta.toISOString().split('T')[0];
+    showModal('⚠️','Rango limitado','Como Administrador, el rango de fechas no puede superar los 30 días.');
+  }
+}
+
+// ─── PERÍODOS: nuevas funciones para super_admin+ ────────────────────────────
+
+// Toggle del panel de rango en Períodos para super_admin+
+window.togglePerRangoSA=function(btn){
+  const panel=document.getElementById('stats-per-rango-panel-sa');
+  if(!panel)return;
+  const open=panel.style.display==='flex';
+  panel.style.display=open?'none':'flex';
+  if(btn)btn.classList.toggle('active',!open);
+  if(open){
+    const df=document.getElementById('stats-date-from-per');const dt=document.getElementById('stats-date-to-per');
+    if(df)df.value='';if(dt)dt.value='';
+    renderComparaciones();
+  }
+};
+
+// Filtro de usuario en Períodos para super_admin+ (campo separado SA)
+window._filtroUsuarioStatsPerSA=null;
+window.filtrarSugerenciasUsuarioInlinePerSA=function(){
+  const input=document.getElementById('stats-user-inline-input-per-sa');
+  const sug=document.getElementById('stats-user-inline-sug-per-sa');
+  if(!input||!sug)return;
+  const q=(input.value||'').toUpperCase().trim();
+  const lista=_obtenerUsuariosPermitidosStats();
+  const filtrada=q?lista.filter(n=>n.includes(q)):lista;
+  if(!filtrada.length){sug.style.display='none';return;}
+  sug.innerHTML=filtrada.map(n=>{
+    const rolBadgeStr=_getBadgeHtmlPorNombre(n);
+    return`<div onclick="seleccionarUsuarioStatsInlinePerSA('${n.replace(/'/g,"\\'")}')"
+      style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;"
+      onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">
+      👤 ${n}${rolBadgeStr}
+    </div>`;
+  }).join('');
+  sug.style.display='block';
+};
+
+window.seleccionarUsuarioStatsInlinePerSA=function(nombre){
+  window._filtroUsuarioStatsPerSA=nombre.toUpperCase().trim();
+  // También sincronizar con el filtro global para que renderComparaciones lo use
+  window._filtroUsuarioStats=window._filtroUsuarioStatsPerSA;
+  const input=document.getElementById('stats-user-inline-input-per-sa');
+  if(input)input.value=window._filtroUsuarioStatsPerSA;
+  const sug=document.getElementById('stats-user-inline-sug-per-sa');
+  if(sug)sug.style.display='none';
+  const chip=document.getElementById('stats-per-user-chip-sa');
+  if(chip){
+    chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
+    const rolBadgeStr=_getBadgeHtmlPorNombre(nombre);
+    chip.innerHTML=`<span style="font-size:.78rem;background:var(--accent);color:#111;padding:4px 10px;border-radius:20px;font-weight:700;">👤 ${nombre}${rolBadgeStr}</span>
+      <button onclick="limpiarUsuarioStatsPerSA()" style="background:none;border:none;cursor:pointer;font-size:.78rem;color:var(--text3);">✕</button>`;
+  }
+  renderComparaciones();
+};
+
+window.limpiarUsuarioStatsPerSA=function(){
+  window._filtroUsuarioStatsPerSA=null;
+  window._filtroUsuarioStats=null;
+  const input=document.getElementById('stats-user-inline-input-per-sa');if(input)input.value='';
+  const chip=document.getElementById('stats-per-user-chip-sa');if(chip){chip.style.display='none';chip.innerHTML='';}
+  renderComparaciones();
+};
+
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#stats-superadmin-filters-periodos-wrap')){
+    const sug=document.getElementById('stats-user-inline-sug-per-sa');
+    if(sug)sug.style.display='none';
+  }
+});
+
+// ─── PERÍODOS: lógica de renderComparaciones actualizada con rango dinámico ──
+// Override de renderComparaciones para manejar rango super_admin+ y títulos dinámicos
+const _origRenderComparaciones=renderComparaciones;
+renderComparaciones=function(){
+  const _rolComp=window._rol||'usuario';
+  const _filtroUser=window._filtroUsuarioStats;
+  if(_rolComp==='admin'&&!_filtroUser){
+    ['comp-dias','comp-sem','comp-mes'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.innerHTML='<p class="no-data" style="color:var(--orange);">👆 Seleccioná un usuario primero</p>';
+    });
+    const notaEl=document.getElementById('comp-nota-contexto');
+    if(notaEl)notaEl.innerHTML=`📌 Seleccioná un usuario para ver sus comparativas de períodos.`;
+    return;
+  }
+  // Determinar si hay rango personalizado (solo super_admin+)
+  const esSA=(_rolComp==='super_admin'||_rolComp==='admin_supremo');
+  const dfVal=esSA?document.getElementById('stats-date-from-per')?.value:'';
+  const dtVal=esSA?document.getElementById('stats-date-to-per')?.value:'';
+  const hayRango=esSA&&(dfVal||dtVal);
+  let rangoDesde=null,rangoHasta=null;
+  if(hayRango){
+    if(dfVal)rangoDesde=new Date(dfVal+'T00:00:00');
+    if(dtVal)rangoHasta=new Date(dtVal+'T23:59:59');
+    else rangoHasta=new Date();
+    if(!rangoDesde)rangoDesde=new Date(0);
+  }
+  const hoy=new Date();hoy.setHours(0,0,0,0);
+  const _base=()=>{
+    let t=todosComp();
+    if(_filtroUser)t=t.filter(i=>(i.quien||'').toUpperCase().trim()===_filtroUser.toUpperCase().trim());
+    const tipoF=window._filtroTipoUsuarioStats||'todos';
+    if(tipoF!=='todos'&&!_filtroUser){
+      const npt=_nombresDeRol(tipoF);
+      if(npt&&npt.size)t=t.filter(i=>npt.has((i.quien||'').toUpperCase().trim()));
+    }
+    if(hayRango)t=t.filter(i=>{const ts=i.tsComprado||0;return ts>=rangoDesde.getTime()&&ts<=rangoHasta.getTime();});
+    return t;
+  };
+  const compPerLocal=(desde,hasta)=>{const its=_base().filter(i=>{const t=i.tsComprado||0;return t>=desde&&t<hasta;});return{compras:its.length,gasto:its.reduce((s,i)=>s+getP(i),0)};};
+  const compPLocal=(periodos)=>periodos.map(p=>({label:p.label,...compPerLocal(p.desde,p.hasta)}));
+  const D=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const NM=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  // Calcular base de referencia para períodos
+  const baseHoy=hayRango?(rangoHasta):hoy;
+  const baseHoyCopy=new Date(baseHoy);baseHoyCopy.setHours(0,0,0,0);
+  const lun=new Date(baseHoyCopy);lun.setDate(lun.getDate()-((lun.getDay()+6)%7));
+  // Días: últimos 3 desde baseHoy
+  const diasData=compPLocal([-2,-1,0].map(o=>{
+    const d=new Date(baseHoyCopy);d.setDate(d.getDate()+o);
+    const f=new Date(d);f.setDate(f.getDate()+1);
+    return{label:`${D[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}`,desde:d.getTime(),hasta:f.getTime()};
+  }));
+  // Semanas: últimas 3
+  const semsData=compPLocal([-2,-1,0].map(o=>{
+    const i2=new Date(lun);i2.setDate(i2.getDate()+o*7);
+    const f=new Date(i2);f.setDate(f.getDate()+7);
+    return{label:`${String(i2.getDate()).padStart(2,'0')}/${i2.getMonth()+1}`,desde:i2.getTime(),hasta:f.getTime()};
+  }));
+  // Meses: últimos 3
+  const mesesData=compPLocal([-2,-1,0].map(o=>{
+    const i2=new Date(baseHoyCopy.getFullYear(),baseHoyCopy.getMonth()+o,1);
+    const f=new Date(baseHoyCopy.getFullYear(),baseHoyCopy.getMonth()+o+1,1);
+    return{label:`${NM[i2.getMonth()]} ${i2.getFullYear()}`,desde:i2.getTime(),hasta:f.getTime()};
+  }));
+  // Si el rango es menor a 3 meses / semanas / días → mostrar como incompleto/vacío
+  let diasTitulo='📅 Últimos 3 días';
+  let semsTitulo='📅 Últimas 3 semanas';
+  let mesesTitulo='📅 Últimos 3 meses';
+  if(hayRango){
+    const rDesde=rangoDesde;const rHasta=rangoHasta;
+    const diffMs=rHasta.getTime()-rDesde.getTime();
+    const diffDias=diffMs/(1000*60*60*24);
+    const diffSems=diffDias/7;
+    const diffMeses=diffDias/30;
+    const fmtRango=`${dfVal||'inicio'} → ${dtVal||'hoy'}`;
+    diasTitulo=`📅 Últimos 3 días del rango (${fmtRango})`;
+    semsTitulo=`📅 Últimas 3 semanas del rango (${fmtRango})`;
+    mesesTitulo=`📅 Últimos 3 meses del rango (${fmtRango})`;
+    // Si el rango es menor a los períodos → marcar incompleto
+    if(diffDias<3){diasData.forEach((d,i)=>{if(i<2)d._vacio=true;});}
+    if(diffSems<3){semsData.forEach((d,i)=>{if(i<2)d._vacio=true;});}
+    if(diffMeses<3){mesesData.forEach((d,i)=>{if(i<2)d._vacio=true;});}
+  }
+  // Actualizar títulos
+  const elDiasTit=document.querySelector('#comp-dias')?.closest('.stat-card')?.querySelector('.stat-title');
+  const elSemsTit=document.querySelector('#comp-sem')?.closest('.stat-card')?.querySelector('.stat-title');
+  const elMesTit=document.querySelector('#comp-mes')?.closest('.stat-card')?.querySelector('.stat-title');
+  if(elDiasTit)elDiasTit.textContent=diasTitulo;
+  if(elSemsTit)elSemsTit.textContent=semsTitulo;
+  if(elMesTit)elMesTit.textContent=mesesTitulo;
+  rComp('comp-dias',diasData);
+  rComp('comp-sem',semsData);
+  rComp('comp-mes',mesesData);
+  // Nota contextual
+  const notaEl=document.getElementById('comp-nota-contexto');
+  if(notaEl){
+    const tipoF=window._filtroTipoUsuarioStats||'todos';
+    const tipoLabel=tipoF==='admins'?'Administradores':tipoF==='usuarios'?'Usuarios normales':null;
+    if(_filtroUser)
+      notaEl.innerHTML=`📌 Mostrando comparativas solo de: <strong style="color:var(--accent);">👤 ${_filtroUser}</strong>${hayRango?` · Rango: <strong>${dfVal||'inicio'} → ${dtVal||'hoy'}</strong>`:''}`;
+    else if(tipoLabel)
+      notaEl.innerHTML=`📌 Filtrando por tipo: <strong style="color:var(--blue);">${tipoLabel}</strong>${hayRango?` · Rango: <strong>${dfVal||'inicio'} → ${dtVal||'hoy'}</strong>`:''}`;
+    else
+      notaEl.innerHTML=`📌 Mostrando datos <strong>globales</strong>${hayRango?` · Rango: <strong>${dfVal||'inicio'} → ${dtVal||'hoy'}</strong>`:' (todos los usuarios).'}`;
+  }
+};
+window.renderComparaciones=renderComparaciones;
+
+// ─── APLICAR UX de filtros en Períodos según rol ──────────────────────────────
+function _aplicarFiltrosPeriodesRol(rol){
+  const adminWrap=document.getElementById('stats-admin-filters-periodos-wrap');
+  const saWrap=document.getElementById('stats-superadmin-filters-periodos-wrap');
+  if(rol==='admin'){
+    if(adminWrap)adminWrap.style.display='block';
+    if(saWrap)saWrap.style.display='none';
+  }else if(rol==='super_admin'||rol==='admin_supremo'){
+    if(adminWrap)adminWrap.style.display='none';
+    if(saWrap)saWrap.style.display='block';
+  }else{
+    if(adminWrap)adminWrap.style.display='none';
+    if(saWrap)saWrap.style.display='none';
+  }
+}
+
+// ─── BADGE DE ROL (html) ────────────────────────────────────────────────────
+// Devuelve HTML con badge coloreado para un rol dado
+function _getBadgeHtml(rol){
+  const badges={
+    admin_supremo:`<span style="font-size:.6rem;font-weight:700;background:#8B0000;color:#fff;padding:2px 6px;border-radius:20px;margin-left:5px;white-space:nowrap;">👑 Admin Supremo</span>`,
+    super_admin:`<span style="font-size:.6rem;font-weight:700;background:var(--blue);color:#fff;padding:2px 6px;border-radius:20px;margin-left:5px;white-space:nowrap;">🏢 Super Admin</span>`,
+    admin:`<span style="font-size:.6rem;font-weight:700;background:var(--accent);color:#111;padding:2px 6px;border-radius:20px;margin-left:5px;white-space:nowrap;">🧑‍💼 Admin</span>`,
+    usuario:`<span style="font-size:.6rem;font-weight:700;background:var(--green-bg);color:var(--green);border:1px solid rgba(45,139,94,.3);padding:2px 6px;border-radius:20px;margin-left:5px;white-space:nowrap;">👷 Usuario</span>`,
+  };
+  return badges[rol]||'';
+}
+
+// Devuelve badge HTML según nombre (busca en cache de acceso)
+function _getBadgeHtmlPorNombre(nombre){
+  const cache=window._usuariosAccesoCache||{};
+  const entry=Object.values(cache).find(v=>(v._nombre||'').toUpperCase()===nombre.toUpperCase());
+  if(!entry)return'';
+  const rol=entry.rol||'usuario';
+  if(rol==='admin_supremo')return''; // no aparece nunca
+  return _getBadgeHtml(rol);
+}
+
+// ─── COMPARAR: tipo de filtro ────────────────────────────────────────────────
+window._cmpTipo='todos';
+window.setCmpTipo=function(tipo,btn){
+  window._cmpTipo=tipo===window._cmpTipo?'todos':tipo;
+  ['cmp-ftipo-admins','cmp-ftipo-usuarios'].forEach(id=>{
+    const b=document.getElementById(id);if(b)b.classList.remove('active');
+  });
+  if(window._cmpTipo!=='todos'&&btn)btn.classList.add('active');
+  // Limpiar selecciones previas de usuario A y B
+  window._cmpUserA=null;window._cmpUserB=null;
+  ['a','b'].forEach(l=>{
+    const ch=document.getElementById(`cmp-chip-${l}`);if(ch){ch.style.display='none';ch.innerHTML='';}
+    const inp=document.getElementById(`cmp-user-${l}-input`);if(inp)inp.value='';
+  });
+};
+
+// Obtener lista de usuarios para comparar según tipo filtrado (excluye admin_supremo siempre)
+function _obtenerUsuariosCmp(){
+  const cache=window._usuariosAccesoCache||{};
+  const tipo=window._cmpTipo||'todos';
+  const todosH=todosComp();
+  const nombresEnHistorial=new Set();
+  todosH.forEach(i=>{if(i.quien&&i.quien.trim()!=='')nombresEnHistorial.add(i.quien.trim().toUpperCase());});
+  const getRolPorNombre=(nombre)=>{
+    const entry=Object.values(cache).find(v=>(v._nombre||'').toUpperCase()===nombre.toUpperCase());
+    return entry?.rol||'usuario';
+  };
+  let lista=[...nombresEnHistorial].filter(n=>getRolPorNombre(n)!=='admin_supremo');
+  if(tipo==='admins')lista=lista.filter(n=>{const r=getRolPorNombre(n);return r==='admin'||r==='super_admin';});
+  else if(tipo==='usuarios')lista=lista.filter(n=>getRolPorNombre(n)==='usuario');
+  return lista.sort();
+}
+
+// Override de filtrarSugerenciasCmp para incluir badges y respetar filtro de tipo
+window.filtrarSugerenciasCmp=function(lado){
+  const input=document.getElementById(`cmp-user-${lado}-input`);
+  const sug=document.getElementById(`cmp-sug-${lado}`);
+  if(!input||!sug)return;
+  const q=(input.value||'').toUpperCase().trim();
+  const lista=_obtenerUsuariosCmp();
+  const filtrada=q?lista.filter(n=>n.includes(q)):lista;
+  if(!filtrada.length){sug.style.display='none';return;}
+  sug.innerHTML=filtrada.map(n=>{
+    const badgeHtml=_getBadgeHtmlPorNombre(n);
+    return`<div onclick="seleccionarUsuarioCmp('${lado}','${n.replace(/'/g,"\\'")}')"
+      style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;"
+      onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">
+      👤 ${n}${badgeHtml}
+    </div>`;
+  }).join('');
+  sug.style.display='block';
+};
+
+// Comparación grupal automática: Admins vs Usuarios
+window.ejecutarComparacionGrupal=function(){
+  const res=document.getElementById('cmp-resultado');
+  const perStr=window._cmpPerStr||'7d';
+  let limDesde=0,limHasta=Date.now(),periodoLabel='';
+  if(perStr==='rango'){
+    const df=document.getElementById('cmp-date-from')?.value;
+    const dt=document.getElementById('cmp-date-to')?.value;
+    if(!df&&!dt){showModal('⚠️','Rango vacío','Ingresá al menos una fecha para el rango.');return;}
+    if(df)limDesde=new Date(df+'T00:00:00').getTime();
+    if(dt)limHasta=new Date(dt+'T23:59:59').getTime();
+    periodoLabel=df&&dt?`${df} → ${dt}`:df?`desde ${df}`:`hasta ${dt}`;
+  }else{
+    limDesde=msL(perStr);
+    periodoLabel={'7d':'últimos 7 días','15d':'últimos 15 días','30d':'último mes','todo':'todo el historial'}[perStr]||perStr;
+  }
+  const cache=window._usuariosAccesoCache||{};
+  const todosP=todosComp().filter(i=>{const t=i.tsComprado||0;return t>=limDesde&&t<=limHasta;});
+  const getRolPorNombre=(nombre)=>{
+    const entry=Object.values(cache).find(v=>(v._nombre||'').toUpperCase()===nombre.toUpperCase());
+    return entry?.rol||'usuario';
+  };
+  function statsGrupo(nombreGrupo,itsGrupo){
+    const gasto=itsGrupo.reduce((s,i)=>s+getP(i),0);
+    const conP=itsGrupo.filter(i=>getP(i)>0);
+    const avg=conP.length?gasto/conP.length:0;
+    const diasSet=new Set(itsGrupo.map(i=>{const d=new Date(i.tsComprado||i.ts||0);return`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;}));
+    const alta=itsGrupo.filter(i=>i.urgencia==='alta'||i.urgencia==='urgente').length;
+    return{nombre:nombreGrupo,compras:itsGrupo.length,gasto,avg,dias:diasSet.size,alta};
+  }
+  const itsAdmins=todosP.filter(i=>{const r=getRolPorNombre((i.quien||'').toUpperCase().trim());return r==='admin'||r==='super_admin';});
+  const itsUsuarios=todosP.filter(i=>{const r=getRolPorNombre((i.quien||'').toUpperCase().trim());return r==='usuario';});
+  const sA=statsGrupo('Admins',itsAdmins);
+  const sB=statsGrupo('Usuarios',itsUsuarios);
+  // Usar la misma lógica de opción A: premia más compras, menor ticket, más días, más urgentes
+  const metricas=[
+    {nombre:'Compras',va:sA.compras,vb:sB.compras,fmt:v=>`${v}`,desc:'Grupo con mayor número de compras registradas',mayorEsMejor:true},
+    {nombre:'Ticket promedio',va:sA.avg,vb:sB.avg,fmt:v=>v>0?`S/ ${v.toFixed(2)}`:'—',desc:'Menor ticket = mayor eficiencia de precio',mayorEsMejor:false},
+    {nombre:'Días activos',va:sA.dias,vb:sB.dias,fmt:v=>`${v}d`,desc:'Grupo con mayor presencia en el período',mayorEsMejor:true},
+    {nombre:'Alta prioridad',va:sA.alta,vb:sB.alta,fmt:v=>`${v}`,desc:'Grupo que resolvió más ítems urgentes',mayorEsMejor:true},
+  ];
+  const colA='var(--blue)';const colB='var(--green)';
+  let ptsA=0,ptsB=0;
+  const detalles=metricas.map(m=>{
+    let ganM='empate';
+    const aGana=m.mayorEsMejor?(m.va>m.vb):(m.va<m.vb&&m.va>0);
+    const bGana=m.mayorEsMejor?(m.vb>m.va):(m.vb<m.va&&m.vb>0);
+    if(aGana){ganM='Admins';ptsA++;}else if(bGana){ganM='Usuarios';ptsB++;}
+    return{...m,ganM};
+  });
+  const ganador=ptsA>ptsB?'Admins':ptsB>ptsA?'Usuarios':'empate';
+  const colGan=ganador==='Admins'?colA:ganador==='Usuarios'?colB:'var(--text3)';
+  const card=(st,col)=>`
+    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);padding:14px;flex:1;min-width:0;">
+      <div style="font-size:.65rem;font-weight:700;color:#fff;background:${col};border-radius:20px;padding:3px 10px;display:inline-block;margin-bottom:10px;">👥 ${st.nombre}</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);"><span style="font-size:.75rem;color:var(--text3);">Compras</span><span style="font-size:.9rem;font-weight:800;color:var(--text);font-family:var(--ffmono);">${st.compras}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);"><span style="font-size:.75rem;color:var(--text3);">Gasto total</span><span style="font-size:.9rem;font-weight:800;color:var(--accent);font-family:var(--ffmono);">S/ ${st.gasto.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);"><span style="font-size:.75rem;color:var(--text3);">Ticket promedio</span><span style="font-size:.88rem;font-weight:700;color:var(--text);font-family:var(--ffmono);">${st.avg>0?'S/ '+st.avg.toFixed(2):'—'}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="font-size:.75rem;color:var(--text3);">Alta prioridad</span><span style="font-size:.88rem;font-weight:700;color:${st.alta>0?'var(--red)':'var(--text3)'};">${st.alta}</span></div>
+    </div>`;
+  const explicacionRows=detalles.map(m=>{
+    const ganCol=m.ganM==='Admins'?colA:m.ganM==='Usuarios'?colB:'var(--text3)';
+    return`<div style="padding:7px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+        <span style="font-size:.75rem;font-weight:700;color:var(--text);">${m.nombre}</span>
+        <span style="font-size:.7rem;color:${ganCol};font-weight:700;">${m.ganM==='empate'?'🤝 Empate':m.ganM}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--text3);">
+        <span>Admins: <strong style="color:var(--text);">${m.fmt(m.va)}</strong></span>
+        <span>Usuarios: <strong style="color:var(--text);">${m.fmt(m.vb)}</strong></span>
+      </div>
+      <div style="font-size:.65rem;color:var(--text3);font-style:italic;margin-top:2px;">${m.desc}</div>
+    </div>`;
+  }).join('');
+  const ganadorHTML=`
+    <div style="margin-top:10px;background:var(--surface);border:1.5px solid ${ganador==='empate'?'var(--border)':colGan};border-radius:var(--rmd);overflow:hidden;">
+      <div style="padding:12px 14px;background:${ganador==='empate'?'var(--surface2)':colGan};text-align:center;">
+        <div style="font-size:.88rem;font-weight:800;color:${ganador==='empate'?'var(--text)':'#fff'};">
+          ${ganador==='empate'?'🤝 Empate técnico':`🏆 Mayor rendimiento: ${ganador}`}
+        </div>
+        <div style="font-size:.68rem;color:${ganador==='empate'?'var(--text3)':'rgba(255,255,255,.8)'};margin-top:3px;">Criterio: eficiencia (compras, precio, presencia, urgencias)</div>
+      </div>
+      <div style="padding:10px 14px;">
+        <div style="font-size:.65rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">📊 Detalle por métrica</div>
+        ${explicacionRows}
+      </div>
+    </div>`;
+  res.style.display='block';
+  res.innerHTML=`
+    <div style="font-size:.65rem;color:var(--text3);margin-bottom:8px;text-align:center;padding:6px;background:var(--surface2);border-radius:var(--rsm);">📅 Período: <strong>${periodoLabel}</strong> · ${todosP.length} registros totales</div>
+    <div style="display:flex;gap:8px;">${card(sA,colA)}${card(sB,colB)}</div>
+    ${ganadorHTML}`;
+};
+
+// ─── COMPARAR: lógica de rendimiento (Opción A) ───────────────────────────────
+// Sobreescribir ejecutarComparacion para usar criterios de eficiencia (Opción A)
+const _origEjecutarComparacion=window.ejecutarComparacion;
+window.ejecutarComparacion=function(){
+  const a=window._cmpUserA;const b=window._cmpUserB;
+  const res=document.getElementById('cmp-resultado');
+  if(!a&&!b){showModal('⚠️','Seleccionar usuario','Elige al menos un usuario para comparar.');return;}
+  if(a&&b&&a===b){showModal('⚠️','Mismo usuario','Selecciona dos usuarios distintos para comparar.');return;}
+  const perStr=window._cmpPerStr||'7d';
+  let limDesde=0,limHasta=Date.now(),periodoLabel='';
+  if(perStr==='rango'){
+    const df=document.getElementById('cmp-date-from')?.value;
+    const dt=document.getElementById('cmp-date-to')?.value;
+    if(!df&&!dt){showModal('⚠️','Rango vacío','Ingresá al menos una fecha para el rango.');return;}
+    if(df)limDesde=new Date(df+'T00:00:00').getTime();
+    if(dt)limHasta=new Date(dt+'T23:59:59').getTime();
+    periodoLabel=df&&dt?`${df} → ${dt}`:df?`desde ${df}`:`hasta ${dt}`;
+  }else{
+    limDesde=msL(perStr);
+    periodoLabel={'7d':'últimos 7 días','15d':'últimos 15 días','30d':'último mes','todo':'todo el historial'}[perStr]||perStr;
+  }
+  const todosP=todosComp().filter(i=>{const t=i.tsComprado||0;return t>=limDesde&&t<=limHasta;});
+  function statsUser(nombre){
+    const its=nombre?todosP.filter(i=>(i.quien||'').toUpperCase().trim()===nombre.toUpperCase()):[];
+    const gasto=its.reduce((s,i)=>s+getP(i),0);
+    const conP=its.filter(i=>getP(i)>0);
+    const avg=conP.length?gasto/conP.length:0;
+    const dias=new Set(its.map(i=>{const d=new Date(i.tsComprado||i.ts||0);return`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;})).size;
+    const cats={};its.forEach(i=>{const c=i.categoria||'OTROS';cats[c]=(cats[c]||0)+1;});
+    const favCat=Object.entries(cats).sort((a,b2)=>b2[1]-a[1])[0];
+    const alta=its.filter(i=>i.urgencia==='alta'||i.urgencia==='urgente').length;
+    return{nombre,compras:its.length,gasto,avg,dias,favCat,alta};
+  }
+  const sA=statsUser(a);const sB=b?statsUser(b):null;
+  const colA='var(--blue)';const colB='var(--green)';
+  const badgeA=_getBadgeHtmlPorNombre(a);
+  const badgeB=b?_getBadgeHtmlPorNombre(b):'';
+  const card=(st,col,badge)=>!st?'':`
+    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);padding:14px;flex:1;min-width:0;">
+      <div style="font-size:.65rem;font-weight:700;color:#fff;background:${col};border-radius:20px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;margin-bottom:10px;">👤 ${st.nombre}${badge}</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);"><span style="font-size:.75rem;color:var(--text3);">Compras</span><span style="font-size:.9rem;font-weight:800;color:var(--text);font-family:var(--ffmono);">${st.compras}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);"><span style="font-size:.75rem;color:var(--text3);">Gasto total</span><span style="font-size:.9rem;font-weight:800;color:var(--accent);font-family:var(--ffmono);">S/ ${st.gasto.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);"><span style="font-size:.75rem;color:var(--text3);">Ticket promedio</span><span style="font-size:.88rem;font-weight:700;color:var(--text);font-family:var(--ffmono);">${st.avg>0?'S/ '+st.avg.toFixed(2):'—'}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);"><span style="font-size:.75rem;color:var(--text3);">Días activos</span><span style="font-size:.88rem;font-weight:700;color:var(--text);">${st.dias}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);"><span style="font-size:.75rem;color:var(--text3);">Cat. favorita</span><span style="font-size:.78rem;font-weight:600;color:var(--text);">${st.favCat?`${EM[st.favCat[0]]||'⚙️'} ${st.favCat[0]}`:'—'}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="font-size:.75rem;color:var(--text3);">Alta prioridad</span><span style="font-size:.88rem;font-weight:700;color:${st.alta>0?'var(--red)':'var(--text3)'};">${st.alta}</span></div>
+    </div>`;
+  let ganadorHTML='';
+  if(sB){
+    // Opción A: más compras, menor ticket, más días activos, más urgentes = mejor
+    const metricas=[
+      {nombre:'Compras',va:sA.compras,vb:sB.compras,fmt:v=>`${v}`,desc:'Quien registró más compras en el período',mayorEsMejor:true},
+      {nombre:'Ticket promedio',va:sA.avg,vb:sB.avg,fmt:v=>v>0?`S/ ${v.toFixed(2)}`:'—',desc:'Menor ticket = mayor eficiencia de precio',mayorEsMejor:false},
+      {nombre:'Días activos',va:sA.dias,vb:sB.dias,fmt:v=>`${v}d`,desc:'Quien tuvo más presencia durante el período',mayorEsMejor:true},
+      {nombre:'Alta prioridad',va:sA.alta,vb:sB.alta,fmt:v=>`${v}`,desc:'Quien resolvió más ítems urgentes',mayorEsMejor:true},
+    ];
+    let ptsA=0,ptsB=0;
+    const detalles=metricas.map(m=>{
+      let ganM='empate';
+      const aGana=m.mayorEsMejor?(m.va>m.vb):(m.va<m.vb&&m.va>0);
+      const bGana=m.mayorEsMejor?(m.vb>m.va):(m.vb<m.va&&m.vb>0);
+      if(aGana){ganM=a;ptsA++;}else if(bGana){ganM=b;ptsB++;}
+      return{...m,ganM};
+    });
+    const ganador=ptsA>ptsB?a:ptsB>ptsA?b:'empate';
+    const colGan=ganador===a?colA:ganador===b?colB:'var(--text3)';
+    const explicacionRows=detalles.map(m=>{
+      const ganCol=m.ganM===a?colA:m.ganM===b?colB:'var(--text3)';
+      return`<div style="padding:7px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+          <span style="font-size:.75rem;font-weight:700;color:var(--text);">${m.nombre}</span>
+          <span style="font-size:.7rem;color:${ganCol};font-weight:700;">${m.ganM==='empate'?'🤝 Empate':m.ganM}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--text3);margin-bottom:2px;">
+          <span>${a}: <strong style="color:var(--text);">${m.fmt(m.va)}</strong></span>
+          ${b?`<span>${b}: <strong style="color:var(--text);">${m.fmt(m.vb)}</strong></span>`:''}
+        </div>
+        <div style="font-size:.65rem;color:var(--text3);font-style:italic;">${m.desc}</div>
+      </div>`;
+    }).join('');
+    ganadorHTML=`
+      <div style="margin-top:10px;background:var(--surface);border:1.5px solid ${ganador==='empate'?'var(--border)':colGan};border-radius:var(--rmd);overflow:hidden;">
+        <div style="padding:12px 14px;background:${ganador==='empate'?'var(--surface2)':colGan};text-align:center;">
+          <div style="font-size:.88rem;font-weight:800;color:${ganador==='empate'?'var(--text)':'#fff'};">
+            ${ganador==='empate'?'🤝 Empate técnico':`🏆 Mayor rendimiento: ${ganador}`}
+          </div>
+          <div style="font-size:.68rem;color:${ganador==='empate'?'var(--text3)':'rgba(255,255,255,.8)'};margin-top:3px;">
+            ${ganador==='empate'?'Resultados equivalentes':`Ganó ${Math.max(ptsA,ptsB)} de ${metricas.length} métricas (eficiencia)`}
+          </div>
+        </div>
+        <div style="padding:10px 14px;">
+          <div style="font-size:.65rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">📊 Detalle por métrica</div>
+          ${explicacionRows}
+        </div>
+      </div>`;
+  }
+  res.style.display='block';
+  res.innerHTML=`
+    <div style="font-size:.65rem;color:var(--text3);margin-bottom:8px;text-align:center;padding:6px;background:var(--surface2);border-radius:var(--rsm);">📅 Período analizado: <strong>${periodoLabel}</strong> · ${todosP.length} registros totales</div>
+    <div style="display:flex;gap:8px;">${card(sA,colA,badgeA)}${sB?card(sB,colB,badgeB):''}</div>
+    ${ganadorHTML}`;
+};
+
+// ─── BADGES EN LISTAS DE USUARIO (filtros de stats globales) ─────────────────
+// Override de filtrarSugerenciasUsuario para mostrar badges de rol
+const _origFiltrarSugerenciasUsuario=window.filtrarSugerenciasUsuario;
+window.filtrarSugerenciasUsuario=function(){
+  const input=document.getElementById('stats-user-input');
+  const sug=document.getElementById('stats-user-suggestions');
+  if(!input||!sug)return;
+  const q=(input.value||'').toUpperCase().trim();
+  const lista=_obtenerUsuariosPermitidosStats();
+  const filtrada=q?lista.filter(n=>n.includes(q)):lista;
+  if(!filtrada.length){sug.style.display='none';return;}
+  sug.innerHTML=filtrada.map(n=>{
+    const badgeHtml=_getBadgeHtmlPorNombre(n);
+    return`<div onclick="seleccionarUsuarioStats('${n.replace(/'/g,"\\'")}') "
+      style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;"
+      onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">
+      👤 ${n}${badgeHtml}
+    </div>`;
+  }).join('');
+  sug.style.display='block';
+};
+
+// Override de filtrarSugerenciasUsuarioInline para mostrar badges
+const _origFiltrarSugerenciasUsuarioInline=window.filtrarSugerenciasUsuarioInline;
+window.filtrarSugerenciasUsuarioInline=function(){
+  const input=document.getElementById('stats-user-inline-input');
+  const sug=document.getElementById('stats-user-inline-sug');
+  if(!input||!sug)return;
+  const q=(input.value||'').toUpperCase().trim();
+  const lista=_obtenerUsuariosPermitidosStats();
+  const filtrada=q?lista.filter(n=>n.includes(q)):lista;
+  if(!filtrada.length){sug.style.display='none';return;}
+  sug.innerHTML=filtrada.map(n=>{
+    const badgeHtml=_getBadgeHtmlPorNombre(n);
+    return`<div onclick="seleccionarUsuarioStatsInline('${n.replace(/'/g,"\\'")}')"`+
+      ` style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;" `+
+      `onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">👤 ${n}${badgeHtml}</div>`;
+  }).join('');
+  sug.style.display='block';
+};
+
+// Override filtrarSugerenciasUsuarioInlinePer para admin (Períodos) con badges
+const _origFiltrarSugerenciasUsuarioInlinePer=window.filtrarSugerenciasUsuarioInlinePer;
+window.filtrarSugerenciasUsuarioInlinePer=function(){
+  const input=document.getElementById('stats-user-inline-input-per');
+  const sug=document.getElementById('stats-user-inline-sug-per');
+  if(!input||!sug)return;
+  const q=(input.value||'').toUpperCase().trim();
+  const lista=_obtenerUsuariosPermitidosStats();
+  const filtrada=q?lista.filter(n=>n.includes(q)):lista;
+  if(!filtrada.length){sug.style.display='none';return;}
+  sug.innerHTML=filtrada.map(n=>{
+    const badgeHtml=_getBadgeHtmlPorNombre(n);
+    return`<div onclick="seleccionarUsuarioStatsInlinePer('${n.replace(/'/g,"\\'")}')" `+
+      `style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;" `+
+      `onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">👤 ${n}${badgeHtml}</div>`;
+  }).join('');
+  sug.style.display='block';
+};
+
+// Poblar historial con badges de rol en el select
+poblarUsuariosHist=function(todos){
+  const sel=document.getElementById('hist-filter-user');if(!sel)return;
+  const actual=sel.value;
+  const cache=window._usuariosAccesoCache||{};
+  const getRolLabel=(nombre)=>{
+    const entry=Object.values(cache).find(v=>(v._nombre||'').toUpperCase()===nombre.toUpperCase());
+    const rol=entry?.rol||'usuario';
+    if(rol==='admin_supremo')return''; // no aparece
+    if(rol==='super_admin')return' [Super Admin]';
+    if(rol==='admin')return' [Admin]';
+    return' [Usuario]';
+  };
+  // Excluir admin_supremo del select
+  const users=[...new Set(todos.map(i=>i.quien).filter(Boolean))].filter(u=>{
+    const entry=Object.values(cache).find(v=>(v._nombre||'').toUpperCase()===u.toUpperCase());
+    return (entry?.rol||'usuario')!=='admin_supremo';
+  }).sort();
+  sel.innerHTML=`<option value="">— Todos —</option>`+
+    users.map(u=>`<option value="${u}"${u===actual?' selected':''}>${u}${getRolLabel(u)}</option>`).join('');
+}
+
+// ─── PATCH _aplicarUXFiltrosStats para incluir Períodos y Historial ─────────
+const _orig_aplicarUXFiltrosStats=typeof _aplicarUXFiltrosStats==='function'?_aplicarUXFiltrosStats:null;
+_aplicarUXFiltrosStats=function(rol){
+  if(_orig_aplicarUXFiltrosStats)_orig_aplicarUXFiltrosStats(rol);
+  // Aplicar visibilidad de filtros de historial según rol
+  _aplicarFiltrosHistorialRol(rol);
+  // Aplicar visibilidad de filtros de Períodos según rol
+  _aplicarFiltrosPeriodesRol(rol);
+};
+
 window.designarSuperAdmin=async function(){
   if(!window._esAdminSupremo){
     showModal('🔒','Sin permisos','Solo el Admin Supremo puede designar el Super Admin.');
