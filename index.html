@@ -1824,56 +1824,72 @@ window.pedirEditEmp=function(){
       if(nuevoNombre===window._nombreActual)return;
       const uid=_uid();
       if(!uid){showModal('\u274c','Error','No hay sesi\u00f3n activa.');return;}
-      await update(_rPerfil(uid),{nombre:nuevoNombre,tsEditado:Date.now()});
-      // Guardar límite por UID (1 cambio por cuenta por día)
-      localStorage.setItem(_eekPorUid(),hoyKey());
-      // Actualizar nombre en UI y variable global
+      // Guardar nombre anterior ANTES de cualquier cambio
       const nombreAnterior=window._nombreActual;
+      // 1. Actualizar perfil en Firebase
+      try{await update(_rPerfil(uid),{nombre:nuevoNombre,tsEditado:Date.now()});}
+      catch(e){showModal('\u274c','Error al guardar','No se pudo actualizar el perfil. Intenta de nuevo.');return;}
+      // 2. Marcar límite diario por UID
+      localStorage.setItem(_eekPorUid(),hoyKey());
+      // 3. Actualizar UI inmediatamente
       window._nombreActual=nuevoNombre;
       document.getElementById('brand-user').textContent=nuevoNombre;
+      // 4. Actualizar todos los registros en Firebase que tengan quien_id === uid
       let actualizados=0;
+      const updates={};
+      // faltantes (pendientes + comprados activos)
       try{
-        const updates={};
-        // Actualizar en faltantes (activos)
         const snapAct=await get(ref(db,'faltantes'));
-        if(snapAct.exists()){snapAct.forEach(child=>{const d=child.val();if(d.quien_id===uid){updates[`faltantes/${child.key}/quien`]=nuevoNombre;actualizados++;}if(d.quienEdito_id===uid){updates[`faltantes/${child.key}/quienEdito`]=nuevoNombre;}});}
-        // Actualizar en archivo
+        if(snapAct.exists()){
+          snapAct.forEach(child=>{
+            const d=child.val();
+            if(d&&d.quien_id===uid){updates[`faltantes/${child.key}/quien`]=nuevoNombre;actualizados++;}
+            if(d&&d.quienEdito_id===uid){updates[`faltantes/${child.key}/quienEdito`]=nuevoNombre;}
+          });
+        }
+      }catch(e){console.warn('Error leyendo faltantes:',e);}
+      // archivo (historial archivado)
+      try{
         const snapArch=await get(ref(db,'archivo'));
-        if(snapArch.exists()){snapArch.forEach(child=>{const d=child.val();if(d.quien_id===uid){updates[`archivo/${child.key}/quien`]=nuevoNombre;actualizados++;}if(d.quienEdito_id===uid){updates[`archivo/${child.key}/quienEdito`]=nuevoNombre;}});}
-        // Actualizar en historial (nodo separado si existe)
-        const snapHist=await get(ref(db,'historial'));
-        if(snapHist.exists()){snapHist.forEach(child=>{const d=child.val();if(d.quien_id===uid){updates[`historial/${child.key}/quien`]=nuevoNombre;actualizados++;}if(d.quienEdito_id===uid){updates[`historial/${child.key}/quienEdito`]=nuevoNombre;}});}
-        if(Object.keys(updates).length)await update(ref(db),updates);
-        // Refrescar cache de usuarios para que el filtro muestre el nuevo nombre
-        if(window._usuariosAccesoCache){
-          const cacheEntry=Object.values(window._usuariosAccesoCache).find(v=>(v._nombre||'').toUpperCase()===nombreAnterior.toUpperCase());
-          if(cacheEntry)cacheEntry._nombre=nuevoNombre;
+        if(snapArch.exists()){
+          snapArch.forEach(child=>{
+            const d=child.val();
+            if(d&&d.quien_id===uid){updates[`archivo/${child.key}/quien`]=nuevoNombre;actualizados++;}
+            if(d&&d.quienEdito_id===uid){updates[`archivo/${child.key}/quienEdito`]=nuevoNombre;}
+          });
         }
-        // Refrescar el chip de filtro de usuario activo si coincide con el nombre anterior
-        if((window._filtroUsuarioStats||'').toUpperCase()===nombreAnterior.toUpperCase()){
-          window._filtroUsuarioStats=nuevoNombre;
-          const chip=document.getElementById('stats-user-chip');
-          if(chip&&chip.style.display!=='none'){
-            const chipText=chip.querySelector('span');if(chipText)chipText.textContent=`👤 ${nuevoNombre}`;
-          }
-        }
-        // Refrescar el chip en historial si coincide
-        if((window._filtroUsuarioHist||'').toUpperCase()===nombreAnterior.toUpperCase()){
-          window._filtroUsuarioHist=nuevoNombre;
-          const chipH=document.getElementById('hist-user-chip');
-          if(chipH&&chipH.style.display!=='none'){
-            const chipHText=chipH.querySelector('span');if(chipHText)chipHText.textContent=`👤 ${nuevoNombre}`;
-          }
-        }
-        // Re-renderizar historial para reflejar el nuevo nombre en los registros
-        if(typeof renderHist==='function')setTimeout(()=>renderHist(),300);
-        const msg=actualizados>0
-          ?`Nombre actualizado a <strong>${nuevoNombre}</strong>.<br><span style="font-size:.8rem;color:var(--text3);">${actualizados} registro${actualizados!==1?'s':''} actualizado${actualizados!==1?'s':''}.</span>`
-          :`Nombre actualizado a <strong>${nuevoNombre}</strong>.`;
-        showModal('\u2705','Nombre actualizado',msg);
-      }catch(err){
-        showModal('\u26a0\ufe0f','Nombre actualizado con advertencia',`Tu nombre fue cambiado a <strong>${nuevoNombre}</strong>, pero algunos registros podr\u00edan no haberse actualizado.`);
+      }catch(e){console.warn('Error leyendo archivo:',e);}
+      // Aplicar todas las actualizaciones en un solo write
+      if(Object.keys(updates).length){
+        try{await update(ref(db),updates);}
+        catch(e){console.warn('Error escribiendo updates:',e);}
       }
+      // 5. Actualizar cache en memoria para filtros y badges
+      if(window._usuariosAccesoCache){
+        const cacheEntry=Object.values(window._usuariosAccesoCache).find(u=>(u._nombre||'').toUpperCase()===nombreAnterior.toUpperCase());
+        if(cacheEntry)cacheEntry._nombre=nuevoNombre;
+      }
+      // Actualizar filtro activo de Stats si coincide con nombre anterior
+      if((window._filtroUsuarioStats||'').toUpperCase()===nombreAnterior.toUpperCase()){
+        window._filtroUsuarioStats=nuevoNombre;
+        const chip=document.getElementById('stats-user-chip');
+        if(chip&&chip.style.display!=='none'){const sp=chip.querySelector('span');if(sp)sp.textContent=`\ud83d\udc64 ${nuevoNombre}`;}
+      }
+      // Actualizar filtro activo de Historial si coincide
+      if((window._filtroUsuarioHist||'').toUpperCase()===nombreAnterior.toUpperCase()){
+        window._filtroUsuarioHist=nuevoNombre;
+        const chipH=document.getElementById('hist-user-chip');
+        if(chipH&&chipH.style.display!=='none'){const spH=chipH.querySelector('span');if(spH)spH.textContent=`\ud83d\udc64 ${nuevoNombre}`;}
+      }
+      // 6. Re-renderizar vistas para reflejar el nuevo nombre
+      if(typeof renderHist==='function')setTimeout(()=>renderHist(),200);
+      if(typeof renderStats==='function')setTimeout(()=>renderStats(),200);
+      if(typeof renderLista==='function')setTimeout(()=>renderLista(),200);
+      // 7. Mostrar confirmación
+      const msg=actualizados>0
+        ?`Nombre actualizado a <strong>${nuevoNombre}</strong>.<br><span style="font-size:.8rem;color:var(--text3);">${actualizados} registro${actualizados!==1?'s':''} actualizado${actualizados!==1?'s':''}.</span>`
+        :`Nombre actualizado a <strong>${nuevoNombre}</strong>.`;
+      showModal('\u2705','Nombre actualizado',msg);
     }},{txt:'Cancelar',cls:'secondary'}]);
 };
 // Perfil se carga desde Firebase en onAuthStateChanged
