@@ -1141,31 +1141,36 @@ details summary::-webkit-details-marker{display:none;}
       <span id="hfilt-dot" style="display:none;position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;background:var(--accent);border:1.5px solid var(--surface);"></span>
     </button>
   </div>
-  <!-- Panel rango de fechas: colapsable -->
+  <!-- Panel rango de fechas: colapsable — estandarizado para todos los roles -->
   <div id="hist-rango-panel" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:10px 12px;margin-bottom:6px;">
     <div style="display:flex;gap:8px;">
       <div style="flex:1;">
         <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">Desde</div>
-        <div style="display:flex;gap:4px;align-items:center;">
-          <input type="date" id="hist-date-from" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="renderHist();actualizarDotHFilt()"/>
-          <button onclick="limpiarCampoRangoHist('from')" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-        </div>
+        <input type="date" id="hist-date-from" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="renderHist();actualizarDotHFilt()"/>
       </div>
       <div style="flex:1;">
         <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">Hasta</div>
         <div style="display:flex;gap:4px;align-items:center;">
           <input type="date" id="hist-date-to" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="renderHist();actualizarDotHFilt()"/>
-          <button onclick="limpiarCampoRangoHist('to')" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+          <button onclick="limpiarRangoHist()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
         </div>
       </div>
     </div>
   </div>
-  <!-- Fila 2: Filtro por usuario (segunda línea, siempre visible para admin+) -->
+  <!-- Fila 2: Filtro por usuario — autocomplete con badges (igual que stats, lógica varía por rol) -->
   <div id="hist-user-row" style="display:none;margin-bottom:8px;">
-    <div style="display:flex;gap:8px;align-items:center;">
-      <select id="hist-filter-user" class="select-f" style="font-size:.78rem;padding:6px 9px;flex:1;" onchange="renderHist();actualizarDotHFilt()"><option value="">— Todos —</option></select>
-      <button onclick="limpiarFiltrosHist()" style="flex-shrink:0;padding:6px 12px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕ Limpiar</button>
+    <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">👤 Filtrar por usuario</div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <div style="flex:1;position:relative;">
+        <input type="text" id="hist-user-input" placeholder="Buscar usuario…" autocomplete="off"
+          class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
+          oninput="filtrarSugerenciasUsuarioHist()" onfocus="filtrarSugerenciasUsuarioHist()"/>
+        <div id="hist-user-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
+      </div>
+      <button onclick="limpiarUsuarioHist()" id="btn-clear-user-hist"
+        style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
     </div>
+    <div id="hist-user-chip" style="display:none;margin-top:5px;"></div>
   </div>
   <div id="admin-panel-hist" style="display:none;" class="admin-panel">
     <div class="admin-header">
@@ -1227,14 +1232,14 @@ details summary::-webkit-details-marker{display:none;}
         <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
         <div style="display:flex;gap:4px;align-items:center;">
           <input type="date" id="stats-date-from" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
-          <button onclick="limpiarCampoRangoGlobal('from')" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+          <button onclick="limpiarRangoGlobal()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
         </div>
       </div>
       <div style="flex:1;min-width:110px;">
         <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
         <div style="display:flex;gap:4px;align-items:center;">
           <input type="date" id="stats-date-to" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
-          <button onclick="limpiarCampoRangoGlobal('to')" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+          <button onclick="limpiarRangoGlobal()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
         </div>
       </div>
     </div>
@@ -1298,14 +1303,14 @@ details summary::-webkit-details-marker{display:none;}
           <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
           <div style="display:flex;gap:4px;align-items:center;">
             <input type="date" id="stats-date-from-admin" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="validarRangoAdmin();syncAdminDateToMain();actualizarDotSFilt();renderStats()"/>
-            <button onclick="limpiarCampoRangoAdmin('from')" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+            <button onclick="limpiarRangoAdmin()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
           </div>
         </div>
         <div style="flex:1;min-width:110px;">
           <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
           <div style="display:flex;gap:4px;align-items:center;">
             <input type="date" id="stats-date-to-admin" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="validarRangoAdmin();syncAdminDateToMain();actualizarDotSFilt();renderStats()"/>
-            <button onclick="limpiarCampoRangoAdmin('to')" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+            <button onclick="limpiarRangoAdmin()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
           </div>
         </div>
       </div>
@@ -1454,14 +1459,14 @@ details summary::-webkit-details-marker{display:none;}
             <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
             <div style="display:flex;gap:4px;align-items:center;">
               <input type="date" id="cmp-date-from" class="input-f" style="font-size:.78rem;padding:6px 8px;width:100%;box-sizing:border-box;"/>
-              <button onclick="limpiarCampoRangoCmp('from')" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              <button onclick="limpiarRangoCmp()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
             </div>
           </div>
           <div style="flex:1;min-width:110px;">
             <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
             <div style="display:flex;gap:4px;align-items:center;">
               <input type="date" id="cmp-date-to" class="input-f" style="font-size:.78rem;padding:6px 8px;width:100%;box-sizing:border-box;"/>
-              <button onclick="limpiarCampoRangoCmp('to')" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              <button onclick="limpiarRangoCmp()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
             </div>
           </div>
         </div>
@@ -1729,6 +1734,11 @@ function _aplicarRol(rol){
   if(rol==='admin'&&window._filtroUsuarioStats){
     const _permitidos=_obtenerUsuariosPermitidosStats();
     if(!_permitidos.includes(window._filtroUsuarioStats)){window._filtroUsuarioStats=null;const _chip=document.getElementById('stats-user-chip');if(_chip){_chip.style.display='none';_chip.innerHTML='';}const _inlineI=document.getElementById('stats-user-inline-input');if(_inlineI)_inlineI.value='';}
+  }
+  // Resetear filtro de usuario en historial al cambiar de rol
+  if(window._filtroUsuarioHist){
+    if(typeof limpiarUsuarioHist==='function')limpiarUsuarioHist();
+    else window._filtroUsuarioHist=null;
   }
   // Aplicar UX de filtros según rol
   if(typeof _aplicarUXFiltrosStats==='function')_aplicarUXFiltrosStats(rol);
@@ -2801,12 +2811,10 @@ function renderHist(){
   }
 
   // Filtro por usuario
-  const userFil=document.getElementById('hist-filter-user')?.value||'';
-  if(userFil)todos=todos.filter(i=>i.quien===userFil);
+  const userFil=(window._filtroUsuarioHist||'').toUpperCase().trim();
+  if(userFil)todos=todos.filter(i=>(i.quien||'').toUpperCase().trim()===userFil);
 
-  // Poblar el select de usuarios con todos los disponibles (sin filtro de usuario aplicado)
-  const todosParaUsers=todosComp().filter(i=>(i.tsComprado||0)>=lim);
-  poblarUsuariosHist(todosParaUsers);
+  // Ya no se usa select — poblarUsuariosHist es legacy, no llamar aquí
 
   const gasto=todos.reduce((s,i)=>s+getP(i),0);const emps=new Set(todos.map(i=>i.quien).filter(Boolean)).size;
   document.getElementById('hk-t').textContent=todos.length;document.getElementById('hk-g').textContent=`S/ ${gasto.toFixed(2)}`;document.getElementById('hk-u').textContent=todos.filter(i=>i.urgencia==='alta'||i.urgencia==='urgente').length;document.getElementById('hk-e').textContent=emps;
@@ -2826,12 +2834,13 @@ function renderHist(){
 window.limpiarFiltrosHist=function(){
   const df=document.getElementById('hist-date-from');if(df)df.value='';
   const dt=document.getElementById('hist-date-to');if(dt)dt.value='';
-  const du=document.getElementById('hist-filter-user');if(du)du.value='';
   // Cerrar panel de rango si está abierto
   const panelRango=document.getElementById('hist-rango-panel');
   if(panelRango)panelRango.style.display='none';
   const btnRango=document.getElementById('btn-hist-rango');
   if(btnRango)btnRango.classList.remove('active');
+  // Limpiar filtro de usuario
+  limpiarUsuarioHist();
   // Restaurar el botón de período activo según fHist actual
   document.querySelectorAll('#filt-hist .fbtn').forEach(b=>{
     const v=b.getAttribute('onclick')?.match(/'([^']+)'\)/)?.[1];
@@ -2840,6 +2849,88 @@ window.limpiarFiltrosHist=function(){
   actualizarDotHFilt();
   renderHist();
 };
+
+// ─── HISTORIAL: filtro por usuario (autocomplete con badges) ─────────────────
+window._filtroUsuarioHist=null;
+
+// Obtener usuarios permitidos para historial según rol — usa la misma lógica que stats
+function _obtenerUsuariosPermitidosHist(){
+  const rol=window._rol||'usuario';
+  const miNombre=(window._nombreActual||'').toUpperCase().trim();
+  const cache=window._usuariosAccesoCache||{};
+  const getRolPorNombre=(n)=>{
+    const entry=Object.values(cache).find(v=>(v._nombre||'').toUpperCase()===n.toUpperCase());
+    return entry?.rol||'usuario';
+  };
+  const nombresEnHistorial=new Set();
+  todosComp().forEach(i=>{if(i.quien&&i.quien.trim())nombresEnHistorial.add(i.quien.trim().toUpperCase());});
+  let lista=[];
+  if(rol==='admin_supremo'){
+    // Ve todos (incluyendo a sí mismo)
+    lista=[...nombresEnHistorial];
+  }else if(rol==='super_admin'){
+    // Todos excepto admin_supremo (incluyendo a sí mismo)
+    lista=[...nombresEnHistorial].filter(n=>getRolPorNombre(n)!=='admin_supremo');
+  }else if(rol==='admin'){
+    // Solo a sí mismo + usuarios normales (NO otros admin ni super_admin)
+    lista=[...nombresEnHistorial].filter(n=>{
+      if(n===miNombre)return true;
+      const r=getRolPorNombre(n);
+      return r==='usuario';
+    });
+  }
+  return lista.sort();
+}
+
+window.filtrarSugerenciasUsuarioHist=function(){
+  const input=document.getElementById('hist-user-input');
+  const sug=document.getElementById('hist-user-suggestions');
+  if(!input||!sug)return;
+  const q=(input.value||'').toUpperCase().trim();
+  const lista=_obtenerUsuariosPermitidosHist();
+  const filtrada=q?lista.filter(n=>n.includes(q)):lista;
+  if(!filtrada.length){sug.style.display='none';return;}
+  sug.innerHTML=filtrada.map(n=>{
+    const badge=_getBadgeHtmlPorNombre(n);
+    return`<div onclick="seleccionarUsuarioHist('${n.replace(/'/g,"\\'")}')"
+      style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;"
+      onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">
+      👤 ${n}${badge}
+    </div>`;
+  }).join('');
+  sug.style.display='block';
+};
+
+window.seleccionarUsuarioHist=function(nombre){
+  window._filtroUsuarioHist=nombre.toUpperCase().trim();
+  const input=document.getElementById('hist-user-input');if(input)input.value='';
+  const sug=document.getElementById('hist-user-suggestions');if(sug)sug.style.display='none';
+  const chip=document.getElementById('hist-user-chip');
+  if(chip){
+    chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
+    const badge=_getBadgeHtmlPorNombre(nombre);
+    chip.innerHTML=`<span style="font-size:.78rem;background:var(--accent);color:#111;padding:4px 10px;border-radius:20px;font-weight:700;">👤 ${window._filtroUsuarioHist}${badge}</span>`;
+  }
+  const btnClear=document.getElementById('btn-clear-user-hist');if(btnClear)btnClear.style.display='';
+  actualizarDotHFilt();renderHist();
+};
+
+window.limpiarUsuarioHist=function(){
+  window._filtroUsuarioHist=null;
+  const input=document.getElementById('hist-user-input');if(input)input.value='';
+  const sug=document.getElementById('hist-user-suggestions');if(sug)sug.style.display='none';
+  const chip=document.getElementById('hist-user-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+  const btnClear=document.getElementById('btn-clear-user-hist');if(btnClear)btnClear.style.display='none';
+  actualizarDotHFilt();renderHist();
+};
+
+// Cerrar sugerencias de historial al hacer click fuera
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#hist-user-row')){
+    const sug=document.getElementById('hist-user-suggestions');
+    if(sug)sug.style.display='none';
+  }
+});
 
 window.toggleHistFiltros=function(){
   // Legacy: ya reemplazado por toggleHistRango; mantener por compatibilidad
@@ -2850,7 +2941,7 @@ window.actualizarDotHFilt=function(){
   if(typeof _validarRangoHistAdmin==='function')_validarRangoHistAdmin();
   const df=document.getElementById('hist-date-from')?.value||'';
   const dt=document.getElementById('hist-date-to')?.value||'';
-  const du=document.getElementById('hist-filter-user')?.value||'';
+  const du=window._filtroUsuarioHist||'';
   const hayFecha=df||dt;
   const activo=df||dt||du;
   const dot=document.getElementById('hfilt-dot');
@@ -2878,8 +2969,8 @@ window.exportarExcel=function(){
   const toVal=document.getElementById('hist-date-to')?.value;
   if(fromVal){const d=new Date(fromVal+'T00:00:00');todos=todos.filter(i=>(i.tsComprado||0)>=d.getTime());}
   if(toVal){const d=new Date(toVal+'T23:59:59');todos=todos.filter(i=>(i.tsComprado||0)<=d.getTime());}
-  const userFil=document.getElementById('hist-filter-user')?.value||'';
-  if(userFil)todos=todos.filter(i=>i.quien===userFil);
+  const userFil=(window._filtroUsuarioHist||'').toUpperCase().trim();
+  if(userFil)todos=todos.filter(i=>(i.quien||'').toUpperCase().trim()===userFil);
   const qh=norm(searchHist);
   if(qh)todos=todos.filter(i=>norm(i.nombre||'').includes(qh)||norm(i.categoria||'').includes(qh)||norm(i.quien||'').includes(qh));
   if(adminModeActive&&searchAdminHist){const qa=norm(searchAdminHist);todos=todos.filter(i=>norm(i.nombre||'').includes(qa)||norm(i.categoria||'').includes(qa)||norm(i.quien||'').includes(qa));}
@@ -3418,12 +3509,14 @@ window.filtrarSugerenciasUsuario=function(){
   const lista=_obtenerUsuariosPermitidosStats();
   const filtrada=q?lista.filter(n=>n.includes(q)):lista;
   if(!filtrada.length){sug.style.display='none';return;}
-  sug.innerHTML=filtrada.map(n=>`
-    <div onclick="seleccionarUsuarioStats('${n.replace(/'/g,"\'")}') "
-      style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);"
+  sug.innerHTML=filtrada.map(n=>{
+    const badge=_getBadgeHtmlPorNombre(n);
+    return`<div onclick="seleccionarUsuarioStats('${n.replace(/'/g,"\\'")}') "
+      style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;"
       onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">
-      👤 ${n}
-    </div>`).join('');
+      👤 ${n}${badge}
+    </div>`;
+  }).join('');
   sug.style.display='block';
 };
 
@@ -3443,7 +3536,8 @@ window.seleccionarUsuarioStats=function(nombre){
   const chip=document.getElementById('stats-user-chip');
   if(chip){
     chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
-    chip.innerHTML=`<span style="font-size:.78rem;background:var(--accent);color:#111;padding:4px 10px;border-radius:20px;font-weight:700;">👤 ${window._filtroUsuarioStats}</span>`;
+    const badge=_getBadgeHtmlPorNombre(window._filtroUsuarioStats);
+    chip.innerHTML=`<span style="font-size:.78rem;background:var(--accent);color:#111;padding:4px 10px;border-radius:20px;font-weight:700;">👤 ${window._filtroUsuarioStats}${badge}</span>`;
   }
   const btnClear=document.getElementById('btn-clear-user-stat');if(btnClear)btnClear.style.display='';
   actualizarDotSFilt();renderStats();
@@ -3588,17 +3682,14 @@ window.limpiarCampoRangoAdmin=function(campo){
   actualizarDotSFilt();renderStats();
 };
 
+// Limpiar rango admin — limpia ambos campos, cierra panel, desactiva botón
 window.limpiarRangoAdmin=function(){
-  // Limpiar campos del admin (stats-date-from-admin/to)
   const df=document.getElementById('stats-date-from-admin');const dt=document.getElementById('stats-date-to-admin');
   if(df)df.value='';if(dt)dt.value='';
-  // Sincronizar a los canónicos (stats-date-from/to usados por renderStats)
   const mf=document.getElementById('stats-date-from');const mt=document.getElementById('stats-date-to');
   if(mf)mf.value='';if(mt)mt.value='';
-  const btn=document.getElementById('btn-stats-rango-admin');
-  if(btn)btn.classList.remove('active');
-  const wrap=document.getElementById('stats-rango-admin-wrap');
-  if(wrap)wrap.style.display='none';
+  const btn=document.getElementById('btn-stats-rango-admin');if(btn)btn.classList.remove('active');
+  const wrap=document.getElementById('stats-rango-admin-wrap');if(wrap)wrap.style.display='none';
   actualizarDotSFilt();renderStats();
 };
 
@@ -3610,7 +3701,6 @@ window.toggleStatsRangoGlobal=function(btn){
   wrap.style.display=open?'none':'flex';
   if(btn)btn.classList.toggle('active',!open);
   if(open){
-    // Al cerrar, limpiar fechas y re-render
     const mf=document.getElementById('stats-date-from');const mt=document.getElementById('stats-date-to');
     if(mf)mf.value='';if(mt)mt.value='';
     actualizarDotSFilt();renderStats();
@@ -3618,20 +3708,20 @@ window.toggleStatsRangoGlobal=function(btn){
   }
 };
 
-// Limpiar un campo individual del rango global con botón X
-window.limpiarCampoRangoGlobal=function(campo){
-  const id=campo==='from'?'stats-date-from':'stats-date-to';
-  const inp=document.getElementById(id);if(inp)inp.value='';
-  // Si ambos campos están vacíos, cerrar el panel y desactivar botón
-  const from=document.getElementById('stats-date-from')?.value||'';
-  const to=document.getElementById('stats-date-to')?.value||'';
-  if(!from&&!to){
-    const wrap=document.getElementById('stats-rango-global-wrap');if(wrap)wrap.style.display='none';
-    const btn=document.getElementById('btn-stats-rango-global');if(btn)btn.classList.remove('active');
-  }
+// Limpiar rango global (super_admin+) — limpia ambos campos, cierra panel, desactiva botón
+window.limpiarRangoGlobal=function(){
+  const mf=document.getElementById('stats-date-from');const mt=document.getElementById('stats-date-to');
+  if(mf)mf.value='';if(mt)mt.value='';
+  const wrap=document.getElementById('stats-rango-global-wrap');if(wrap)wrap.style.display='none';
+  const btn=document.getElementById('btn-stats-rango-global');if(btn)btn.classList.remove('active');
   actualizarDotSFilt();renderStats();
   if(typeof renderComparaciones==='function')renderComparaciones();
 };
+
+// Alias legacy — mantener compatibilidad con llamadas antiguas
+window.limpiarCampoRangoGlobal=window.limpiarRangoGlobal;
+window.limpiarCampoRangoAdmin=window.limpiarRangoAdmin;
+window.limpiarCampoRangoHist=window.limpiarRangoHist;
 
 // Inline user selector for admin (visible above preset filters)
 window.filtrarSugerenciasUsuarioInline=function(){
@@ -4862,19 +4952,17 @@ window.setCmpPer=function(p,btn){
 };
 
 // Limpiar campo individual del rango en Comparar
-window.limpiarCampoRangoCmp=function(campo){
-  const id=campo==='from'?'cmp-date-from':'cmp-date-to';
-  const inp=document.getElementById(id);if(inp)inp.value='';
-  const from=document.getElementById('cmp-date-from')?.value||'';
-  const to=document.getElementById('cmp-date-to')?.value||'';
-  if(!from&&!to){
-    // Desactivar el botón Rango y cerrar panel
-    const rangoWrap=document.getElementById('cmp-rango-wrap');if(rangoWrap)rangoWrap.style.display='none';
-    const rangoBtn=document.getElementById('cmpf-rango');if(rangoBtn)rangoBtn.classList.remove('active');
-    window._cmpPerStr='7d';
-    const btn7d=document.getElementById('cmpf-7d');if(btn7d)btn7d.classList.add('active');
-  }
+// Limpiar rango comparar — limpia ambos campos, cierra panel, desactiva botón Rango y activa 7d
+window.limpiarRangoCmp=function(){
+  const df=document.getElementById('cmp-date-from');if(df)df.value='';
+  const dt=document.getElementById('cmp-date-to');if(dt)dt.value='';
+  const rangoWrap=document.getElementById('cmp-rango-wrap');if(rangoWrap)rangoWrap.style.display='none';
+  const rangoBtn=document.getElementById('cmpf-rango');if(rangoBtn)rangoBtn.classList.remove('active');
+  window._cmpPerStr='7d';
+  const btn7d=document.getElementById('cmpf-7d');if(btn7d)btn7d.classList.add('active');
 };
+// Alias legacy
+window.limpiarCampoRangoCmp=window.limpiarRangoCmp;
 
 window.ejecutarComparacion=function(){
   const a=window._cmpUserA;const b=window._cmpUserB;
@@ -5767,7 +5855,7 @@ window.limpiarRangoHist=function(){
   actualizarDotHFilt();renderHist();
 };
 
-// Limpiar un campo individual del rango historial con botón X
+// Limpiar campo individual del rango historial con botón X
 window.limpiarCampoRangoHist=function(campo){
   const id=campo==='from'?'hist-date-from':'hist-date-to';
   const inp=document.getElementById(id);if(inp)inp.value='';
