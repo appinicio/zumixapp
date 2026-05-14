@@ -1227,19 +1227,16 @@ details summary::-webkit-details-marker{display:none;}
       <button id="btn-stats-rango-global" onclick="toggleStatsRangoGlobal(this)" style="flex-shrink:0;padding:5px 11px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.72rem;font-weight:700;border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);white-space:nowrap;transition:var(--transition);">📅 Rango</button>
     </div>
     <!-- Panel rango fechas global (oculto por defecto) -->
-    <div id="stats-rango-global-wrap" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:8px 12px;margin-top:6px;gap:8px;flex-direction:row;align-items:center;flex-wrap:wrap;">
+    <div id="stats-rango-global-wrap" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:8px 12px;margin-top:6px;gap:8px;flex-direction:row;align-items:flex-end;flex-wrap:wrap;">
       <div style="flex:1;min-width:110px;">
         <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
-        <div style="display:flex;gap:4px;align-items:center;">
-          <input type="date" id="stats-date-from" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
-          <button onclick="limpiarRangoGlobal()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-        </div>
+        <input type="date" id="stats-date-from" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
       </div>
       <div style="flex:1;min-width:110px;">
         <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
         <div style="display:flex;gap:4px;align-items:center;">
           <input type="date" id="stats-date-to" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
-          <button onclick="limpiarRangoGlobal()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+          <button onclick="limpiarRangoGlobal()" title="Limpiar rango y cerrar" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
         </div>
       </div>
     </div>
@@ -1298,19 +1295,16 @@ details summary::-webkit-details-marker{display:none;}
         </div>
       </div>
       <!-- Rango de fecha inline para admin — acotado a 30 días -->
-      <div id="stats-rango-admin-wrap" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:8px 12px;margin-top:6px;gap:8px;flex-direction:row;align-items:center;flex-wrap:wrap;">
+      <div id="stats-rango-admin-wrap" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:8px 12px;margin-top:6px;gap:8px;flex-direction:row;align-items:flex-end;flex-wrap:wrap;">
         <div style="flex:1;min-width:110px;">
           <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
-          <div style="display:flex;gap:4px;align-items:center;">
-            <input type="date" id="stats-date-from-admin" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="validarRangoAdmin();syncAdminDateToMain();actualizarDotSFilt();renderStats()"/>
-            <button onclick="limpiarRangoAdmin()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-          </div>
+          <input type="date" id="stats-date-from-admin" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="validarRangoAdmin();syncAdminDateToMain();actualizarDotSFilt();renderStats()"/>
         </div>
         <div style="flex:1;min-width:110px;">
           <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
           <div style="display:flex;gap:4px;align-items:center;">
             <input type="date" id="stats-date-to-admin" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="validarRangoAdmin();syncAdminDateToMain();actualizarDotSFilt();renderStats()"/>
-            <button onclick="limpiarRangoAdmin()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+            <button onclick="limpiarRangoAdmin()" title="Limpiar rango y cerrar" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
           </div>
         </div>
       </div>
@@ -1376,24 +1370,44 @@ details summary::-webkit-details-marker{display:none;}
     <div id="stats-superadmin-filters-periodos-wrap" style="display:none;margin-bottom:4px;">
       <!-- El filtro de usuario y rango se controla desde la barra global de arriba -->
     </div>
+    <!-- Filtros de vista de períodos — visible para todos los roles con acceso a Períodos -->
+    <div id="per-view-filters" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+      <button class="fbtn active" id="pervf-3d" onclick="setPerViewFilt('3d',this)" style="font-size:.7rem;padding:5px 11px;">📅 Últimos 3 días</button>
+      <button class="fbtn" id="pervf-3s" onclick="setPerViewFilt('3s',this)" style="font-size:.7rem;padding:5px 11px;">📅 Últimas 3 semanas</button>
+      <button class="fbtn" id="pervf-3m" onclick="setPerViewFilt('3m',this)" style="font-size:.7rem;padding:5px 11px;">📅 Últimos 3 meses</button>
+      <button class="fbtn" id="pervf-3m2" onclick="setPerViewFilt('3m2',this)" style="font-size:.7rem;padding:5px 11px;">📅 +3 meses</button>
+    </div>
     <!-- Nota dinámica — se actualiza desde renderComparaciones() -->
     <div id="comp-nota-contexto" style="font-size:.72rem;color:var(--text3);margin-bottom:10px;padding:9px 11px;background:var(--surface2);border-radius:var(--rsm);border:1px solid var(--border);line-height:1.6;">
-      📌 Comparación automática de los últimos períodos. Los datos reflejan el filtro de usuario activo.
+      📌 Mostrando datos globales (todos los usuarios).
     </div>
     <!-- Explicación de la lógica de comparación -->
     <div style="font-size:.68rem;color:var(--text3);margin-bottom:10px;padding:8px 11px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);line-height:1.6;">
       <strong style="color:var(--text2);">¿Cómo funciona?</strong> Cada columna muestra un período distinto (día, semana o mes).
       El 📈 indica el período con <em>mayor gasto</em> y el 📉 el de <em>menor gasto</em>.
-      Si hay un filtro de usuario activo en la barra superior, las comparativas se calculan solo sobre esos datos.
+      Si hay un filtro de usuario activo, las comparativas se calculan solo sobre esos datos.
     </div>
-    <div class="stat-card"><div class="stat-title">📅 Últimos 3 días</div><div class="comp-grid" id="comp-dias"></div></div>
-    <div class="stat-card"><div class="stat-title">📅 Últimas 3 semanas</div><div class="comp-grid" id="comp-sem"></div></div>
-    <div class="stat-card"><div class="stat-title">📅 Últimos 3 meses</div><div class="comp-grid" id="comp-mes"></div></div>
+    <div class="stat-card" id="per-card-3d"><div class="stat-title">📅 Últimos 3 días</div><div class="comp-grid" id="comp-dias"></div></div>
+    <div class="stat-card" id="per-card-3s"><div class="stat-title">📅 Últimas 3 semanas</div><div class="comp-grid" id="comp-sem"></div></div>
+    <div class="stat-card" id="per-card-3m"><div class="stat-title">📅 Últimos 3 meses</div><div class="comp-grid" id="comp-mes"></div></div>
+    <div class="stat-card" id="per-card-3m2" style="display:none;"><div class="stat-title">📅 Meses 4–6 anteriores</div><div class="comp-grid" id="comp-mes2"></div></div>
   </div>
 
   <!-- ─── SUBPANE: USUARIOS (super_admin+) ────────────────────────────────── -->
   <div class="subpane" id="sp-usuarios">
-    <!-- Filtro tipo ya está en la barra global de super_admin+ -->
+    <!-- Filtros de período para usuarios -->
+    <div id="u-period-filters" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+      <button class="fbtn active" id="ufilt-p-todo" onclick="setUFiltPeriodo('todo',this)" style="font-size:.7rem;padding:5px 11px;">Todo</button>
+      <button class="fbtn" id="ufilt-p-30d" onclick="setUFiltPeriodo('30d',this)" style="font-size:.7rem;padding:5px 11px;">Mes</button>
+      <button class="fbtn" id="ufilt-p-15d" onclick="setUFiltPeriodo('15d',this)" style="font-size:.7rem;padding:5px 11px;">15 días</button>
+      <button class="fbtn" id="ufilt-p-7d" onclick="setUFiltPeriodo('7d',this)" style="font-size:.7rem;padding:5px 11px;">7 días</button>
+    </div>
+    <!-- Filtro tipo (Admins / Usuarios) -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+      <button class="fbtn active" id="ufilt-todos" onclick="setUFiltTipo('todos',this)" style="font-size:.72rem;padding:6px 13px;">Todos</button>
+      <button class="fbtn" id="ufilt-admins" onclick="setUFiltTipo('admins',this)" style="font-size:.72rem;padding:6px 13px;">🧑‍💼 Admins</button>
+      <button class="fbtn" id="ufilt-usuarios" onclick="setUFiltTipo('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios</button>
+    </div>
     <!-- KPI resumen global de la sección usuarios -->
     <div id="u-kpi-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;"></div>
     <!-- Ranking compras -->
@@ -1417,7 +1431,7 @@ details summary::-webkit-details-marker{display:none;}
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button class="fbtn" id="cmp-ftipo-admins" onclick="setCmpTipo('admins',this)" style="font-size:.72rem;padding:6px 13px;">🧑‍💼 Admins</button>
           <button class="fbtn" id="cmp-ftipo-usuarios" onclick="setCmpTipo('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios</button>
-          <button onclick="ejecutarComparacionGrupal()" style="font-size:.72rem;padding:6px 13px;background:var(--accent);color:#111;border:none;border-radius:var(--rmd);font-family:var(--ff);font-weight:700;cursor:pointer;white-space:nowrap;transition:var(--transition);">🔄 Admins vs Usuarios</button>
+          <button id="btn-cmp-grupal" onclick="toggleComparacionGrupal(this)" style="font-size:.72rem;padding:6px 13px;background:var(--accent);color:#111;border:none;border-radius:var(--rmd);font-family:var(--ff);font-weight:700;cursor:pointer;white-space:nowrap;transition:var(--transition);">🔄 Admins vs Usuarios</button>
         </div>
       </div>
       <!-- Seleccionar usuarios a comparar -->
@@ -1471,7 +1485,7 @@ details summary::-webkit-details-marker{display:none;}
           </div>
         </div>
       </div>
-      <button onclick="ejecutarComparacion()" style="width:100%;padding:11px;background:var(--text);color:var(--bg);border:none;border-radius:var(--rmd);font-family:var(--ff);font-size:.85rem;font-weight:700;cursor:pointer;transition:var(--transition);">🔄 Comparar</button>
+      <button id="btn-ejecutar-cmp" onclick="toggleComparacion(this)" style="width:100%;padding:11px;background:var(--text);color:var(--bg);border:none;border-radius:var(--rmd);font-family:var(--ff);font-size:.85rem;font-weight:700;cursor:pointer;transition:var(--transition);">🔄 Comparar</button>
     </div>
     <div id="cmp-resultado" style="display:none;"></div>
   </div>
@@ -1482,12 +1496,41 @@ details summary::-webkit-details-marker{display:none;}
       <div style="font-size:.72rem;color:var(--text3);">Registro de actividad del sistema</div>
       <button onclick="renderLogs()" style="font-size:.72rem;padding:5px 11px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);color:var(--text2);cursor:pointer;font-family:var(--ff);font-weight:700;">↺ Actualizar</button>
     </div>
-    <!-- Filtro por tipo de acción -->
-    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+    <!-- Fila 1: filtros de período -->
+    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+      <button class="fbtn active" id="lfilt-p-7d" onclick="setLogPeriodo('7d',this)" style="font-size:.7rem;padding:5px 11px;">7 días</button>
+      <button class="fbtn" id="lfilt-p-15d" onclick="setLogPeriodo('15d',this)" style="font-size:.7rem;padding:5px 11px;">15 días</button>
+      <button class="fbtn" id="lfilt-p-30d" onclick="setLogPeriodo('30d',this)" style="font-size:.7rem;padding:5px 11px;">1 mes</button>
+      <button class="fbtn" id="lfilt-p-todo" onclick="setLogPeriodo('todo',this)" style="font-size:.7rem;padding:5px 11px;">Todo</button>
+    </div>
+    <!-- Fila 2: filtro por tipo de acción -->
+    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
       <button class="fbtn active" id="lfilt-todo" onclick="setLogFilt('todo',this)" style="font-size:.7rem;padding:5px 11px;">Todo</button>
       <button class="fbtn" id="lfilt-eliminar" onclick="setLogFilt('eliminar',this)" style="font-size:.7rem;padding:5px 11px;">🗑 Eliminaciones</button>
       <button class="fbtn" id="lfilt-editar" onclick="setLogFilt('editar',this)" style="font-size:.7rem;padding:5px 11px;">✏️ Ediciones</button>
       <button class="fbtn" id="lfilt-exportar" onclick="setLogFilt('exportar',this)" style="font-size:.7rem;padding:5px 11px;">📊 Exportaciones</button>
+    </div>
+    <!-- Fila 3: filtro por usuario y tipo (igual que subtab análisis) -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:flex-start;">
+      <!-- Filtrar por usuario -->
+      <div style="flex:1;min-width:150px;">
+        <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:3px;letter-spacing:.05em;text-transform:uppercase;">👤 Filtrar por usuario</div>
+        <div style="position:relative;">
+          <input type="text" id="log-user-input" placeholder="Buscar usuario…" autocomplete="off"
+            class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
+            oninput="filtrarSugerenciasUsuarioLog()" onfocus="filtrarSugerenciasUsuarioLog()" />
+          <div id="log-user-sug" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+        </div>
+        <div id="log-user-chip" style="display:none;margin-top:5px;"></div>
+      </div>
+      <!-- Filtrar por tipo de usuario -->
+      <div style="flex-shrink:0;">
+        <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:3px;letter-spacing:.05em;text-transform:uppercase;">👥 Filtrar por tipo</div>
+        <div style="display:flex;gap:6px;">
+          <button class="fbtn" id="lfilt-tipo-admins" onclick="setLogTipo('admins',this)" style="font-size:.72rem;padding:6px 13px;">🧑‍💼 Admins</button>
+          <button class="fbtn" id="lfilt-tipo-usuarios" onclick="setLogTipo('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios</button>
+        </div>
+      </div>
     </div>
     <div id="lista-logs"><p class="no-data">Cargando logs…</p></div>
   </div>
@@ -3739,6 +3782,13 @@ window.limpiarRangoAdmin=function(){
   if(mf)mf.value='';if(mt)mt.value='';
   const btn=document.getElementById('btn-stats-rango-admin');if(btn)btn.classList.remove('active');
   const wrap=document.getElementById('stats-rango-admin-wrap');if(wrap)wrap.style.display='none';
+  // Reactivar período activo
+  const fActivo=typeof fStats!=='undefined'?fStats:'7d';
+  document.querySelectorAll('#stats-admin-filters-wrap .fbtn').forEach(b=>{
+    const onclick=b.getAttribute('onclick')||'';
+    const match=onclick.match(/'([^']+)'\)/);
+    if(match&&match[1]===fActivo)b.classList.add('active');else if(!b.id||b.id==='btn-stats-rango-admin')b.classList.remove('active');
+  });
   actualizarDotSFilt();renderStats();
 };
 
@@ -3762,7 +3812,14 @@ window.limpiarRangoGlobal=function(){
   const mf=document.getElementById('stats-date-from');const mt=document.getElementById('stats-date-to');
   if(mf)mf.value='';if(mt)mt.value='';
   const wrap=document.getElementById('stats-rango-global-wrap');if(wrap)wrap.style.display='none';
-  const btn=document.getElementById('btn-stats-rango-global');if(btn)btn.classList.remove('active');
+  const btn=document.getElementById('btn-stats-rango-global');if(btn){btn.classList.remove('active');}
+  // Reactivar el botón de período que corresponda en filt-stats
+  const fActivo=typeof fStats!=='undefined'?fStats:'7d';
+  document.querySelectorAll('#filt-stats .fbtn').forEach(b=>{
+    const onclick=b.getAttribute('onclick')||'';
+    const match=onclick.match(/'([^']+)'\)/);
+    if(match&&match[1]===fActivo)b.classList.add('active');else b.classList.remove('active');
+  });
   actualizarDotSFilt();renderStats();
   if(typeof renderComparaciones==='function')renderComparaciones();
 };
@@ -3771,6 +3828,140 @@ window.limpiarRangoGlobal=function(){
 window.limpiarCampoRangoGlobal=window.limpiarRangoGlobal;
 window.limpiarCampoRangoAdmin=window.limpiarRangoAdmin;
 window.limpiarCampoRangoHist=window.limpiarRangoHist;
+
+// ─── PERÍODOS: filtro de vista (qué secciones mostrar) ───────────────────────
+window._perViewFilt='3d'; // '3d'|'3s'|'3m'|'3m2'
+window.setPerViewFilt=function(v,btn){
+  window._perViewFilt=v;
+  document.querySelectorAll('#per-view-filters .fbtn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  // Mostrar/ocultar cards según filtro
+  const cards={
+    '3d':'per-card-3d','3s':'per-card-3s','3m':'per-card-3m','3m2':'per-card-3m2'
+  };
+  // Cada filtro muestra su card; los demás se ocultan
+  Object.entries(cards).forEach(([k,id])=>{
+    const el=document.getElementById(id);
+    if(el)el.style.display=(k===v)?'':'none';
+  });
+  renderComparaciones();
+};
+
+// ─── USUARIOS: filtro de período ──────────────────────────────────────────────
+window._uFiltPeriodo='todo';
+window.setUFiltPeriodo=function(v,btn){
+  window._uFiltPeriodo=v;
+  document.querySelectorAll('#u-period-filters .fbtn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderUsuariosTab();
+};
+
+// ─── COMPARAR: toggle "Admins vs Usuarios" y "Comparar / Limpiar" ─────────────
+window._cmpGrupalActivo=false;
+window.toggleComparacionGrupal=function(btn){
+  const res=document.getElementById('cmp-resultado');
+  if(window._cmpGrupalActivo){
+    // Limpiar
+    window._cmpGrupalActivo=false;
+    if(btn){btn.textContent='🔄 Admins vs Usuarios';btn.style.background='var(--accent)';btn.style.color='#111';}
+    if(res){res.style.display='none';res.innerHTML='';}
+  }else{
+    window._cmpGrupalActivo=true;
+    ejecutarComparacionGrupal();
+    if(btn){btn.textContent='🧹 Limpiar comparación grupal';btn.style.background='var(--red-bg)';btn.style.color='var(--red)';}
+  }
+};
+
+window.toggleComparacion=function(btn){
+  const res=document.getElementById('cmp-resultado');
+  const hayResultado=res&&res.style.display==='block'&&res.innerHTML.trim()!=='';
+  if(hayResultado){
+    // Limpiar
+    res.style.display='none';res.innerHTML='';
+    if(btn){btn.textContent='🔄 Comparar';btn.style.background='';}
+  }else{
+    ejecutarComparacion();
+    if(btn){
+      // Después de ejecutar, si hay resultado, actualizar texto
+      setTimeout(()=>{
+        const r=document.getElementById('cmp-resultado');
+        if(r&&r.style.display==='block'){btn.textContent='🧹 Limpiar comparación';btn.style.background='var(--red-bg)';btn.style.color='var(--red)';}
+      },50);
+    }
+  }
+};
+
+// ─── LOGS: filtro de período ──────────────────────────────────────────────────
+window._logFiltPeriodo='7d';
+window.setLogPeriodo=function(v,btn){
+  window._logFiltPeriodo=v;
+  document.querySelectorAll('[id^="lfilt-p-"]').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderLogs();
+};
+
+// ─── LOGS: filtro de tipo de usuario ─────────────────────────────────────────
+window._logFiltTipo='todos';
+window.setLogTipo=function(tipo,btn){
+  window._logFiltTipo=tipo===window._logFiltTipo?'todos':tipo;
+  document.querySelectorAll('[id^="lfilt-tipo-"]').forEach(b=>b.classList.remove('active'));
+  if(window._logFiltTipo!=='todos'&&btn)btn.classList.add('active');
+  // Limpiar usuario si había
+  window._logFiltUsuario=null;
+  const chip=document.getElementById('log-user-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+  const inp=document.getElementById('log-user-input');if(inp)inp.value='';
+  renderLogs();
+};
+
+// ─── LOGS: filtro de usuario ──────────────────────────────────────────────────
+window._logFiltUsuario=null;
+window.filtrarSugerenciasUsuarioLog=function(){
+  const input=document.getElementById('log-user-input');
+  const sug=document.getElementById('log-user-sug');
+  if(!input||!sug)return;
+  const q=(input.value||'').toUpperCase().trim();
+  // Obtener todos los usuarios que aparecen en logs (desde el cache de acceso)
+  const cache=window._usuariosAccesoCache||{};
+  let lista=Object.values(cache).map(v=>(v._nombre||'').toUpperCase()).filter(n=>n);
+  lista=[...new Set(lista)].sort();
+  const filtrada=q?lista.filter(n=>n.includes(q)):lista;
+  if(!filtrada.length){sug.style.display='none';return;}
+  sug.innerHTML=filtrada.map(n=>{
+    const badge=_getBadgeHtmlPorNombre(n);
+    return`<div onclick="seleccionarUsuarioLog('${n.replace(/'/g,"\\'")}')"
+      style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;"
+      onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">
+      👤 ${n}${badge}
+    </div>`;
+  }).join('');
+  sug.style.display='block';
+};
+window.seleccionarUsuarioLog=function(nombre){
+  window._logFiltUsuario=nombre.toUpperCase().trim();
+  window._logFiltTipo='todos';
+  document.querySelectorAll('[id^="lfilt-tipo-"]').forEach(b=>b.classList.remove('active'));
+  const inp=document.getElementById('log-user-input');if(inp)inp.value='';
+  const sug=document.getElementById('log-user-sug');if(sug)sug.style.display='none';
+  const chip=document.getElementById('log-user-chip');
+  if(chip){
+    chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
+    const badge=_getBadgeHtmlPorNombre(nombre);
+    chip.innerHTML=`<span style="font-size:.78rem;background:var(--accent);color:#111;padding:4px 10px;border-radius:20px;font-weight:700;">👤 ${window._logFiltUsuario}${badge}</span>
+      <button onclick="limpiarUsuarioLog()" style="background:none;border:none;cursor:pointer;font-size:.78rem;color:var(--text3);">✕</button>`;
+  }
+  renderLogs();
+};
+window.limpiarUsuarioLog=function(){
+  window._logFiltUsuario=null;
+  const inp=document.getElementById('log-user-input');if(inp)inp.value='';
+  const chip=document.getElementById('log-user-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+  renderLogs();
+};
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#sp-logs')){
+    const sug=document.getElementById('log-user-sug');if(sug)sug.style.display='none';
+  }
+});
 
 // Inline user selector for admin (visible above preset filters)
 window.filtrarSugerenciasUsuarioInline=function(){
@@ -4881,8 +5072,14 @@ function renderUsuariosTab(){
   const nd='<p class="no-data">Sin datos</p>';
   const medals=['🥇','🥈','🥉'];
   const _fb=(window._nombreActual||'DESCONOCIDO').toUpperCase();
-  // Obtener todos los datos sin restricción de período (siempre "todo el historial")
+  // Obtener todos los datos filtrados por período
   let todosU=todosComp();
+  // Aplicar filtro de período
+  const periodoU=window._uFiltPeriodo||'todo';
+  if(periodoU!=='todo'){
+    const limU=msL(periodoU);
+    todosU=todosU.filter(i=>(i.tsComprado||0)>=limU);
+  }
   // Filtrar por tipo
   const tipoU=window._uFiltTipo||'todos';
   if(tipoU!=='todos'){
@@ -5171,6 +5368,12 @@ window.limpiarCmpUser=function(lado){
   if(lado==='a')window._cmpUserA=null;else window._cmpUserB=null;
   const chip=document.getElementById(`cmp-chip-${lado}`);if(chip){chip.style.display='none';chip.innerHTML='';}
   const input=document.getElementById(`cmp-user-${lado}-input`);if(input)input.value='';
+  // Si no hay ningún usuario seleccionado, resetear el botón de comparar
+  if(!window._cmpUserA&&!window._cmpUserB){
+    const btnCmp=document.getElementById('btn-ejecutar-cmp');
+    if(btnCmp){btnCmp.textContent='🔄 Comparar';btnCmp.style.background='';btnCmp.style.color='';}
+    const res=document.getElementById('cmp-resultado');if(res){res.style.display='none';res.innerHTML='';}
+  }
 };
 
 // ─── LOGS DEL SISTEMA (admin_supremo) ─────────────────────────────────────────
@@ -5208,9 +5411,30 @@ window.renderLogs=function(){
   get(rLogs).then(snap=>{
     const d=snap.val()||{};
     let entries=Object.entries(d).map(([k,v])=>({...v,_key:k})).sort((a,b)=>b.ts-a.ts);
+    // Filtro por tipo de acción
     const filt=window._logFiltActual||'todo';
     if(filt!=='todo')entries=entries.filter(e=>e.accion===filt);
-    if(!entries.length){lista.innerHTML='<p class="no-data">Sin logs registrados</p>';return;}
+    // Filtro por período
+    const periodoLog=window._logFiltPeriodo||'7d';
+    if(periodoLog!=='todo'){
+      const limTs=msL(periodoLog);
+      entries=entries.filter(e=>(e.ts||0)>=limTs);
+    }
+    // Filtro por usuario
+    const userLog=(window._logFiltUsuario||'').toUpperCase().trim();
+    if(userLog)entries=entries.filter(e=>(e.usuario||'').toUpperCase().trim()===userLog);
+    // Filtro por tipo de usuario
+    const tipoLog=window._logFiltTipo||'todos';
+    if(tipoLog!=='todos'){
+      const cache=window._usuariosAccesoCache||{};
+      const getRolPorNombre=(nombre)=>{
+        const entry=Object.values(cache).find(v=>(v._nombre||'').toUpperCase()===nombre.toUpperCase());
+        return entry?.rol||'usuario';
+      };
+      if(tipoLog==='admins')entries=entries.filter(e=>{const r=getRolPorNombre((e.usuario||'').toUpperCase());return r==='admin'||r==='super_admin'||r==='admin_supremo';});
+      else if(tipoLog==='usuarios')entries=entries.filter(e=>getRolPorNombre((e.usuario||'').toUpperCase())==='usuario');
+    }
+    if(!entries.length){lista.innerHTML='<p class="no-data">Sin logs para el filtro actual</p>';return;}
     const iconAcc={eliminar:'🗑',editar:'✏️',exportar:'📊',pdf:'📄'};
     const colorAcc={eliminar:'var(--red)',editar:'var(--blue)',exportar:'var(--green)',pdf:'var(--orange)'};
     const bgAcc={eliminar:'var(--red-bg)',editar:'var(--blue-bg)',exportar:'var(--green-bg)',pdf:'var(--orange-bg)'};
@@ -6005,7 +6229,7 @@ renderComparaciones=function(){
   const _rolComp=window._rol||'usuario';
   const _filtroUser=window._filtroUsuarioStats;
   if(_rolComp==='admin'&&!_filtroUser){
-    ['comp-dias','comp-sem','comp-mes'].forEach(id=>{
+    ['comp-dias','comp-sem','comp-mes','comp-mes2'].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.innerHTML='<p class="no-data" style="color:var(--orange);">👆 Seleccioná un usuario primero</p>';
     });
@@ -6013,7 +6237,6 @@ renderComparaciones=function(){
     if(notaEl)notaEl.innerHTML=`📌 Seleccioná un usuario para ver sus comparativas de períodos.`;
     return;
   }
-  // Determinar si hay rango personalizado (solo super_admin+)
   const esSA=(_rolComp==='super_admin'||_rolComp==='admin_supremo');
   const dfVal=esSA?document.getElementById('stats-date-from')?.value:'';
   const dtVal=esSA?document.getElementById('stats-date-to')?.value:'';
@@ -6092,17 +6315,34 @@ renderComparaciones=function(){
   rComp('comp-dias',diasData);
   rComp('comp-sem',semsData);
   rComp('comp-mes',mesesData);
-  // Nota contextual
+  // Calcular meses 4-6 anteriores (para el filtro +3 meses)
+  const meses2Data=compPLocal([-5,-4,-3].map(o=>{
+    const i2=new Date(baseHoyCopy.getFullYear(),baseHoyCopy.getMonth()+o,1);
+    const f=new Date(baseHoyCopy.getFullYear(),baseHoyCopy.getMonth()+o+1,1);
+    return{label:`${NM[i2.getMonth()]} ${i2.getFullYear()}`,desde:i2.getTime(),hasta:f.getTime()};
+  }));
+  rComp('comp-mes2',meses2Data);
+  // Aplicar visibilidad de cards según filtro de vista
+  const vf=window._perViewFilt||'3d';
+  const cardsMap={'3d':'per-card-3d','3s':'per-card-3s','3m':'per-card-3m','3m2':'per-card-3m2'};
+  Object.entries(cardsMap).forEach(([k,id])=>{
+    const el=document.getElementById(id);
+    if(el)el.style.display=(k===vf)?'':'none';
+  });
+  // Nota contextual dinámica según filtros activos
   const notaEl=document.getElementById('comp-nota-contexto');
   if(notaEl){
     const tipoF=window._filtroTipoUsuarioStats||'todos';
     const tipoLabel=tipoF==='admins'?'Administradores':tipoF==='usuarios'?'Usuarios normales':null;
+    const vfLabel={'3d':'Últimos 3 días','3s':'Últimas 3 semanas','3m':'Últimos 3 meses','3m2':'Meses 4–6 anteriores'}[vf]||vf;
+    let nota='';
     if(_filtroUser)
-      notaEl.innerHTML=`📌 Mostrando comparativas solo de: <strong style="color:var(--accent);">👤 ${_filtroUser}</strong>${hayRango?` · Rango: <strong>${dfVal||'inicio'} → ${dtVal||'hoy'}</strong>`:''}`;
+      nota=`📌 Mostrando comparativas de <strong style="color:var(--accent);">👤 ${_filtroUser}</strong> · Vista: <strong>${vfLabel}</strong>${hayRango?` · Rango: <strong>${dfVal||'inicio'} → ${dtVal||'hoy'}</strong>`:''}`;
     else if(tipoLabel)
-      notaEl.innerHTML=`📌 Filtrando por tipo: <strong style="color:var(--blue);">${tipoLabel}</strong>${hayRango?` · Rango: <strong>${dfVal||'inicio'} → ${dtVal||'hoy'}</strong>`:''}`;
+      nota=`📌 Filtrando por tipo: <strong style="color:var(--blue);">${tipoLabel}</strong> · Vista: <strong>${vfLabel}</strong>${hayRango?` · Rango: <strong>${dfVal||'inicio'} → ${dtVal||'hoy'}</strong>`:''}`;
     else
-      notaEl.innerHTML=`📌 Mostrando datos <strong>globales</strong>${hayRango?` · Rango: <strong>${dfVal||'inicio'} → ${dtVal||'hoy'}</strong>`:' (todos los usuarios).'}`;
+      nota=`📌 Mostrando datos <strong>globales</strong> (todos los usuarios) · Vista: <strong>${vfLabel}</strong>${hayRango?` · Rango: <strong>${dfVal||'inicio'} → ${dtVal||'hoy'}</strong>`:''}`;
+    notaEl.innerHTML=nota;
   }
 };
 window.renderComparaciones=renderComparaciones;
