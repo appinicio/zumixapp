@@ -1382,7 +1382,7 @@ details summary::-webkit-details-marker{display:none;}
       📌 Mostrando datos globales (todos los usuarios).
     </div>
     <!-- Explicación de la lógica de comparación -->
-    <div style="font-size:.68rem;color:var(--text3);margin-bottom:10px;padding:8px 11px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);line-height:1.6;">
+    <div id="comp-como-funciona" style="font-size:.68rem;color:var(--text3);margin-bottom:10px;padding:8px 11px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);line-height:1.6;">
       <strong style="color:var(--text2);">¿Cómo funciona?</strong> Cada columna muestra un período distinto (día, semana o mes).
       El 📈 indica el período con <em>mayor gasto</em> y el 📉 el de <em>menor gasto</em>.
       Si hay un filtro de usuario activo, las comparativas se calculan solo sobre esos datos.
@@ -1395,19 +1395,6 @@ details summary::-webkit-details-marker{display:none;}
 
   <!-- ─── SUBPANE: USUARIOS (super_admin+) ────────────────────────────────── -->
   <div class="subpane" id="sp-usuarios">
-    <!-- Filtros de período para usuarios -->
-    <div id="u-period-filters" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
-      <button class="fbtn active" id="ufilt-p-todo" onclick="setUFiltPeriodo('todo',this)" style="font-size:.7rem;padding:5px 11px;">Todo</button>
-      <button class="fbtn" id="ufilt-p-30d" onclick="setUFiltPeriodo('30d',this)" style="font-size:.7rem;padding:5px 11px;">Mes</button>
-      <button class="fbtn" id="ufilt-p-15d" onclick="setUFiltPeriodo('15d',this)" style="font-size:.7rem;padding:5px 11px;">15 días</button>
-      <button class="fbtn" id="ufilt-p-7d" onclick="setUFiltPeriodo('7d',this)" style="font-size:.7rem;padding:5px 11px;">7 días</button>
-    </div>
-    <!-- Filtro tipo (Admins / Usuarios) -->
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
-      <button class="fbtn active" id="ufilt-todos" onclick="setUFiltTipo('todos',this)" style="font-size:.72rem;padding:6px 13px;">Todos</button>
-      <button class="fbtn" id="ufilt-admins" onclick="setUFiltTipo('admins',this)" style="font-size:.72rem;padding:6px 13px;">🧑‍💼 Admins</button>
-      <button class="fbtn" id="ufilt-usuarios" onclick="setUFiltTipo('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios</button>
-    </div>
     <!-- KPI resumen global de la sección usuarios -->
     <div id="u-kpi-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;"></div>
     <!-- Ranking compras -->
@@ -1497,11 +1484,25 @@ details summary::-webkit-details-marker{display:none;}
       <button onclick="renderLogs()" style="font-size:.72rem;padding:5px 11px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);color:var(--text2);cursor:pointer;font-family:var(--ff);font-weight:700;">↺ Actualizar</button>
     </div>
     <!-- Fila 1: filtros de período -->
-    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center;">
       <button class="fbtn active" id="lfilt-p-7d" onclick="setLogPeriodo('7d',this)" style="font-size:.7rem;padding:5px 11px;">7 días</button>
       <button class="fbtn" id="lfilt-p-15d" onclick="setLogPeriodo('15d',this)" style="font-size:.7rem;padding:5px 11px;">15 días</button>
       <button class="fbtn" id="lfilt-p-30d" onclick="setLogPeriodo('30d',this)" style="font-size:.7rem;padding:5px 11px;">1 mes</button>
-      <button class="fbtn" id="lfilt-p-todo" onclick="setLogPeriodo('todo',this)" style="font-size:.7rem;padding:5px 11px;">Todo</button>
+      <button id="btn-log-rango" onclick="toggleLogRango(this)" style="flex-shrink:0;padding:5px 11px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.7rem;font-weight:700;border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);white-space:nowrap;transition:var(--transition);">📅 Rango</button>
+    </div>
+    <!-- Panel rango fechas logs (oculto por defecto) -->
+    <div id="log-rango-wrap" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:8px 12px;margin-bottom:8px;gap:8px;flex-direction:row;align-items:flex-end;flex-wrap:wrap;">
+      <div style="flex:1;min-width:110px;">
+        <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
+        <input type="date" id="log-date-from" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="renderLogs()"/>
+      </div>
+      <div style="flex:1;min-width:110px;">
+        <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
+        <div style="display:flex;gap:4px;align-items:center;">
+          <input type="date" id="log-date-to" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="renderLogs()"/>
+          <button onclick="limpiarRangoLog()" title="Limpiar rango y cerrar" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+        </div>
+      </div>
     </div>
     <!-- Fila 2: filtro por tipo de acción -->
     <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
@@ -3897,6 +3898,35 @@ window.setLogPeriodo=function(v,btn){
   window._logFiltPeriodo=v;
   document.querySelectorAll('[id^="lfilt-p-"]').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
+  // Cerrar panel de rango si estaba abierto
+  const wrap=document.getElementById('log-rango-wrap');if(wrap)wrap.style.display='none';
+  const rangoBtn=document.getElementById('btn-log-rango');if(rangoBtn)rangoBtn.classList.remove('active');
+  const df=document.getElementById('log-date-from');if(df)df.value='';
+  const dt=document.getElementById('log-date-to');if(dt)dt.value='';
+  renderLogs();
+};
+window.toggleLogRango=function(btn){
+  const wrap=document.getElementById('log-rango-wrap');
+  if(!wrap)return;
+  const visible=wrap.style.display==='flex'||wrap.style.display==='block';
+  if(visible){
+    limpiarRangoLog();
+  }else{
+    wrap.style.display='flex';
+    if(btn)btn.classList.add('active');
+    // Desactivar botones de período
+    document.querySelectorAll('[id^="lfilt-p-"]').forEach(b=>b.classList.remove('active'));
+    window._logFiltPeriodo='rango';
+  }
+};
+window.limpiarRangoLog=function(){
+  const wrap=document.getElementById('log-rango-wrap');if(wrap)wrap.style.display='none';
+  const btn=document.getElementById('btn-log-rango');if(btn)btn.classList.remove('active');
+  const df=document.getElementById('log-date-from');if(df)df.value='';
+  const dt=document.getElementById('log-date-to');if(dt)dt.value='';
+  window._logFiltPeriodo='7d';
+  // Reactivar botón de 7 días por defecto
+  const def=document.getElementById('lfilt-p-7d');if(def)def.classList.add('active');
   renderLogs();
 };
 
@@ -5072,17 +5102,27 @@ function renderUsuariosTab(){
   const nd='<p class="no-data">Sin datos</p>';
   const medals=['🥇','🥈','🥉'];
   const _fb=(window._nombreActual||'DESCONOCIDO').toUpperCase();
-  // Obtener todos los datos filtrados por período
+  // Obtener todos los datos filtrados — usa los filtros globales
   let todosU=todosComp();
-  // Aplicar filtro de período
-  const periodoU=window._uFiltPeriodo||'todo';
-  if(periodoU!=='todo'){
-    const limU=msL(periodoU);
+  // Aplicar filtro de período global (igual que Análisis)
+  const periodoG=typeof fStats!=='undefined'?fStats:'7d';
+  const dfVal=document.getElementById('stats-date-from')?.value||'';
+  const dtVal=document.getElementById('stats-date-to')?.value||'';
+  const hayRangoG=dfVal||dtVal;
+  if(hayRangoG){
+    const desde=dfVal?new Date(dfVal+'T00:00:00').getTime():0;
+    const hasta=dtVal?new Date(dtVal+'T23:59:59').getTime():Date.now();
+    todosU=todosU.filter(i=>{const t=i.tsComprado||0;return t>=desde&&t<=hasta;});
+  }else if(periodoG!=='todo'){
+    const limU=msL(periodoG);
     todosU=todosU.filter(i=>(i.tsComprado||0)>=limU);
   }
-  // Filtrar por tipo
-  const tipoU=window._uFiltTipo||'todos';
-  if(tipoU!=='todos'){
+  // Filtrar por usuario individual seleccionado en barra global
+  const userFG=(window._filtroUsuarioStats||'').toUpperCase().trim();
+  if(userFG)todosU=todosU.filter(i=>(i.quien||'').toUpperCase().trim()===userFG);
+  // Filtrar por tipo (barra global)
+  const tipoU=window._filtroTipoUsuarioStats||'todos';
+  if(tipoU!=='todos'&&!userFG){
     const npt=_nombresDeRol(tipoU);
     if(npt&&npt.size)todosU=todosU.filter(i=>npt.has((i.quien||'').toUpperCase().trim()));
   }
@@ -5416,7 +5456,15 @@ window.renderLogs=function(){
     if(filt!=='todo')entries=entries.filter(e=>e.accion===filt);
     // Filtro por período
     const periodoLog=window._logFiltPeriodo||'7d';
-    if(periodoLog!=='todo'){
+    if(periodoLog==='rango'){
+      const dfVal=document.getElementById('log-date-from')?.value||'';
+      const dtVal=document.getElementById('log-date-to')?.value||'';
+      if(dfVal||dtVal){
+        const desde=dfVal?new Date(dfVal+'T00:00:00').getTime():0;
+        const hasta=dtVal?new Date(dtVal+'T23:59:59').getTime():Date.now();
+        entries=entries.filter(e=>{const t=e.ts||0;return t>=desde&&t<=hasta;});
+      }
+    }else if(periodoLog!=='todo'){
       const limTs=msL(periodoLog);
       entries=entries.filter(e=>(e.ts||0)>=limTs);
     }
@@ -6344,6 +6392,14 @@ renderComparaciones=function(){
       nota=`📌 Mostrando datos <strong>globales</strong> (todos los usuarios) · Vista: <strong>${vfLabel}</strong>${hayRango?` · Rango: <strong>${dfVal||'inicio'} → ${dtVal||'hoy'}</strong>`:''}`;
     notaEl.innerHTML=nota;
   }
+  // Texto explicativo dinámico según vista activa
+  const comoEl=document.getElementById('comp-como-funciona');
+  if(comoEl){
+    const unidad={'3d':'día','3s':'semana','3m':'mes','3m2':'mes'}[vf]||'período';
+    const plural={'3d':'días','3s':'semanas','3m':'meses','3m2':'meses'}[vf]||'períodos';
+    const num={'3d':'3','3s':'3','3m':'3','3m2':'3'}[vf]||'3';
+    comoEl.innerHTML=`<strong style="color:var(--text2);">¿Cómo funciona?</strong> Cada columna muestra un ${unidad} distinto. Se comparan los últimos ${num} ${plural}. El 📈 indica el ${unidad} con <em>mayor gasto</em> y el 📉 el de <em>menor gasto</em>.${_filtroUser?` Datos filtrados para <strong style="color:var(--accent);">👤 ${_filtroUser}</strong>.`:hayRango?` Datos acotados al rango <strong>${dfVal||'inicio'} → ${dtVal||'hoy'}</strong>.`:' Se usan todos los datos globales.'}`;
+  }
 };
 window.renderComparaciones=renderComparaciones;
 
@@ -6697,6 +6753,17 @@ window.filtrarSugerenciasUsuarioInlinePer=function(){
 
 
 // Nota: poblarUsuariosHist ya está redefinida más arriba con la lógica de roles y filtros correctos
+
+// ─── PATCH renderStats: también actualiza USUARIOS si ese subtab está activo ─
+const _origRenderStatsGlobal=window.renderStats;
+window.renderStats=function(){
+  if(_origRenderStatsGlobal)_origRenderStatsGlobal();
+  // Si el subtab de USUARIOS está activo, re-renderizarlo con los filtros globales actualizados
+  const stabU=document.getElementById('stab-usuarios');
+  if(stabU&&stabU.classList.contains('active')){
+    renderUsuariosTab();
+  }
+};
 
 // ─── PATCH _aplicarUXFiltrosStats para incluir Períodos y Historial ─────────
 const _orig_aplicarUXFiltrosStats=typeof _aplicarUXFiltrosStats==='function'?_aplicarUXFiltrosStats:null;
