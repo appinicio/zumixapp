@@ -2005,7 +2005,7 @@ window.switchST=function(t){
   if(globalBar){
     const rol=window._rol||'usuario';
     const esRolGlobal=(rol==='super_admin'||rol==='admin_supremo');
-    const ocultarEnTab=(t==='comparar'||t==='logs');
+    const ocultarEnTab=(t==='comparar'||t==='logs'||t==='comparaciones');
     globalBar.style.display=(esRolGlobal&&!ocultarEnTab)?'block':'none';
   }
   if(t==='metricas')renderStats();
@@ -2790,24 +2790,24 @@ function mkCard(item,opts={}){
   if(esNuevo&&!esComp)cls+=` nuevo`;
   const _puedeElim=window._permisos?.eliminar;
   const _rolMkCard=window._rol||'admin'; // si rol no cargó aún, asumir admin (re-render ocurrirá)
-  const _esUsuarioCard=_rolMkCard==='usuario';
   const _miNombreMk=(window._nombreActual||'').toUpperCase().trim();
   const _esPropiaMk=(item.quien||'').toUpperCase().trim()===_miNombreMk;
-  // usuario: en comprados solo puede editar los suyos propios
-  // admin+: puede editar cualquiera
-  const _puedeEditarEsteComp=!_esUsuarioCard||_esPropiaMk;
+  // usuario + admin : operativos — solo ven/editan sus propias compras
+  // super_admin + admin_supremo : supervisión — ven y editan todo
+  const _esSoloSuyos=(_rolMkCard==='usuario'||_rolMkCard==='admin');
+  const _puedeEditarEsteComp=!_esSoloSuyos||_esPropiaMk;
   const actions=esComp
     ?(_puedeEditarEsteComp?`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>`:'')
     :`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>${_puedeElim?`<button class="ia-sm del" onclick="eliminarItem('${item.fbKey}')" title="Eliminar">🗑</button>`:''}`;
   const derecha=esComp?`<span class="item-precio">${precioStr}</span>`:`<button class="btn-comp-ahora" onclick="cambiarAComprado('${item.fbKey}')">☐ Marcar comprado</button>`;
-  // usuario: en pendientes solo ve su propio "quien"; en comprados ve el suyo propio
-  // admin+: ve todos
-  const _esUsuarioNormal=window._rol==='usuario'; // null/undefined = no ocultar (admin+ ya cargado)
+  // quién compró: usuario+admin solo ven el suyo; super_admin+admin_supremo ven todos
   const _miNombre=(window._nombreActual||'').toUpperCase().trim();
   const _esPropio=(item.quien||'').toUpperCase().trim()===_miNombre;
-  const _mostrarQuien=!_esUsuarioNormal||_esPropio;
+  const _mostrarQuien=!_esSoloSuyos||_esPropio;
+  // quién editó: solo super_admin+admin_supremo lo ven (no generar comparaciones entre empleados)
+  const _mostrarEditor=!_esSoloSuyos;
   const quienTag=(_mostrarQuien&&item.quien)
-    ?`<span>·</span><span style="font-size:.65rem;font-weight:700;color:var(--text3);">👤 ${item.quien}</span>${(esComp&&item.quienEdito&&!_esUsuarioNormal)?`<span style="font-size:.6rem;color:var(--text3);margin-left:3px;">· ✏️ ${item.quienEdito}</span>`:''}`
+    ?`<span>·</span><span style="font-size:.65rem;font-weight:700;color:var(--text3);">👤 ${item.quien}</span>${(esComp&&item.quienEdito&&_mostrarEditor)?`<span style="font-size:.6rem;color:var(--text3);margin-left:3px;">· ✏️ ${item.quienEdito}</span>`:''}`
     :'';
   return `<div class="${cls}" id="card-${item.fbKey}"><div class="item-icon">${em}</div><div class="item-body"><div class="item-nom">${item.nombre}${esNuevo&&!esComp?' ✦':''}</div><div class="item-sub"><span>${cantStr}${totalStr}</span><span>·</span><span>${item.categoria||''}</span>${rel?`<span>·</span><span>${rel}</span>`:''}${quienTag}</div></div><div class="item-right">${derecha}<div class="item-actions">${actions}</div></div></div>`;
 }
@@ -2844,19 +2844,19 @@ function renderLista(){
       function rGC(items,key,label,icon){if(!items.length)return'';const open=gruposOpen[key]!==false;return `<div class="grupo-header" onclick="toggleGrupo('${key}')"><span class="grupo-title">${icon} ${label}<span class="grupo-badge">${items.length}</span></span><span class="grupo-arrow${open?' open':''}" id="garr-${key}">▼</span></div><div id="gbody-${key}" style="${open?'':'display:none'}">${items.map(it=>mkCard(it,{esComp:true,esNuevo:it.fbKey===ultimoKey})).join('')}</div>`;}
       lc.innerHTML=rGC(gDLC,'c-darlyn','Darlyn y Luz','👑')+rGC(gNosC,'c-nosotros','Nosotros','👥');
     }
-    const _esUsNorm=window._rol==='usuario'; // null/undefined = admin, ve total global
+    // usuario+admin: solo ven su propio total y resumen; super_admin+admin_supremo: global
+    const _esSoloSuyosRL=(window._rol==='usuario'||window._rol==='admin');
     const _miNombreCmp=(window._nombreActual||'').toUpperCase().trim();
-    // usuario: solo ve su propio monto; admin+: ve total global
-    const compParaTotal=_esUsNorm?compHoy.filter(i=>(i.quien||'').toUpperCase().trim()===_miNombreCmp):compHoy;
+    const compParaTotal=_esSoloSuyosRL?compHoy.filter(i=>(i.quien||'').toUpperCase().trim()===_miNombreCmp):compHoy;
     const totalDia=compParaTotal.reduce((s,i)=>s+getP(i),0);
     totEl.style.display=compParaTotal.length?'block':'none';
     totVal.textContent=`S/ ${totalDia.toFixed(2)}`;
-    if(_esUsNorm){totEl.querySelector('span:first-child').textContent='💰 Mi total hoy';}
+    if(_esSoloSuyosRL){totEl.querySelector('span:first-child').textContent='💰 Mi total hoy';}
     else{const _tl=totEl.querySelector('span:first-child');if(_tl)_tl.textContent='💰 Total gastado hoy';}
     const _fnb=(window._nombreActual||'DESCONOCIDO').toUpperCase();
     const pu={};
-    // usuario: solo se muestra su propio resumen
-    const compParaResumen=_esUsNorm?compHoy.filter(i=>(i.quien||'').toUpperCase().trim()===_miNombreCmp):compHoy;
+    // usuario+admin: solo su fila; super_admin+admin_supremo: todas
+    const compParaResumen=_esSoloSuyosRL?compHoy.filter(i=>(i.quien||'').toUpperCase().trim()===_miNombreCmp):compHoy;
     compParaResumen.forEach(i=>{ // admin+: todos; usuario: solo los suyos
       const u=(i.quien&&i.quien.trim()!==''?i.quien.trim():_fnb).toUpperCase();
       if(!pu[u])pu[u]={alta:0,media:0,baja:0,g:0};
@@ -3396,6 +3396,19 @@ document.addEventListener('click',function(e){
 });
 
 // WSP
+// ── Función unificada: filtra comprados hoy según rol ──────────────────────────
+// Misma regla en renderLista, mkCard y genWSP — un solo lugar para mantener.
+// usuario + admin  → solo sus propias compras
+// super_admin + admin_supremo → todo sin excepción
+window._filtrarCompHoyPorRol=function(items){
+  const rol=window._rol||'usuario';
+  const miNombre=(window._nombreActual||'').toUpperCase().trim();
+  const esSoloSuyos=(rol==='usuario'||rol==='admin');
+  return esSoloSuyos
+    ?items.filter(i=>(i.quien||'').toUpperCase().trim()===miNombre)
+    :items;
+};
+
 window.genWSP=function(tipo){
   const now=new Date();const D=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];const fd=`${D[now.getDay()]} ${now.getDate()} ${M[now.getMonth()]}`;const fh=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;const S='────────────────────────',S2='════════════════════════';
   if(tipo==='pend'){
@@ -3433,82 +3446,71 @@ window.genWSP=function(tipo){
     msgs.pend=L.join('\n');document.getElementById('pt-pend').textContent=msgs.pend;document.getElementById('prev-pend').classList.add('show');setTimeout(()=>document.getElementById('prev-pend').scrollIntoView({behavior:'smooth',block:'start'}),50);
   }else{
     const hI=new Date();hI.setHours(0,0,0,0);const hT=hI.getTime();
-    let compAll=activos.filter(i=>i.comprado&&(i.tsComprado||0)>=hT);
+    const compAll=activos.filter(i=>i.comprado&&(i.tsComprado||0)>=hT);
     if(!compAll.length){showModal('📋','Sin compras hoy','No hay productos comprados hoy.');return;}
+    // ── Función unificada de filtrado por rol (misma regla que renderLista y mkCard) ──
+    const comp=_filtrarCompHoyPorRol(compAll);
+    if(!comp.length){showModal('📋','Sin compras','No hay compras propias para generar hoy.');return;}
+    const nota=document.getElementById('nota-comp').value.trim();
+    const total=comp.reduce((s,i)=>s+getP(i),0);
     const _rolWSP=window._rol||'usuario';
-    const _miNombreWSP=(window._nombreActual||'').toUpperCase().trim();
-    const _emailWSP=(window._auth?.currentUser?.email||'').toLowerCase().trim();
-    // Filtrar según rol
-    // Obtener emails de roles protegidos desde el cache
-    const _cache=window._usuariosAccesoCache||{};
-    const _emailsSupremo=Object.values(_cache).filter(v=>v.rol==='admin_supremo').map(v=>(v.email||'').toLowerCase().trim());
-    const _emailsSuperAdmin=Object.values(_cache).filter(v=>v.rol==='super_admin').map(v=>(v.email||'').toLowerCase().trim());
-    const _nombresSupremo=new Set();const _nombresSuperAdmin=new Set();
-    Object.values(_cache).forEach(v=>{
-      const nombreV=(v._nombre||'').toUpperCase().trim();
-      if(v.rol==='admin_supremo'&&nombreV)_nombresSupremo.add(nombreV);
-      if(v.rol==='super_admin'&&nombreV)_nombresSuperAdmin.add(nombreV);
-    });
-    let comp;
-    if(_rolWSP==='usuario'){
-      // Solo sus propias compras
-      comp=compAll.filter(i=>(i.quien||'').toUpperCase().trim()===_miNombreWSP);
-    }else if(_rolWSP==='admin'){
-      // Todo excepto super_admin y admin_supremo
-      comp=compAll.filter(i=>{
-        const quien=(i.quien||'').toUpperCase().trim();
-        return !_nombresSupremo.has(quien)&&!_nombresSuperAdmin.has(quien);
-      });
-    }else if(_rolWSP==='super_admin'){
-      // Todo excepto admin_supremo
-      comp=compAll.filter(i=>{
-        const quien=(i.quien||'').toUpperCase().trim();
-        return !_nombresSupremo.has(quien);
-      });
-    }else{
-      // admin_supremo: todo sin excepción
-      comp=compAll;
-    }
-    if(!comp.length){showModal('📋','Sin compras','No hay compras para generar con tu nivel de acceso.');return;}
-    const nota=document.getElementById('nota-comp').value.trim();const total=comp.reduce((s,i)=>s+getP(i),0);
+    const _esSoloSuyosWSP=(_rolWSP==='usuario'||_rolWSP==='admin');
     let L=[`🧃 *JUGERÍA ZUMIX*`,S2,`✅ *COMPRADO HOY*`,`📅 ${fd}   🕐 ${fh}`,S,''];
     const _urgLblC={alta:'🔴 ALTA PRIORIDAD',media:'🔵 PRIORIDAD MEDIA',baja:'🟢 PUEDE ESPERAR'};
-    // Agrupar por quien (comprador real), ordenado por subtotal desc
-    const _fallbackNombreWSP=(window._nombreActual||'DESCONOCIDO').toUpperCase();
-    const gruposPorComprador={};
-    comp.forEach(i=>{
-      const comprador=(i.quien&&i.quien.trim()!==''?i.quien.trim():_fallbackNombreWSP).toUpperCase();
-      if(!gruposPorComprador[comprador])gruposPorComprador[comprador]=[];
-      gruposPorComprador[comprador].push(i);
-    });
-    const compradorOrden=Object.entries(gruposPorComprador)
-      .sort((a,b)=>b[1].reduce((s,i)=>s+getP(i),0)-a[1].reduce((s,i)=>s+getP(i),0));
-    let n=1;
-    compradorOrden.forEach(([comprador,gitems])=>{
+    if(_esSoloSuyosWSP){
+      // usuario + admin: lista plana sin atribución de comprador
       const ordUrgG={alta:0,urgente:0,media:1,normal:2,baja:2};
-      const sorted=[...gitems].sort((a,b)=>(ordUrgG[a.urgencia||'baja']??2)-(ordUrgG[b.urgencia||'baja']??2));
-      const sub=gitems.reduce((s,i)=>s+getP(i),0);
-      L.push(`👤 ${comprador}`);
-      let curUrg=null;
+      const sorted=[...comp].sort((a,b)=>(ordUrgG[a.urgencia||'baja']??2)-(ordUrgG[b.urgencia||'baja']??2));
+      let curUrg=null;let n=1;
       sorted.forEach(i=>{
         const uKey=i.urgencia||'baja';const uKeyN=uKey==='urgente'?'alta':uKey==='normal'?'baja':uKey;
         if(uKeyN!==curUrg){
           if(curUrg!==null)L.push('');
-          curUrg=uKeyN;
-          L.push('');
-          L.push(`  ${_urgLblC[uKeyN]||'🟢 PUEDE ESPERAR'}`);
-          L.push('');
+          curUrg=uKeyN;L.push('');
+          L.push(`  ${_urgLblC[uKeyN]||'🟢 PUEDE ESPERAR'}`);L.push('');
         }
         const c=i.compra?.cantidad||i.cantidad;const f=i.compra?.formato||i.unidad;
-        const _cantWsp2=c&&f?` (${c} ${f})`:(c?` (${c})`:'');
+        const _cant=c&&f?` (${c} ${f})`:(c?` (${c})`:'');
         const p=getP(i);
-        const _editTag=i.quienEdito?` ✏️${i.quienEdito}`:'';
-        L.push(`     ${String(n++).padStart(2,'0')}. ${i.nombre}${_cantWsp2}${p?` — S/ ${p.toFixed(2)}`:''}${_editTag}`);
+        L.push(`     ${String(n++).padStart(2,'0')}. ${i.nombre}${_cant}${p?` — S/ ${p.toFixed(2)}`:''}`);
       });
       L.push('');
-      if(sub>0)L.push(`  💳 Subtotal ${comprador}: S/ ${sub.toFixed(2)}`);
-      L.push('');
-    });
+    }else{
+      // super_admin + admin_supremo: agrupado por comprador con subtotales
+      const _fallbackNombre=(window._nombreActual||'DESCONOCIDO').toUpperCase();
+      const gruposPorComprador={};
+      comp.forEach(i=>{
+        const comprador=(i.quien&&i.quien.trim()!==''?i.quien.trim():_fallbackNombre).toUpperCase();
+        if(!gruposPorComprador[comprador])gruposPorComprador[comprador]=[];
+        gruposPorComprador[comprador].push(i);
+      });
+      const compradorOrden=Object.entries(gruposPorComprador)
+        .sort((a,b)=>b[1].reduce((s,i)=>s+getP(i),0)-a[1].reduce((s,i)=>s+getP(i),0));
+      let n=1;
+      compradorOrden.forEach(([comprador,gitems])=>{
+        const ordUrgG={alta:0,urgente:0,media:1,normal:2,baja:2};
+        const sorted=[...gitems].sort((a,b)=>(ordUrgG[a.urgencia||'baja']??2)-(ordUrgG[b.urgencia||'baja']??2));
+        const sub=gitems.reduce((s,i)=>s+getP(i),0);
+        L.push(`👤 ${comprador}`);
+        let curUrg=null;
+        sorted.forEach(i=>{
+          const uKey=i.urgencia||'baja';const uKeyN=uKey==='urgente'?'alta':uKey==='normal'?'baja':uKey;
+          if(uKeyN!==curUrg){
+            if(curUrg!==null)L.push('');
+            curUrg=uKeyN;L.push('');
+            L.push(`  ${_urgLblC[uKeyN]||'🟢 PUEDE ESPERAR'}`);L.push('');
+          }
+          const c=i.compra?.cantidad||i.cantidad;const f=i.compra?.formato||i.unidad;
+          const _cant=c&&f?` (${c} ${f})`:(c?` (${c})`:'');
+          const p=getP(i);
+          const _editTag=i.quienEdito?` ✏️${i.quienEdito}`:'';
+          L.push(`     ${String(n++).padStart(2,'0')}. ${i.nombre}${_cant}${p?` — S/ ${p.toFixed(2)}`:''}${_editTag}`);
+        });
+        L.push('');
+        if(sub>0)L.push(`  💳 Subtotal ${comprador}: S/ ${sub.toFixed(2)}`);
+        L.push('');
+      });
+    }
     L.push(S);if(total>0)L.push(`💰 *Total gastado: S/ ${total.toFixed(2)}*`);L.push(`✅ *${comp.length} producto${comp.length>1?'s':''} comprado${comp.length>1?'s':''} hoy*`);if(nota){L.push('');L.push(`📝 _${nota}_`);}L.push(S2);L.push('_Enviado desde Zumix Stock_ ✅');
     msgs.comp=L.join('\n');document.getElementById('pt-comp').textContent=msgs.comp;document.getElementById('prev-comp').classList.add('show');setTimeout(()=>document.getElementById('prev-comp').scrollIntoView({behavior:'smooth',block:'start'}),50);
   }
@@ -3549,6 +3551,7 @@ window.setFiltroTipoUsuario=function(tipo,btn){
     if(userWrap)userWrap.style.display=_esRolConFiltroUser()?'':'none';
     actualizarDotSFilt();renderStats();
     if(typeof renderComparaciones==='function')renderComparaciones();
+    if(typeof renderUsuariosTab==='function')renderUsuariosTab();
     return;
   }
   window._filtroTipoUsuarioStats=tipo;
@@ -3567,6 +3570,7 @@ window.setFiltroTipoUsuario=function(tipo,btn){
   }
   actualizarDotSFilt();renderStats();
   if(typeof renderComparaciones==='function')renderComparaciones();
+  if(typeof renderUsuariosTab==='function')renderUsuariosTab();
 };
 
 function _esRolConFiltroUser(){
@@ -3673,6 +3677,7 @@ window.seleccionarUsuarioStats=function(nombre){
   const btnClear=document.getElementById('btn-clear-user-stat');if(btnClear)btnClear.style.display='';
   actualizarDotSFilt();renderStats();
   if(typeof renderComparaciones==='function')renderComparaciones();
+  if(typeof renderUsuariosTab==='function')renderUsuariosTab();
 };
 
 // Limpiar filtro de usuario
@@ -3697,6 +3702,7 @@ window.limpiarFiltroUsuarioStats=function(){
   if(tipoWrap)tipoWrap.style.display=(rol==='super_admin'||rol==='admin_supremo')?'':'none';
   actualizarDotSFilt();renderStats();
   if(typeof renderComparaciones==='function')renderComparaciones();
+  if(typeof renderUsuariosTab==='function')renderUsuariosTab();
 };
 
 // Cerrar sugerencias al hacer click fuera
@@ -6317,18 +6323,19 @@ window.validarRangoAdmin=function(){
   const df=document.getElementById('stats-date-from-admin');
   const dt=document.getElementById('stats-date-to-admin');
   const warn=document.getElementById('admin-rango-warn');
-  if(!df||!dt||!warn)return;
-  if(!df.value||!dt.value){warn.style.display='none';return;}
+  if(!df||!dt)return;
+  if(!df.value||!dt.value){if(warn)warn.style.display='none';return;}
   const desde=new Date(df.value+'T00:00:00');
   const hasta=new Date(dt.value+'T23:59:59');
   const diffDias=(hasta-desde)/(1000*60*60*24);
   if(diffDias>30){
-    warn.style.display='block';
+    if(warn)warn.style.display='none';
     // Ajustar 'hasta' para que no supere 30 días desde 'desde'
     const maxHasta=new Date(desde);maxHasta.setDate(maxHasta.getDate()+30);
     dt.value=maxHasta.toISOString().split('T')[0];
+    showModal('⚠️','Rango limitado','Como Administrador, el rango de fechas no puede superar los 30 días.');
   }else{
-    warn.style.display='none';
+    if(warn)warn.style.display='none';
   }
 };
 
