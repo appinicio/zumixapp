@@ -1397,9 +1397,32 @@ details summary::-webkit-details-marker{display:none;}
       </div>
       <div id="stats-per-user-chip" style="display:none;margin-top:5px;"></div>
     </div>
-    <!-- Filtros para super_admin / admin_supremo en Períodos: solo el filtro global superior aplica -->
-    <div id="stats-superadmin-filters-periodos-wrap" style="display:none;margin-bottom:4px;">
-      <!-- El filtro de usuario y rango se controla desde la barra global de arriba -->
+    <!-- Filtros para super_admin / admin_supremo en Períodos: usuario + tipo -->
+    <div id="stats-superadmin-filters-periodos-wrap" style="display:none;margin-bottom:8px;">
+      <!-- Filtrar por usuario -->
+      <div style="margin-bottom:8px;">
+        <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:3px;letter-spacing:.05em;text-transform:uppercase;">👤 Filtrar por usuario</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <div style="flex:1;position:relative;">
+            <input type="text" id="stats-user-input-per-sa" placeholder="Buscar usuario…" autocomplete="off"
+              class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
+              oninput="filtrarSugerenciasUsuarioPerSA()" onfocus="filtrarSugerenciasUsuarioPerSA()" />
+            <div id="stats-user-sug-per-sa" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
+          </div>
+          <button onclick="limpiarUsuarioPerSA()" id="btn-clear-user-per-sa"
+            style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
+        </div>
+        <div id="stats-user-chip-per-sa" style="display:none;margin-top:5px;"></div>
+      </div>
+      <!-- Filtrar por tipo -->
+      <div>
+        <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">👥 Filtrar por tipo</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+          <button class="fbtn" id="pertipo-admins" onclick="setPerTipoSA('admins',this)" style="font-size:.72rem;padding:6px 13px;">🧑‍💼 Admins</button>
+          <button class="fbtn" id="pertipo-usuarios" onclick="setPerTipoSA('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios</button>
+        </div>
+        <div id="stats-per-tipo-chip-sa" style="display:none;margin-top:3px;"></div>
+      </div>
     </div>
     <!-- Filtros de vista de períodos — visible para todos los roles con acceso a Períodos -->
     <div id="per-view-filters" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
@@ -4024,14 +4047,21 @@ window.filtrarSugerenciasUsuarioLog=function(){
   const sug=document.getElementById('log-user-sug');
   if(!input||!sug)return;
   const q=(input.value||'').toUpperCase().trim();
-  // Obtener todos los usuarios que aparecen en logs (desde el cache de acceso)
+  // Combinar nombres del cache + nombres que realmente aparecen en los últimos logs renderizados
   const cache=window._usuariosAccesoCache||{};
-  let lista=Object.values(cache).map(v=>(v._nombre||'').toUpperCase()).filter(n=>n);
-  lista=[...new Set(lista)].sort();
+  const desdecache=Object.values(cache).map(v=>(v._nombre||v.nombre||'').toUpperCase()).filter(n=>n);
+  // También extraer de los logs ya cargados en DOM (del campo "👤 X · rol")
+  const desdeLogs=[];
+  document.querySelectorAll('#lista-logs [style*="font-size:.68rem"]').forEach(el=>{
+    const txt=el.textContent||'';
+    const m=txt.match(/👤\s*([^\·]+)/);
+    if(m)desdeLogs.push(m[1].trim().toUpperCase());
+  });
+  let lista=[...new Set([...desdecache,...desdeLogs])].filter(n=>n).sort();
   const filtrada=q?lista.filter(n=>n.includes(q)):lista;
   if(!filtrada.length){sug.style.display='none';return;}
   sug.innerHTML=filtrada.map(n=>{
-    const badge=_getBadgeHtmlPorNombre(n);
+    const badge=typeof _getBadgeHtmlPorNombre==='function'?_getBadgeHtmlPorNombre(n):'';
     return`<div onclick="seleccionarUsuarioLog('${n.replace(/'/g,"\\'")}')"
       style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;"
       onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">
@@ -5217,7 +5247,39 @@ function renderUsuariosTab(){
     const npt=_nombresDeRol(tipoU);
     if(npt&&npt.size)todosU=todosU.filter(i=>npt.has((i.quien||'').toUpperCase().trim()));
   }
-  // Construir mapa por usuario
+  // Construir mapa por usuario — SIEMPRE sobre todos los datos (sin filtro de usuario)
+  // para poder mostrar la posición real en el ranking global
+  const todosParaRanking=()=>{
+    let t=todosComp();
+    // Solo aplicar filtro de período y tipo, NO de usuario individual
+    if(hayRangoG){
+      const desde=dfVal?new Date(dfVal+'T00:00:00').getTime():0;
+      const hasta=dtVal?new Date(dtVal+'T23:59:59').getTime():Date.now();
+      t=t.filter(i=>{const ts=i.tsComprado||0;return ts>=desde&&ts<=hasta;});
+    }else if(periodoG!=='todo'){
+      const limU=msL(periodoG);
+      t=t.filter(i=>(i.tsComprado||0)>=limU);
+    }
+    const tipoU2=window._filtroTipoUsuarioStats||'todos';
+    if(tipoU2!=='todos'){
+      const npt=_nombresDeRol(tipoU2);
+      if(npt&&npt.size)t=t.filter(i=>npt.has((i.quien||'').toUpperCase().trim()));
+    }
+    return t;
+  };
+  const todosParaRankingData=userFG?todosParaRanking():todosU;
+  const gUGlobal={};
+  todosParaRankingData.forEach(i=>{
+    const u=(i.quien&&i.quien.trim()!==''?i.quien.trim():_fb).toUpperCase();
+    if(!gUGlobal[u])gUGlobal[u]={t:0,g:0};
+    gUGlobal[u].t++;const p=getP(i);if(p>0)gUGlobal[u].g+=p;
+  });
+  const rankingGlobalT=Object.entries(gUGlobal).sort((a,b)=>b[1].t-a[1].t);
+  const rankingGlobalG=Object.entries(gUGlobal).sort((a,b)=>b[1].g-a[1].g);
+  const posRankT=(nombre)=>rankingGlobalT.findIndex(([u])=>u===nombre);
+  const posRankG=(nombre)=>rankingGlobalG.findIndex(([u])=>u===nombre);
+  const totalGlobalT=rankingGlobalT.length;
+
   const gU={};
   todosU.forEach(i=>{
     const u=(i.quien&&i.quien.trim()!==''?i.quien.trim():_fb).toUpperCase();
@@ -5253,28 +5315,36 @@ function renderUsuariosTab(){
     ['st-ranking-users','st-gasto-users','st-ticket-users','st-dias-users','st-cat-users'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=nd;});
     return;
   }
-  // Ranking por compras
+  // Ranking por compras — posición real en ranking global
   const rankingU=usuarios.sort((a,b)=>b[1].t-a[1].t);
   const mRank=rankingU[0]?.[1].t||1;
-  document.getElementById('st-ranking-users').innerHTML=rankingU.map(([u,d],i)=>`
-    <div class="sr" style="align-items:center;padding:4px 0;">
-      <span style="font-size:.82rem;font-weight:800;width:20px;flex-shrink:0;text-align:center;color:${i<3?'var(--accent)':'var(--text3)'};">${i<3?medals[i]:(i+1)+'.'}</span>
-      <span class="sr-n" style="font-size:.84rem;">👤 ${u}</span>
+  document.getElementById('st-ranking-users').innerHTML=rankingU.map(([u,d])=>{
+    const posReal=posRankT(u); // posición real en ranking global (0-based)
+    const posLabel=posReal<3?medals[posReal]:(posReal+1)+'.';
+    const posColor=posReal<3?'var(--accent)':'var(--text3)';
+    const totalGlobalTxt=userFG?` <span style="font-size:.62rem;color:var(--text3);">(pos. ${posReal+1}/${totalGlobalT} global)</span>`:'';
+    return`<div class="sr" style="align-items:center;padding:4px 0;">
+      <span style="font-size:.82rem;font-weight:800;width:20px;flex-shrink:0;text-align:center;color:${posColor};">${posLabel}</span>
+      <span class="sr-n" style="font-size:.84rem;">👤 ${u}${totalGlobalTxt}</span>
       <div class="sr-bg"><div class="sr-bar" style="width:${Math.round(d.t/mRank*100)}%"></div></div>
       <span class="sr-v">${d.t}x</span>
-      <span class="sr-e">${totalRegistros>0?(d.t/totalRegistros*100).toFixed(0)+'%':''}</span>
-    </div>`).join('');
-  // Ranking por gasto
+      <span class="sr-e">${todosU.length>0?(d.t/todosU.length*100).toFixed(0)+'%':''}</span>
+    </div>`;}).join('');
+  // Ranking por gasto — posición real en ranking global
   const gastoU=[...usuarios].sort((a,b)=>b[1].g-a[1].g);
   const mGasto=gastoU[0]?.[1].g||1;
-  document.getElementById('st-gasto-users').innerHTML=gastoU.map(([u,d],i)=>`
-    <div class="sr" style="align-items:center;padding:4px 0;">
-      <span style="font-size:.82rem;font-weight:800;width:20px;flex-shrink:0;text-align:center;color:${i<3?'var(--accent)':'var(--text3)'};">${i<3?medals[i]:(i+1)+'.'}</span>
-      <span class="sr-n" style="font-size:.84rem;">👤 ${u}</span>
+  document.getElementById('st-gasto-users').innerHTML=gastoU.map(([u,d])=>{
+    const posReal=posRankG(u);
+    const posLabel=posReal<3?medals[posReal]:(posReal+1)+'.';
+    const posColor=posReal<3?'var(--accent)':'var(--text3)';
+    const totalGlobalTxt=userFG?` <span style="font-size:.62rem;color:var(--text3);">(pos. ${posReal+1}/${totalGlobalT} global)</span>`:'';
+    return`<div class="sr" style="align-items:center;padding:4px 0;">
+      <span style="font-size:.82rem;font-weight:800;width:20px;flex-shrink:0;text-align:center;color:${posColor};">${posLabel}</span>
+      <span class="sr-n" style="font-size:.84rem;">👤 ${u}${totalGlobalTxt}</span>
       <div class="sr-bg"><div class="sr-bar" style="width:${Math.round(d.g/mGasto*100)}%"></div></div>
       <span class="sr-v" style="width:auto;font-size:.72rem;">S/ ${d.g.toFixed(2)}</span>
-      <span class="sr-e">${totalGasto>0?(d.g/totalGasto*100).toFixed(0)+'%':''}</span>
-    </div>`).join('');
+      <span class="sr-e">${todosU.reduce((s,i)=>s+getP(i),0)>0?(d.g/todosU.reduce((s,i)=>s+getP(i),0)*100).toFixed(0)+'%':''}</span>
+    </div>`;}).join('');
   // Ticket promedio por usuario
   const ticketU=[...usuarios].filter(([u,d])=>d.precios.length>0).map(([u,d])=>{const avg=d.precios.reduce((s,p)=>s+p,0)/d.precios.length;return[u,avg,d.t];}).sort((a,b)=>b[1]-a[1]);
   const mTick=ticketU[0]?.[1]||1;
@@ -5562,16 +5632,25 @@ window.renderLogs=function(){
     // Filtro por usuario
     const userLog=(window._logFiltUsuario||'').toUpperCase().trim();
     if(userLog)entries=entries.filter(e=>(e.usuario||'').toUpperCase().trim()===userLog);
-    // Filtro por tipo de usuario
+    // Filtro por tipo de usuario — robusto: busca por rol en cache, fallback a campo e.rol
     const tipoLog=window._logFiltTipo||'todos';
     if(tipoLog!=='todos'){
       const cache=window._usuariosAccesoCache||{};
-      const getRolPorNombre=(nombre)=>{
-        const entry=Object.values(cache).find(v=>(v._nombre||'').toUpperCase()===nombre.toUpperCase());
-        return entry?.rol||'usuario';
-      };
-      if(tipoLog==='admins')entries=entries.filter(e=>{const r=getRolPorNombre((e.usuario||'').toUpperCase());return r==='admin'||r==='super_admin'||r==='admin_supremo';});
-      else if(tipoLog==='usuarios')entries=entries.filter(e=>getRolPorNombre((e.usuario||'').toUpperCase())==='usuario');
+      // Mapa nombre→rol desde cache (normalizado a mayúsculas)
+      const rolPorNombre={};
+      Object.values(cache).forEach(v=>{
+        const n=(v._nombre||v.nombre||'').toUpperCase().trim();
+        if(n)rolPorNombre[n]=v.rol||'usuario';
+      });
+      const esAdmin=(r)=>r==='admin'||r==='super_admin'||r==='admin_supremo';
+      entries=entries.filter(e=>{
+        const nombreE=(e.usuario||'').toUpperCase().trim();
+        // Primero intentar desde cache; si no, usar e.rol del propio log
+        const rolE=rolPorNombre[nombreE]||(e.rol||'usuario');
+        if(tipoLog==='admins')return esAdmin(rolE);
+        if(tipoLog==='usuarios')return rolE==='usuario';
+        return true;
+      });
     }
     if(!entries.length){lista.innerHTML='<p class="no-data">Sin logs para el filtro actual</p>';return;}
     const iconAcc={eliminar:'🗑',editar:'✏️',exportar:'📊',pdf:'📄'};
@@ -6365,12 +6444,10 @@ window.togglePerRangoSA=function(btn){
 
 // Filtro de usuario en Períodos para super_admin+ — redirige al filtro global
 window._filtroUsuarioStatsPerSA=null;
-window.filtrarSugerenciasUsuarioInlinePerSA=function(){
-  // No-op: el filtro global cubre esta funcionalidad
-};
+// No-op legacy
+window.filtrarSugerenciasUsuarioInlinePerSA=function(){};
 
 window.seleccionarUsuarioStatsInlinePerSA=function(nombre){
-  // Redirigir al selector global
   if(typeof seleccionarUsuarioStats==='function')seleccionarUsuarioStats(nombre);
 };
 
@@ -6378,6 +6455,92 @@ window.limpiarUsuarioStatsPerSA=function(){
   window._filtroUsuarioStatsPerSA=null;
   if(typeof limpiarFiltroUsuarioStats==='function')limpiarFiltroUsuarioStats();
 };
+
+// ─── PERÍODOS super_admin: filtro usuario (input propio del subtab) ────────────
+window.filtrarSugerenciasUsuarioPerSA=function(){
+  const input=document.getElementById('stats-user-input-per-sa');
+  const sug=document.getElementById('stats-user-sug-per-sa');
+  if(!input||!sug)return;
+  const q=(input.value||'').toUpperCase().trim();
+  const cache=window._usuariosAccesoCache||{};
+  let lista=Object.values(cache).map(v=>(v._nombre||'').toUpperCase()).filter(n=>n);
+  lista=[...new Set(lista)].sort();
+  const filtrada=q?lista.filter(n=>n.includes(q)):lista;
+  if(!filtrada.length){sug.style.display='none';return;}
+  sug.innerHTML=filtrada.map(n=>{
+    const badge=typeof _getBadgeHtmlPorNombre==='function'?_getBadgeHtmlPorNombre(n):'';
+    return`<div onclick="seleccionarUsuarioPerSA('${n.replace(/'/g,"\\'")}')"
+      style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;"
+      onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">
+      👤 ${n}${badge}</div>`;
+  }).join('');
+  sug.style.display='block';
+};
+
+window.seleccionarUsuarioPerSA=function(nombre){
+  // Limpiar tipo si había
+  window._filtroTipoUsuarioStats='todos';
+  ['pertipo-admins','pertipo-usuarios'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
+  const chipTipo=document.getElementById('stats-per-tipo-chip-sa');if(chipTipo){chipTipo.style.display='none';chipTipo.innerHTML='';}
+  // Aplicar usuario
+  window._filtroUsuarioStats=nombre.toUpperCase().trim();
+  const input=document.getElementById('stats-user-input-per-sa');if(input)input.value='';
+  const sug=document.getElementById('stats-user-sug-per-sa');if(sug)sug.style.display='none';
+  const chip=document.getElementById('stats-user-chip-per-sa');
+  if(chip){
+    const badge=typeof _getBadgeHtmlPorNombre==='function'?_getBadgeHtmlPorNombre(nombre):'';
+    chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
+    chip.innerHTML=`<span style="font-size:.78rem;background:var(--accent);color:#111;padding:4px 10px;border-radius:20px;font-weight:700;">👤 ${nombre.toUpperCase()}${badge}</span>
+      <button onclick="limpiarUsuarioPerSA()" style="background:none;border:none;cursor:pointer;font-size:.78rem;color:var(--text3);">✕</button>`;
+  }
+  const btnClear=document.getElementById('btn-clear-user-per-sa');if(btnClear)btnClear.style.display='';
+  renderComparaciones();
+};
+
+window.limpiarUsuarioPerSA=function(){
+  window._filtroUsuarioStats=null;
+  const input=document.getElementById('stats-user-input-per-sa');if(input)input.value='';
+  const sug=document.getElementById('stats-user-sug-per-sa');if(sug)sug.style.display='none';
+  const chip=document.getElementById('stats-user-chip-per-sa');if(chip){chip.style.display='none';chip.innerHTML='';}
+  const btnClear=document.getElementById('btn-clear-user-per-sa');if(btnClear)btnClear.style.display='none';
+  renderComparaciones();
+};
+
+// ─── PERÍODOS super_admin: filtro tipo ────────────────────────────────────────
+window.setPerTipoSA=function(tipo,btn){
+  const yaActivo=btn&&btn.classList.contains('active');
+  if(yaActivo){
+    // Toggle off
+    window._filtroTipoUsuarioStats='todos';
+    ['pertipo-admins','pertipo-usuarios'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
+    const chip=document.getElementById('stats-per-tipo-chip-sa');if(chip){chip.style.display='none';chip.innerHTML='';}
+    renderComparaciones();return;
+  }
+  // Limpiar usuario si había
+  window._filtroUsuarioStats=null;
+  const input=document.getElementById('stats-user-input-per-sa');if(input)input.value='';
+  const chipUser=document.getElementById('stats-user-chip-per-sa');if(chipUser){chipUser.style.display='none';chipUser.innerHTML='';}
+  const btnClear=document.getElementById('btn-clear-user-per-sa');if(btnClear)btnClear.style.display='none';
+  // Aplicar tipo
+  window._filtroTipoUsuarioStats=tipo;
+  ['pertipo-admins','pertipo-usuarios'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  const chip=document.getElementById('stats-per-tipo-chip-sa');
+  if(chip){
+    const lbl=tipo==='admins'?'🧑‍💼 Administradores':'👷 Usuarios normales';
+    chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
+    chip.innerHTML=`<span style="font-size:.78rem;background:var(--blue);color:#fff;padding:4px 10px;border-radius:20px;font-weight:700;">${lbl}</span>
+      <button onclick="setPerTipoSA('${tipo}',document.getElementById('pertipo-${tipo}'))" style="background:none;border:none;cursor:pointer;font-size:.78rem;color:var(--text3);">✕</button>`;
+  }
+  renderComparaciones();
+};
+
+// Cerrar sugerencias de Períodos al click fuera
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#stats-superadmin-filters-periodos-wrap')){
+    const sug=document.getElementById('stats-user-sug-per-sa');if(sug)sug.style.display='none';
+  }
+});
 
 // ─── PERÍODOS: lógica de renderComparaciones actualizada con rango dinámico ──
 // Override de renderComparaciones para manejar rango super_admin+ y títulos dinámicos
