@@ -1191,6 +1191,26 @@ details summary::-webkit-details-marker{display:none;}
     <div class="kpi"><strong id="hk-u">0</strong><span>alta prio.</span></div>
     <div class="kpi"><strong id="hk-e">0</strong><span>personas</span></div>
   </div>
+  <!-- Filtro por categoría en Historial -->
+  <div id="hist-cat-filter-row" style="margin-bottom:8px;">
+    <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">🏷 Filtrar por categoría</div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <select id="hist-cat-select" class="select-f" style="font-size:.78rem;padding:6px 10px;flex:1;" onchange="aplicarFiltroCatHist()">
+        <option value="">— Todas las categorías —</option>
+        <option value="CARNES">🥩 Carnes</option>
+        <option value="VERDURAS">🥦 Verduras y hojas</option>
+        <option value="LACTEOS">🥛 Lácteos, huevos y derivados</option>
+        <option value="FRUTAS">🍎 Frutas</option>
+        <option value="INSUMOS">🧪 Otros insumos</option>
+        <option value="PREPARADOS">🍱 Preparados</option>
+        <option value="BEBIDAS">🥤 Bebidas envasadas</option>
+        <option value="ENVASES">📦 Envases y embalaje</option>
+        <option value="LIMPIEZA">🧹 Limpieza</option>
+        <option value="OTROS">⚙️ Otros</option>
+      </select>
+      <button id="btn-clear-cat-hist" onclick="limpiarFiltroCatHist()" style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+    </div>
+  </div>
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
     <input class="search-input" type="text" id="search-hist" placeholder="Buscar en historial…" oninput="filtrarHist()"/>
@@ -1274,18 +1294,24 @@ details summary::-webkit-details-marker{display:none;}
 
   <!-- ─── SUBPANE: ANÁLISIS (antes Métricas) ─────────────────────────────── -->
   <div class="subpane active" id="sp-metricas">
-    <!-- Filtros para rol ADMIN (inline usuario + período + rango) — oculto para super_admin+ -->
+    <!-- Filtros para rol ADMIN (usuario tipo super_admin + período + rango) — oculto para super_admin+ -->
     <div id="stats-admin-filters-wrap" style="display:none;margin-bottom:8px;">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;">
-        <!-- Selector de usuario inline para admin -->
-        <div id="stats-user-inline-wrap" style="flex-shrink:0;">
-          <div style="position:relative;">
-            <input type="text" id="stats-user-inline-input" placeholder="👤 Usuario…" autocomplete="off"
-              class="input-f" style="font-size:.78rem;padding:6px 10px;width:120px;box-sizing:border-box;border-color:var(--accent);"
+      <!-- Filtro de usuario estilo super_admin para admin en Análisis -->
+      <div id="stats-user-inline-wrap" style="margin-bottom:8px;">
+        <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:3px;letter-spacing:.05em;text-transform:uppercase;">👤 Filtrar por usuario</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <div style="flex:1;position:relative;">
+            <input type="text" id="stats-user-inline-input" placeholder="Buscar usuario…" autocomplete="off"
+              class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
               oninput="filtrarSugerenciasUsuarioInline()" onfocus="filtrarSugerenciasUsuarioInline()" />
             <div id="stats-user-inline-sug" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
           </div>
+          <button onclick="limpiarUsuarioStatsInline()" id="btn-clear-user-inline"
+            style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
         </div>
+        <div id="stats-user-inline-chip" style="display:none;margin-top:5px;"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;">
         <div style="display:flex;gap:6px;overflow-x:auto;flex:1;padding-bottom:2px;scrollbar-width:none;">
           <button class="fbtn active" onclick="setFS(this,'7d')" data-admin-filt>7 días</button>
           <button class="fbtn" onclick="setFS(this,'15d')" data-admin-filt>15 días</button>
@@ -1356,13 +1382,18 @@ details summary::-webkit-details-marker{display:none;}
 
   <!-- ─── SUBPANE: PERÍODOS (antes Comparaciones) ─────────────────────────── -->
   <div class="subpane" id="sp-comparaciones">
-    <!-- Filtros para rol ADMIN en Períodos: solo filtro usuario -->
+    <!-- Filtros para rol ADMIN en Períodos: solo filtro usuario estilo super_admin -->
     <div id="stats-admin-filters-periodos-wrap" style="display:none;margin-bottom:8px;">
-      <div style="position:relative;">
-        <input type="text" id="stats-user-inline-input-per" placeholder="👤 Usuario…" autocomplete="off"
-          class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;border-color:var(--accent);"
-          oninput="filtrarSugerenciasUsuarioInlinePer()" onfocus="filtrarSugerenciasUsuarioInlinePer()" />
-        <div id="stats-user-inline-sug-per" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
+      <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:3px;letter-spacing:.05em;text-transform:uppercase;">👤 Filtrar por usuario</div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <div style="flex:1;position:relative;">
+          <input type="text" id="stats-user-inline-input-per" placeholder="Buscar usuario…" autocomplete="off"
+            class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
+            oninput="filtrarSugerenciasUsuarioInlinePer()" onfocus="filtrarSugerenciasUsuarioInlinePer()" />
+          <div id="stats-user-inline-sug-per" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
+        </div>
+        <button onclick="limpiarUsuarioStatsInlinePer()" id="btn-clear-user-inline-per"
+          style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
       </div>
       <div id="stats-per-user-chip" style="display:none;margin-top:5px;"></div>
     </div>
@@ -2907,13 +2938,17 @@ function renderHist(){
   const userFil=(window._filtroUsuarioHist||'').toUpperCase().trim();
   if(userFil)todos=todos.filter(i=>(i.quien||'').toUpperCase().trim()===userFil);
 
+  // Filtro por categoría
+  const catFil=(window._filtroCategHist||'').toUpperCase().trim();
+  if(catFil)todos=todos.filter(i=>(i.categoria||'').toUpperCase().trim()===catFil);
+
   // Ya no se usa select — poblarUsuariosHist es legacy, no llamar aquí
 
   const gasto=todos.reduce((s,i)=>s+getP(i),0);const emps=new Set(todos.map(i=>i.quien).filter(Boolean)).size;
   document.getElementById('hk-t').textContent=todos.length;document.getElementById('hk-g').textContent=`S/ ${gasto.toFixed(2)}`;document.getElementById('hk-u').textContent=todos.filter(i=>i.urgencia==='alta'||i.urgencia==='urgente').length;document.getElementById('hk-e').textContent=emps;
   const cont=document.getElementById('lista-hist');const qh=norm(searchHist);
   const fil=qh?todos.filter(i=>norm(i.nombre||'').includes(qh)||norm(i.categoria||'').includes(qh)||norm(i.quien||'').includes(qh)):todos;
-  if(!fil.length){cont.innerHTML=`<div class="empty-s" style="padding:28px"><div class="ei">${qh||fromVal||toVal||userFil?'🔍':'📭'}</div><div class="et">${qh?`Sin resultados para "${searchHist}"`:userFil?`Sin registros de ${userFil}`:fromVal||toVal?'Sin registros en ese rango de fechas':'Sin registros en este período'}</div></div>`;cont.className='';return;}
+  if(!fil.length){cont.innerHTML=`<div class="empty-s" style="padding:28px"><div class="ei">${qh||fromVal||toVal||userFil||catFil?'🔍':'📭'}</div><div class="et">${qh?`Sin resultados para "${searchHist}"`:catFil?`Sin registros de categoría ${catFil}`:userFil?`Sin registros de ${userFil}`:fromVal||toVal?'Sin registros en ese rango de fechas':'Sin registros en este período'}</div></div>`;cont.className='';return;}
   cont.className='arch-list';
   let filFinal=fil;
   if(adminModeActive&&searchAdminHist){const qa=norm(searchAdminHist);filFinal=fil.filter(i=>norm(i.nombre||'').includes(qa)||norm(i.categoria||'').includes(qa)||norm(i.quien||'').includes(qa));}
@@ -3512,7 +3547,9 @@ window.setFiltroTipoUsuario=function(tipo,btn){
     // Mostrar filtro de usuario nuevamente
     const userWrap=document.getElementById('stats-user-filter-wrap');
     if(userWrap)userWrap.style.display=_esRolConFiltroUser()?'':'none';
-    actualizarDotSFilt();renderStats();return;
+    actualizarDotSFilt();renderStats();
+    if(typeof renderComparaciones==='function')renderComparaciones();
+    return;
   }
   window._filtroTipoUsuarioStats=tipo;
   ['ftipo-admins','ftipo-usuarios'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
@@ -3529,6 +3566,7 @@ window.setFiltroTipoUsuario=function(tipo,btn){
       <button onclick="setFiltroTipoUsuario('${tipo}',document.getElementById('ftipo-${tipo}'))" style="background:none;border:none;cursor:pointer;font-size:.78rem;color:var(--text3);">✕</button>`;
   }
   actualizarDotSFilt();renderStats();
+  if(typeof renderComparaciones==='function')renderComparaciones();
 };
 
 function _esRolConFiltroUser(){
@@ -3634,6 +3672,7 @@ window.seleccionarUsuarioStats=function(nombre){
   }
   const btnClear=document.getElementById('btn-clear-user-stat');if(btnClear)btnClear.style.display='';
   actualizarDotSFilt();renderStats();
+  if(typeof renderComparaciones==='function')renderComparaciones();
 };
 
 // Limpiar filtro de usuario
@@ -3643,13 +3682,21 @@ window.limpiarFiltroUsuarioStats=function(){
   const sug=document.getElementById('stats-user-suggestions');if(sug)sug.style.display='none';
   const chip=document.getElementById('stats-user-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
   const btnClear=document.getElementById('btn-clear-user-stat');if(btnClear)btnClear.style.display='none';
-  // Limpiar inline input
+  // Limpiar inline inputs de admin
   const inlineInput=document.getElementById('stats-user-inline-input');if(inlineInput)inlineInput.value='';
+  const chipInline=document.getElementById('stats-user-inline-chip');if(chipInline){chipInline.style.display='none';chipInline.innerHTML='';}
+  const btnClearInline=document.getElementById('btn-clear-user-inline');if(btnClearInline)btnClearInline.style.display='none';
+  // Limpiar inline input de Períodos admin
+  const inlineInputPer=document.getElementById('stats-user-inline-input-per');if(inlineInputPer)inlineInputPer.value='';
+  const chipPer=document.getElementById('stats-per-user-chip');if(chipPer){chipPer.style.display='none';chipPer.innerHTML='';}
+  const btnClearPer=document.getElementById('btn-clear-user-inline-per');if(btnClearPer)btnClearPer.style.display='none';
+  window._filtroUsuarioStatsPer=null;
   // Restaurar filtro de tipo si corresponde
   const rol=window._rol||'usuario';
   const tipoWrap=document.getElementById('stats-tipo-filter-wrap');
   if(tipoWrap)tipoWrap.style.display=(rol==='super_admin'||rol==='admin_supremo')?'':'none';
   actualizarDotSFilt();renderStats();
+  if(typeof renderComparaciones==='function')renderComparaciones();
 };
 
 // Cerrar sugerencias al hacer click fuera
@@ -3721,10 +3768,31 @@ window.filtrarSugerenciasUsuarioInlinePer=function(){
 
 window.seleccionarUsuarioStatsInlinePer=function(nombre){
   window._filtroUsuarioStatsPer=nombre.toUpperCase().trim();
+  // Sync al filtro global de usuario (usado por renderComparaciones)
+  window._filtroUsuarioStats=window._filtroUsuarioStatsPer;
   const input=document.getElementById('stats-user-inline-input-per');
-  if(input)input.value=window._filtroUsuarioStatsPer;
+  if(input)input.value='';
   const sug=document.getElementById('stats-user-inline-sug-per');
   if(sug)sug.style.display='none';
+  // Mostrar chip
+  const chip=document.getElementById('stats-per-user-chip');
+  if(chip){
+    const badge=typeof _getBadgeHtmlPorNombre==='function'?_getBadgeHtmlPorNombre(nombre):'';
+    chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
+    chip.innerHTML=`<span style="font-size:.78rem;background:var(--accent);color:#111;padding:4px 10px;border-radius:20px;font-weight:700;">👤 ${nombre.toUpperCase()}${badge}</span>`;
+  }
+  const btnClear=document.getElementById('btn-clear-user-inline-per');if(btnClear)btnClear.style.display='';
+  renderComparaciones();
+};
+
+// Limpiar filtro usuario en Períodos para admin
+window.limpiarUsuarioStatsInlinePer=function(){
+  window._filtroUsuarioStatsPer=null;
+  window._filtroUsuarioStats=null;
+  const input=document.getElementById('stats-user-inline-input-per');if(input)input.value='';
+  const sug=document.getElementById('stats-user-inline-sug-per');if(sug)sug.style.display='none';
+  const chip=document.getElementById('stats-per-user-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+  const btnClear=document.getElementById('btn-clear-user-inline-per');if(btnClear)btnClear.style.display='none';
   renderComparaciones();
 };
 
@@ -4014,11 +4082,19 @@ window.filtrarSugerenciasUsuarioInline=function(){
 window.seleccionarUsuarioStatsInline=function(nombre){
   // Redirect to the main seleccionarUsuarioStats
   seleccionarUsuarioStats(nombre);
-  // Update the inline input to show the selected user
+  // Update the inline input to clear and show chip
   const input=document.getElementById('stats-user-inline-input');
-  if(input)input.value=nombre;
+  if(input)input.value='';
   const sug=document.getElementById('stats-user-inline-sug');
   if(sug)sug.style.display='none';
+  // Mostrar chip inline
+  const chipInline=document.getElementById('stats-user-inline-chip');
+  if(chipInline){
+    const badge=typeof _getBadgeHtmlPorNombre==='function'?_getBadgeHtmlPorNombre(nombre):'';
+    chipInline.style.display='flex';chipInline.style.alignItems='center';chipInline.style.gap='6px';
+    chipInline.innerHTML=`<span style="font-size:.78rem;background:var(--accent);color:#111;padding:4px 10px;border-radius:20px;font-weight:700;">👤 ${nombre.toUpperCase()}${badge}</span>`;
+  }
+  const btnClear=document.getElementById('btn-clear-user-inline');if(btnClear)btnClear.style.display='';
 };
 
 // Close inline suggestions when clicking outside
@@ -4028,6 +4104,15 @@ document.addEventListener('click',function(e){
     if(sug)sug.style.display='none';
   }
 });
+
+// Limpiar filtro usuario inline para admin (Análisis)
+window.limpiarUsuarioStatsInline=function(){
+  limpiarFiltroUsuarioStats();
+  const chipInline=document.getElementById('stats-user-inline-chip');
+  if(chipInline){chipInline.style.display='none';chipInline.innerHTML='';}
+  const btnClear=document.getElementById('btn-clear-user-inline');if(btnClear)btnClear.style.display='none';
+  const input=document.getElementById('stats-user-inline-input');if(input)input.value='';
+};
 
 // Apply admin UX layout based on role
 function _aplicarUXFiltrosStats(rol){
@@ -6150,6 +6235,23 @@ function renderSolicitudes(){
   });
 }
 
+// ─── HISTORIAL: filtro por categoría ─────────────────────────────────────────
+window._filtroCategHist=null;
+window.aplicarFiltroCatHist=function(){
+  const sel=document.getElementById('hist-cat-select');
+  if(!sel)return;
+  window._filtroCategHist=sel.value||null;
+  const btnClear=document.getElementById('btn-clear-cat-hist');
+  if(btnClear)btnClear.style.display=window._filtroCategHist?'':'none';
+  renderHist();
+};
+window.limpiarFiltroCatHist=function(){
+  window._filtroCategHist=null;
+  const sel=document.getElementById('hist-cat-select');if(sel)sel.value='';
+  const btnClear=document.getElementById('btn-clear-cat-hist');if(btnClear)btnClear.style.display='none';
+  renderHist();
+};
+
 // ─── HISTORIAL: nuevo sistema de filtros ──────────────────────────────────────
 
 // Toggle del panel de rango de fechas en Historial (solo super_admin+)
@@ -6407,6 +6509,9 @@ window.renderComparaciones=renderComparaciones;
 function _aplicarFiltrosPeriodesRol(rol){
   const adminWrap=document.getElementById('stats-admin-filters-periodos-wrap');
   const saWrap=document.getElementById('stats-superadmin-filters-periodos-wrap');
+  // Botón +3 meses: solo super_admin y admin_supremo
+  const btn3m2=document.getElementById('pervf-3m2')||document.querySelector('[onclick*="3m2"]');
+  if(btn3m2)btn3m2.style.display=(rol==='super_admin'||rol==='admin_supremo')?'':'none';
   if(rol==='admin'){
     if(adminWrap)adminWrap.style.display='block';
     if(saWrap)saWrap.style.display='none';
