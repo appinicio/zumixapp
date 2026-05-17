@@ -851,6 +851,48 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
   color:var(--text3);margin-bottom:12px;
 }
 
+/* ─── FILTROS SECUNDARIOS — color azul, distinto al dorado principal ── */
+.fbtn-sec{
+  padding:6px 12px;font-size:var(--fs-xs);font-weight:700;border-radius:20px;
+  border:1.5px solid var(--border);background:var(--surface);color:var(--text2);
+  cursor:pointer;white-space:nowrap;font-family:var(--ff);
+  transition:background .15s,border-color .15s,color .15s,transform .1s;
+}
+.fbtn-sec:active{transform:scale(.93);}
+.fbtn-sec:hover{border-color:var(--border2);}
+.fbtn-sec.active{
+  background:var(--blue);border-color:var(--blue);color:#fff;
+  box-shadow:0 2px 8px rgba(78,152,216,.25);
+}
+[data-theme="dark"] .fbtn-sec.active{
+  box-shadow:0 2px 10px rgba(88,152,216,.3);
+}
+
+/* ─── FILTER GROUP CARD ──────────────────────────────── */
+.filter-group{
+  background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:var(--rmd);padding:11px 13px;margin-bottom:10px;
+}
+.filter-group-label{
+  font-size:var(--fs-xs);font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.07em;
+  margin-bottom:7px;
+}
+.filter-group-divider{height:1px;background:var(--border);margin:9px 0;}
+
+/* ─── PDF BOTÓN ANCHO COMPLETO ───────────────────────── */
+.btn-pdf-full{
+  width:100%;padding:11px;
+  background:var(--surface);border:1.5px solid var(--red);
+  border-radius:var(--rmd);font-family:var(--ff);
+  font-size:var(--fs-sm);font-weight:700;color:var(--red);
+  cursor:pointer;display:flex;align-items:center;
+  justify-content:center;gap:7px;
+  transition:background .15s,box-shadow .15s;margin-bottom:10px;
+}
+.btn-pdf-full:hover{background:var(--red-bg);}
+.btn-pdf-full:active{transform:scale(.98);}
+
 /* ─── COMPARISON GRID ────────────────────────────────── */
 .comp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
 .comp-c{
@@ -1907,59 +1949,62 @@ details summary::-webkit-details-marker{display:none;}
        BARRA DE FILTROS GLOBAL — super_admin / admin_supremo
        Se muestra encima de TODO subtab para esos roles. Oculta para admin.
   ═══════════════════════════════════════════════════════════════════════════ -->
-  <div id="stats-global-filters-wrap" style="display:none;margin-bottom:8px;">
-    <!-- Fila 1: períodos + botón Rango -->
-    <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;">
-      <div id="filt-stats" style="display:flex;gap:6px;flex-shrink:0;">
-        <button class="fbtn active" onclick="setFS(this,'7d')">7 días</button>
-        <button class="fbtn" onclick="setFS(this,'15d')">15 días</button>
-        <button class="fbtn" onclick="setFS(this,'30d')">Mes</button>
-        <button class="fbtn" onclick="setFS(this,'todo')">Todo</button>
-      </div>
-      <button id="btn-stats-rango-global" onclick="toggleStatsRangoGlobal(this)" style="flex-shrink:0;padding:5px 11px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.72rem;font-weight:700;border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);white-space:nowrap;transition:var(--transition);">📅 Rango</button>
-    </div>
-    <!-- Panel rango fechas global (oculto por defecto) -->
-    <div id="stats-rango-global-wrap" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:8px 12px;margin-top:6px;gap:8px;flex-direction:row;align-items:flex-end;flex-wrap:wrap;">
-      <div style="flex:1;min-width:110px;">
-        <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
-        <input type="date" id="stats-date-from" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
-      </div>
-      <div style="flex:1;min-width:110px;">
-        <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
-        <div style="display:flex;gap:4px;align-items:center;">
-          <input type="date" id="stats-date-to" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
-          <button onclick="limpiarRangoGlobal()" title="Limpiar rango y cerrar" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+  <div id="stats-global-filters-wrap" style="display:none;margin-bottom:10px;">
+    <!-- Período -->
+    <div class="filter-group">
+      <div class="filter-group-label">📅 Período</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;">
+        <div id="filt-stats" style="display:flex;gap:6px;flex-shrink:0;">
+          <button class="fbtn-sec active" onclick="setFS(this,'7d')">7 días</button>
+          <button class="fbtn-sec" onclick="setFS(this,'15d')">15 días</button>
+          <button class="fbtn-sec" onclick="setFS(this,'30d')">Mes</button>
+          <button class="fbtn-sec" onclick="setFS(this,'todo')">Todo</button>
         </div>
+        <button id="btn-stats-rango-global" onclick="toggleStatsRangoGlobal(this)" style="flex-shrink:0;padding:5px 11px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:var(--fs-xs);font-weight:700;border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);white-space:nowrap;transition:var(--transition);">📅 Rango</button>
       </div>
-    </div>
-    <!-- Fila 2: filtro usuario + filtro tipo — super_admin+ -->
-    <div id="stats-global-row2" style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;">
-      <!-- Filtro por usuario -->
-      <div id="stats-user-filter-wrap" style="flex:1;min-width:150px;position:relative;">
-        <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:3px;letter-spacing:.05em;text-transform:uppercase;">👤 Filtrar por usuario</div>
-        <div id="stats-user-required-note" style="display:none;font-size:.7rem;color:var(--orange);background:var(--orange-bg,rgba(255,152,0,.1));border-radius:8px;padding:5px 9px;margin-bottom:4px;">
-          ℹ️ Como Admin debés seleccionar un usuario para ver sus stats.
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <div style="flex:1;position:relative;">
-            <input type="text" id="stats-user-input" placeholder="Buscar usuario…" autocomplete="off"
-              class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
-              oninput="filtrarSugerenciasUsuario()" onfocus="filtrarSugerenciasUsuario()" />
-            <div id="stats-user-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+      <div id="stats-rango-global-wrap" style="display:none;margin-top:8px;gap:8px;flex-direction:row;align-items:flex-end;flex-wrap:wrap;">
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;">
+            <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
+            <input type="date" id="stats-date-from" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
           </div>
-          <button onclick="limpiarFiltroUsuarioStats()" id="btn-clear-user-stat"
-            style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
+          <div style="flex:1;">
+            <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <input type="date" id="stats-date-to" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
+              <button onclick="limpiarRangoGlobal()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+            </div>
+          </div>
         </div>
-        <div id="stats-user-chip" style="display:none;margin-top:5px;"></div>
       </div>
-      <!-- Filtro por tipo de usuario — se oculta si hay usuario seleccionado -->
-      <div id="stats-tipo-filter-wrap" style="flex-shrink:0;">
-        <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:3px;letter-spacing:.05em;text-transform:uppercase;">👥 Filtrar por tipo</div>
-        <div style="display:flex;gap:6px;">
-          <button class="fbtn" id="ftipo-admins" onclick="setFiltroTipoUsuario('admins',this)" style="font-size:.72rem;padding:6px 13px;">🧑‍💼 Admins</button>
-          <button class="fbtn" id="ftipo-usuarios" onclick="setFiltroTipoUsuario('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios</button>
+      <div class="filter-group-divider"></div>
+      <!-- Fila 2: filtro usuario + tipo -->
+      <div id="stats-global-row2" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;">
+        <div id="stats-user-filter-wrap" style="flex:1;min-width:150px;position:relative;">
+          <div class="filter-group-label">👤 Por usuario</div>
+          <div id="stats-user-required-note" style="display:none;font-size:.7rem;color:var(--orange);background:var(--orange-bg,rgba(255,152,0,.1));border-radius:8px;padding:5px 9px;margin-bottom:4px;">
+            ℹ️ Como Admin debés seleccionar un usuario para ver sus stats.
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <div style="flex:1;position:relative;">
+              <input type="text" id="stats-user-input" placeholder="Buscar usuario…" autocomplete="off"
+                class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
+                oninput="filtrarSugerenciasUsuario()" onfocus="filtrarSugerenciasUsuario()" />
+              <div id="stats-user-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+            </div>
+            <button onclick="limpiarFiltroUsuarioStats()" id="btn-clear-user-stat"
+              style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+          </div>
+          <div id="stats-user-chip" style="display:none;margin-top:5px;"></div>
         </div>
-        <div id="stats-tipo-chip" style="display:none;margin-top:5px;"></div>
+        <div id="stats-tipo-filter-wrap" style="flex-shrink:0;">
+          <div class="filter-group-label">👥 Por tipo</div>
+          <div style="display:flex;gap:6px;">
+            <button class="fbtn-sec" id="ftipo-admins" onclick="setFiltroTipoUsuario('admins',this)">🧑‍💼 Admins</button>
+            <button class="fbtn-sec" id="ftipo-usuarios" onclick="setFiltroTipoUsuario('usuarios',this)">👷 Usuarios</button>
+          </div>
+          <div id="stats-tipo-chip" style="display:none;margin-top:5px;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1985,11 +2030,10 @@ details summary::-webkit-details-marker{display:none;}
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;">
         <div style="display:flex;gap:6px;overflow-x:auto;flex:1;padding-bottom:2px;scrollbar-width:none;">
-          <button class="fbtn active" onclick="setFS(this,'7d')" data-admin-filt>7 días</button>
-          <button class="fbtn" onclick="setFS(this,'15d')" data-admin-filt>15 días</button>
-          <button class="fbtn" onclick="setFS(this,'30d')" data-admin-filt>Mes</button>
-          <!-- "Todo" OCULTO para admin — el rango está acotado a 30 días -->
-          <button class="fbtn" id="btn-stats-rango-admin" onclick="toggleStatsRangoAdmin(this)" style="white-space:nowrap;">📅 Rango</button>
+          <button class="fbtn-sec active" onclick="setFS(this,'7d')" data-admin-filt>7 días</button>
+          <button class="fbtn-sec" onclick="setFS(this,'15d')" data-admin-filt>15 días</button>
+          <button class="fbtn-sec" onclick="setFS(this,'30d')" data-admin-filt>Mes</button>
+          <button class="fbtn-sec" id="btn-stats-rango-admin" onclick="toggleStatsRangoAdmin(this)" style="white-space:nowrap;">📅 Rango</button>
         </div>
       </div>
       <!-- Rango de fecha inline para admin — acotado a 30 días -->
@@ -2008,11 +2052,10 @@ details summary::-webkit-details-marker{display:none;}
       </div>
       <div id="admin-rango-warn" style="display:none;font-size:.72rem;color:var(--red);font-weight:600;background:var(--red-bg);border-radius:var(--rsm);padding:5px 9px;margin-top:4px;">⚠️ El rango no puede superar 30 días (mes actual).</div>
     </div>
-    <!-- Botón PDF — solo super_admin+ — debajo de la barra global, en sección análisis -->
-    <div id="stats-pdf-wrap" style="display:none;margin-bottom:8px;">
-      <button onclick="generarReportePDF()" title="Generar reporte PDF"
-        style="display:flex;align-items:center;gap:5px;padding:7px 12px;background:var(--surface);border:1.5px solid var(--red);border-radius:20px;font-family:var(--ff);font-size:.72rem;font-weight:700;color:var(--red);cursor:pointer;white-space:nowrap;transition:var(--transition);">
-        📄 PDF
+    <!-- Botón PDF — ancho completo -->
+    <div id="stats-pdf-wrap" style="display:none;">
+      <button onclick="generarReportePDF()" class="btn-pdf-full">
+        📄 Exportar reporte PDF
       </button>
     </div>
 
@@ -2096,12 +2139,15 @@ details summary::-webkit-details-marker{display:none;}
         <div id="stats-per-tipo-chip-sa" style="display:none;margin-top:3px;"></div>
       </div>
     </div>
-    <!-- Filtros de vista de períodos — visible para todos los roles con acceso a Períodos -->
-    <div id="per-view-filters" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
-      <button class="fbtn active" id="pervf-3d" onclick="setPerViewFilt('3d',this)" style="font-size:.7rem;padding:5px 11px;">📅 Últimos 3 días</button>
-      <button class="fbtn" id="pervf-3s" onclick="setPerViewFilt('3s',this)" style="font-size:.7rem;padding:5px 11px;">📅 Últimas 3 semanas</button>
-      <button class="fbtn" id="pervf-3m" onclick="setPerViewFilt('3m',this)" style="font-size:.7rem;padding:5px 11px;">📅 Últimos 3 meses</button>
-      <button class="fbtn" id="pervf-3m2" onclick="setPerViewFilt('3m2',this)" style="font-size:.7rem;padding:5px 11px;">📅 +3 meses</button>
+    <!-- Filtros de vista de períodos -->
+    <div class="filter-group" style="margin-bottom:10px;">
+      <div class="filter-group-label">📅 Vista de períodos</div>
+      <div id="per-view-filters" style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="fbtn-sec active" id="pervf-3d" onclick="setPerViewFilt('3d',this)">Últimos 3 días</button>
+        <button class="fbtn-sec" id="pervf-3s" onclick="setPerViewFilt('3s',this)">Últimas 3 semanas</button>
+        <button class="fbtn-sec" id="pervf-3m" onclick="setPerViewFilt('3m',this)">Últimos 3 meses</button>
+        <button class="fbtn-sec" id="pervf-3m2" onclick="setPerViewFilt('3m2',this)">+3 meses</button>
+      </div>
     </div>
     <!-- Nota dinámica — se actualiza desde renderComparaciones() -->
     <div id="comp-nota-contexto" style="font-size:.72rem;color:var(--text3);margin-bottom:10px;padding:9px 11px;background:var(--surface2);border-radius:var(--rsm);border:1px solid var(--border);line-height:1.6;">
@@ -2135,23 +2181,25 @@ details summary::-webkit-details-marker{display:none;}
     <div class="stat-card"><div class="stat-title">🏷 Categoría favorita por usuario</div><div id="st-cat-users"><p class="no-data">Sin datos</p></div></div>
   </div>
 
-  <!-- ─── SUBPANE: COMPARAR USUARIOS (super_admin+) ────────────────────────── -->
+  <!-- ─── SUBPANE: COMPARAR USUARIOS ────────────────────────── -->
   <div class="subpane" id="sp-comparar">
-    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:14px;box-shadow:var(--sh);margin-bottom:10px;">
-      <!-- Filtrar por tipo — primera línea -->
-      <div style="margin-bottom:10px;">
-        <div style="font-size:.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">👥 Filtrar por tipo</div>
+    <div class="stat-card">
+
+      <!-- BLOQUE 1: Tipo de comparación -->
+      <div class="filter-group" style="margin-bottom:10px;">
+        <div class="filter-group-label">👥 Tipo de comparación</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="fbtn" id="cmp-ftipo-admins" onclick="setCmpTipo('admins',this)" style="font-size:.72rem;padding:6px 13px;">🧑‍💼 Admins</button>
-          <button class="fbtn" id="cmp-ftipo-usuarios" onclick="setCmpTipo('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios</button>
-          <button id="btn-cmp-grupal" onclick="toggleComparacionGrupal(this)" style="font-size:.72rem;padding:6px 13px;background:var(--accent);color:#111;border:none;border-radius:var(--rmd);font-family:var(--ff);font-weight:700;cursor:pointer;white-space:nowrap;transition:var(--transition);">🔄 Admins vs Usuarios</button>
+          <button class="fbtn-sec" id="cmp-ftipo-admins" onclick="setCmpTipo('admins',this)">🧑‍💼 Solo Admins</button>
+          <button class="fbtn-sec" id="cmp-ftipo-usuarios" onclick="setCmpTipo('usuarios',this)">👷 Solo Usuarios</button>
+          <button class="fbtn-sec" id="btn-cmp-grupal" onclick="toggleComparacionGrupal(this)">🔄 Admins vs Usuarios</button>
         </div>
       </div>
-      <!-- Seleccionar usuarios a comparar -->
-      <div style="font-size:.68rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">👤 Seleccionar usuarios a comparar</div>
-      <div style="display:flex;gap:8px;margin-bottom:8px;">
+
+      <!-- BLOQUE 2: Seleccionar usuarios -->
+      <div class="filter-group-label">👤 Seleccionar usuarios a comparar</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
         <div style="flex:1;">
-          <div style="font-size:.62rem;color:var(--text3);font-weight:700;margin-bottom:4px;">Usuario A</div>
+          <div style="font-size:.6rem;color:var(--text3);font-weight:600;margin-bottom:4px;">Usuario A</div>
           <div style="position:relative;">
             <input type="text" id="cmp-user-a-input" placeholder="Buscar…" autocomplete="off"
               class="input-f" style="font-size:.82rem;padding:7px 10px;width:100%;box-sizing:border-box;"
@@ -2161,7 +2209,7 @@ details summary::-webkit-details-marker{display:none;}
           <div id="cmp-chip-a" style="display:none;margin-top:5px;"></div>
         </div>
         <div style="flex:1;">
-          <div style="font-size:.62rem;color:var(--text3);font-weight:700;margin-bottom:4px;">Usuario B</div>
+          <div style="font-size:.6rem;color:var(--text3);font-weight:600;margin-bottom:4px;">Usuario B</div>
           <div style="position:relative;">
             <input type="text" id="cmp-user-b-input" placeholder="Buscar…" autocomplete="off"
               class="input-f" style="font-size:.82rem;padding:7px 10px;width:100%;box-sizing:border-box;"
@@ -2171,94 +2219,112 @@ details summary::-webkit-details-marker{display:none;}
           <div id="cmp-chip-b" style="display:none;margin-top:5px;"></div>
         </div>
       </div>
-      <!-- Período para la comparación -->
-      <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
-        <button class="fbtn active" id="cmpf-7d" onclick="setCmpPer('7d',this)" style="font-size:.7rem;padding:5px 11px;">7 días</button>
-        <button class="fbtn" id="cmpf-15d" onclick="setCmpPer('15d',this)" style="font-size:.7rem;padding:5px 11px;">15 días</button>
-        <button class="fbtn" id="cmpf-30d" onclick="setCmpPer('30d',this)" style="font-size:.7rem;padding:5px 11px;">Mes</button>
-        <button class="fbtn" id="cmpf-todo" onclick="setCmpPer('todo',this)" style="font-size:.7rem;padding:5px 11px;">Todo</button>
-        <button class="fbtn" id="cmpf-rango" onclick="setCmpPer('rango',this)" style="font-size:.7rem;padding:5px 11px;">📅 Rango</button>
-      </div>
-      <!-- Rango de fechas personalizado — visible solo si se selecciona Rango -->
-      <div id="cmp-rango-wrap" style="display:none;margin-bottom:8px;gap:6px;flex-wrap:wrap;align-items:center;">
-        <div style="display:flex;gap:6px;align-items:center;flex:1;flex-wrap:wrap;">
-          <div style="flex:1;min-width:110px;">
-            <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
-            <div style="display:flex;gap:4px;align-items:center;">
+
+      <!-- BLOQUE 3: Período -->
+      <div class="filter-group" style="margin-bottom:10px;">
+        <div class="filter-group-label">📅 Período</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="fbtn-sec active" id="cmpf-7d" onclick="setCmpPer('7d',this)">7 días</button>
+          <button class="fbtn-sec" id="cmpf-15d" onclick="setCmpPer('15d',this)">15 días</button>
+          <button class="fbtn-sec" id="cmpf-30d" onclick="setCmpPer('30d',this)">Mes</button>
+          <button class="fbtn-sec" id="cmpf-todo" onclick="setCmpPer('todo',this)">Todo</button>
+          <button class="fbtn-sec" id="cmpf-rango" onclick="setCmpPer('rango',this)">📅 Rango</button>
+        </div>
+        <div id="cmp-rango-wrap" style="display:none;margin-top:8px;">
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;">
+              <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
               <input type="date" id="cmp-date-from" class="input-f" style="font-size:.78rem;padding:6px 8px;width:100%;box-sizing:border-box;"/>
-              <button onclick="limpiarRangoCmp()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
             </div>
-          </div>
-          <div style="flex:1;min-width:110px;">
-            <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
-            <div style="display:flex;gap:4px;align-items:center;">
-              <input type="date" id="cmp-date-to" class="input-f" style="font-size:.78rem;padding:6px 8px;width:100%;box-sizing:border-box;"/>
-              <button onclick="limpiarRangoCmp()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+            <div style="flex:1;">
+              <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
+              <div style="display:flex;gap:4px;">
+                <input type="date" id="cmp-date-to" class="input-f" style="font-size:.78rem;padding:6px 8px;width:100%;box-sizing:border-box;"/>
+                <button onclick="limpiarRangoCmp()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <button id="btn-ejecutar-cmp" onclick="toggleComparacion(this)" style="width:100%;padding:11px;background:var(--text);color:var(--bg);border:none;border-radius:var(--rmd);font-family:var(--ff);font-size:.85rem;font-weight:700;cursor:pointer;transition:var(--transition);">🔄 Comparar</button>
+
+      <button id="btn-ejecutar-cmp" onclick="toggleComparacion(this)" class="btn-primary" style="margin-top:0;">
+        🔄 Comparar
+      </button>
     </div>
     <div id="cmp-resultado" style="display:none;"></div>
   </div>
 
-  <!-- ─── SUBPANE: LOGS (admin_supremo ONLY) ──────────────────────────────── -->
+  <!-- ─── SUBPANE: LOGS ───────────────────────────────────── -->
   <div class="subpane" id="sp-logs">
+
+    <!-- Header con actualizar -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-size:.72rem;color:var(--text3);">Registro de actividad del sistema</div>
-      <button onclick="renderLogs()" style="font-size:.72rem;padding:5px 11px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);color:var(--text2);cursor:pointer;font-family:var(--ff);font-weight:700;">↺ Actualizar</button>
+      <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:600;">Registro de actividad del sistema</div>
+      <button onclick="renderLogs()" style="font-size:var(--fs-xs);padding:5px 11px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);color:var(--text2);cursor:pointer;font-family:var(--ff);font-weight:700;transition:var(--transition);">↺ Actualizar</button>
     </div>
-    <!-- Fila 1: filtros de período -->
-    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center;">
-      <button class="fbtn active" id="lfilt-p-7d" onclick="setLogPeriodo('7d',this)" style="font-size:.7rem;padding:5px 11px;">7 días</button>
-      <button class="fbtn" id="lfilt-p-15d" onclick="setLogPeriodo('15d',this)" style="font-size:.7rem;padding:5px 11px;">15 días</button>
-      <button class="fbtn" id="lfilt-p-30d" onclick="setLogPeriodo('30d',this)" style="font-size:.7rem;padding:5px 11px;">1 mes</button>
-      <button id="btn-log-rango" onclick="toggleLogRango(this)" style="flex-shrink:0;padding:5px 11px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.7rem;font-weight:700;border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);white-space:nowrap;transition:var(--transition);">📅 Rango</button>
-    </div>
-    <!-- Panel rango fechas logs (oculto por defecto) -->
-    <div id="log-rango-wrap" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:8px 12px;margin-bottom:8px;gap:8px;flex-direction:row;align-items:flex-end;flex-wrap:wrap;">
-      <div style="flex:1;min-width:110px;">
-        <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
-        <input type="date" id="log-date-from" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="renderLogs()"/>
+
+    <!-- BLOQUE FILTROS: todo agrupado en un solo contenedor -->
+    <div class="filter-group">
+      <div class="filter-group-label">📅 Período</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0;">
+        <button class="fbtn-sec active" id="lfilt-p-7d" onclick="setLogPeriodo('7d',this)">7 días</button>
+        <button class="fbtn-sec" id="lfilt-p-15d" onclick="setLogPeriodo('15d',this)">15 días</button>
+        <button class="fbtn-sec" id="lfilt-p-30d" onclick="setLogPeriodo('30d',this)">1 mes</button>
+        <button class="fbtn-sec" id="btn-log-rango" onclick="toggleLogRango(this)">📅 Rango</button>
       </div>
-      <div style="flex:1;min-width:110px;">
-        <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
-        <div style="display:flex;gap:4px;align-items:center;">
-          <input type="date" id="log-date-to" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="renderLogs()"/>
-          <button onclick="limpiarRangoLog()" title="Limpiar rango y cerrar" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+      <!-- Panel rango fechas — colapsable -->
+      <div id="log-rango-wrap" style="display:none;margin-top:8px;">
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;">
+            <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
+            <input type="date" id="log-date-from" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="renderLogs()"/>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <input type="date" id="log-date-to" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="renderLogs()"/>
+              <button onclick="limpiarRangoLog()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-group-divider"></div>
+
+      <!-- Tipo de acción -->
+      <div class="filter-group-label">⚡ Tipo de acción</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="fbtn-sec active" id="lfilt-todo" onclick="setLogFilt('todo',this)">Todo</button>
+        <button class="fbtn-sec" id="lfilt-eliminar" onclick="setLogFilt('eliminar',this)">🗑 Eliminaciones</button>
+        <button class="fbtn-sec" id="lfilt-editar" onclick="setLogFilt('editar',this)">✏️ Ediciones</button>
+        <button class="fbtn-sec" id="lfilt-exportar" onclick="setLogFilt('exportar',this)">📊 Exportaciones</button>
+      </div>
+
+      <div class="filter-group-divider"></div>
+
+      <!-- Filtros de usuario en dos columnas -->
+      <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;">
+        <div style="flex:1;min-width:150px;">
+          <div class="filter-group-label">👤 Por usuario</div>
+          <div style="position:relative;">
+            <input type="text" id="log-user-input" placeholder="Buscar usuario…" autocomplete="off"
+              class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
+              oninput="filtrarSugerenciasUsuarioLog()" onfocus="filtrarSugerenciasUsuarioLog()" />
+            <div id="log-user-sug" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+          </div>
+          <div id="log-user-chip" style="display:none;margin-top:5px;"></div>
+        </div>
+        <div style="flex-shrink:0;">
+          <div class="filter-group-label">👥 Por tipo</div>
+          <div style="display:flex;gap:6px;">
+            <button class="fbtn-sec" id="lfilt-tipo-admins" onclick="setLogTipo('admins',this)">🧑‍💼 Admins</button>
+            <button class="fbtn-sec" id="lfilt-tipo-usuarios" onclick="setLogTipo('usuarios',this)">👷 Usuarios</button>
+          </div>
         </div>
       </div>
     </div>
-    <!-- Fila 2: filtro por tipo de acción -->
-    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
-      <button class="fbtn active" id="lfilt-todo" onclick="setLogFilt('todo',this)" style="font-size:.7rem;padding:5px 11px;">Todo</button>
-      <button class="fbtn" id="lfilt-eliminar" onclick="setLogFilt('eliminar',this)" style="font-size:.7rem;padding:5px 11px;">🗑 Eliminaciones</button>
-      <button class="fbtn" id="lfilt-editar" onclick="setLogFilt('editar',this)" style="font-size:.7rem;padding:5px 11px;">✏️ Ediciones</button>
-      <button class="fbtn" id="lfilt-exportar" onclick="setLogFilt('exportar',this)" style="font-size:.7rem;padding:5px 11px;">📊 Exportaciones</button>
-    </div>
-    <!-- Fila 3: filtro por usuario y tipo (igual que subtab análisis) -->
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:flex-start;">
-      <!-- Filtrar por usuario -->
-      <div style="flex:1;min-width:150px;">
-        <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:3px;letter-spacing:.05em;text-transform:uppercase;">👤 Filtrar por usuario</div>
-        <div style="position:relative;">
-          <input type="text" id="log-user-input" placeholder="Buscar usuario…" autocomplete="off"
-            class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
-            oninput="filtrarSugerenciasUsuarioLog()" onfocus="filtrarSugerenciasUsuarioLog()" />
-          <div id="log-user-sug" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
-        </div>
-        <div id="log-user-chip" style="display:none;margin-top:5px;"></div>
-      </div>
-      <!-- Filtrar por tipo de usuario -->
-      <div style="flex-shrink:0;">
-        <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:3px;letter-spacing:.05em;text-transform:uppercase;">👥 Filtrar por tipo</div>
-        <div style="display:flex;gap:6px;">
-          <button class="fbtn" id="lfilt-tipo-admins" onclick="setLogTipo('admins',this)" style="font-size:.72rem;padding:6px 13px;">🧑‍💼 Admins</button>
-          <button class="fbtn" id="lfilt-tipo-usuarios" onclick="setLogTipo('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios</button>
-        </div>
-      </div>
-    </div>
+
+    <!-- Lista de logs -->
     <div id="lista-logs"><p class="no-data">Cargando logs…</p></div>
   </div>
 </div>
