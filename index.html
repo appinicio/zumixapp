@@ -139,8 +139,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 .overlay{
   position:fixed;inset:0;background:rgba(26,24,20,.6);z-index:200;
   display:flex;align-items:flex-end;justify-content:center;padding:0;
-  opacity:0;pointer-events:none;transition:opacity .25s;
-  backdrop-filter:blur(3px);
+  opacity:0;pointer-events:none;
 }
 /* El modal de alerta siempre por encima de cualquier overlay/panel */
 #overlay{z-index:9000;}
@@ -148,10 +147,8 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 .modal{
   background:var(--surface);border-radius:20px 20px 0 0;padding:28px 22px 36px;
   width:100%;max-width:430px;box-shadow:var(--shlg);
-  transform:translateY(24px);transition:transform .3s cubic-bezier(.34,1.3,.64,1);
   max-height:88vh;overflow-y:auto;
 }
-.overlay.show .modal{transform:translateY(0);}
 .modal-box{
   background:var(--surface);
   border-radius:20px 20px 0 0;
@@ -160,7 +157,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
   max-height:85vh;overflow-y:auto;
   box-shadow:var(--shlg);
   transform:translateY(24px);
-  transition:transform .3s cubic-bezier(.34,1.3,.64,1);
+  transition:transform .35s cubic-bezier(.34,1.4,.64,1);
 }
 .overlay.show .modal-box{transform:translateY(0);}
 .modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 20px;}
@@ -787,9 +784,132 @@ details summary::-webkit-details-marker{display:none;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 
-/* ─── ANIMATIONS ─────────────────────────────────────── */
-@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-.pane.active{animation:fadeIn .2s ease-out;}
+/* ═══════════════════════════════════════════════════════
+   MICROANIMACIONES — Motion design premium
+   Spring physics · Stagger · Tactile feedback · Counters
+   ══════════════════════════════════════════════════════ */
+
+/* ── Keyframes base ── */
+@keyframes fadeIn      {from{opacity:0}to{opacity:1}}
+@keyframes slideUp     {from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn       {0%{transform:scale(.6);opacity:0}70%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+@keyframes successBounce{0%{transform:scale(1)}30%{transform:scale(1.18)}60%{transform:scale(.94)}80%{transform:scale(1.06)}100%{transform:scale(1)}}
+@keyframes shimmer     {0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes countUp     {from{opacity:0;transform:translateY(6px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes rippleOut   {to{transform:scale(4);opacity:0}}
+@keyframes connPop     {0%{transform:scale(.8);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+@keyframes cardStagger {from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Pane switch ── */
+.pane.active{animation:fadeIn .18s ease-out;}
+
+/* ── Cards — entrada escalonada ── */
+.item-card{
+  animation:cardStagger .22s ease-out both;
+}
+.item-card:nth-child(1){animation-delay:.00s}
+.item-card:nth-child(2){animation-delay:.03s}
+.item-card:nth-child(3){animation-delay:.06s}
+.item-card:nth-child(4){animation-delay:.09s}
+.item-card:nth-child(5){animation-delay:.12s}
+.item-card:nth-child(n+6){animation-delay:.15s}
+
+/* ── Modal — spring desde abajo ── */
+.modal{
+  transform:translateY(32px) scale(.97);
+  transition:transform .38s cubic-bezier(.34,1.4,.64,1),opacity .25s ease-out;
+  opacity:0;
+}
+.overlay.show .modal{
+  transform:translateY(0) scale(1);
+  opacity:1;
+}
+.overlay{
+  opacity:0;pointer-events:none;
+  transition:opacity .22s ease-out;
+  backdrop-filter:blur(0px);
+  -webkit-backdrop-filter:blur(0px);
+}
+.overlay.show{
+  opacity:1;pointer-events:all;
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  transition:opacity .22s ease-out,backdrop-filter .3s ease-out;
+}
+
+/* ── Botones — feedback táctil ── */
+.btn-primary{position:relative;overflow:hidden;}
+.btn-primary:active{transform:scale(.97);}
+.btn-primary::after{
+  content:'';position:absolute;border-radius:50%;
+  width:80px;height:80px;top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  background:rgba(255,255,255,.25);
+  pointer-events:none;
+}
+.btn-primary.rippling::after{
+  animation:rippleOut .5s ease-out forwards;
+}
+.btn-ghost:active{transform:scale(.97);}
+.btn-wsp:active{transform:scale(.97);}
+.mbtn:active{transform:scale(.97);}
+.ob-btn:active{transform:scale(.97);}
+.icon-btn:active{transform:scale(.88);}
+
+/* ── Conn badge — transición de estado ── */
+.conn-badge{
+  transition:background .3s,color .3s,transform .2s;
+}
+.conn-badge.pop{animation:connPop .35s cubic-bezier(.34,1.56,.64,1);}
+
+/* ── KPI / totales — counter animado ── */
+.tot-val.counting{animation:countUp .3s cubic-bezier(.34,1.3,.64,1);}
+.kpi strong.counting{animation:countUp .3s cubic-bezier(.34,1.3,.64,1);}
+
+/* ── Badges — entrada con pop ── */
+.lstab-badge{animation:popIn .3s cubic-bezier(.34,1.56,.64,1) both;}
+.tab-badge{animation:popIn .3s cubic-bezier(.34,1.56,.64,1) both;}
+
+/* ── Completado — success bounce en card ── */
+.item-card.just-completed{animation:successBounce .5s ease-out;}
+
+/* ── Skeleton / shimmer para carga ── */
+.skeleton{
+  background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.4s infinite;
+  border-radius:var(--rmd);
+  color:transparent!important;
+  pointer-events:none;
+}
+
+/* ── Grupo arrow — rotación al colapsar ── */
+.grupo-header.collapsed .grupo-arrow{transform:rotate(-90deg);}
+
+/* ── Sugerencias — slide desde arriba ── */
+.sug-box{
+  transform-origin:top;
+  transition:opacity .18s ease-out,transform .2s cubic-bezier(.34,1.2,.64,1);
+  opacity:0;transform:scaleY(.9) translateY(-4px);
+}
+.sug-box.show{opacity:1;transform:scaleY(1) translateY(0);}
+
+/* ── Search clear btn — fade in ── */
+.search-clear{
+  transition:opacity .15s,transform .15s;
+  opacity:0;transform:scale(.8);
+}
+.search-clear.visible{opacity:1;transform:scale(1);}
+
+/* ── Toggle (tgl) — tactile ── */
+.tgl:active{transform:scale(.95);}
+.tgl{transition:background .15s,border-color .15s,color .15s,transform .1s;}
+
+/* ── Filtros — pop al activarse ── */
+.fbtn{transition:background .15s,border-color .15s,color .15s,transform .1s,box-shadow .15s;}
+.fbtn:active{transform:scale(.93);}
+.fbtn.active{transform:scale(1);}
+
 
 /* ═══════════════════════════════════════════════════════
    DARK MODE — COMPONENTES PREMIUM
@@ -1890,6 +2010,37 @@ details summary::-webkit-details-marker{display:none;}
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,onValue,set,remove,update,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import{getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+/* ── MOTION UTILS ──────────────────────────────────────────── */
+// Ripple en btn-primary al hacer tap
+document.addEventListener('pointerdown',e=>{
+  const btn=e.target.closest('.btn-primary');
+  if(!btn)return;
+  btn.classList.remove('rippling');
+  requestAnimationFrame(()=>{
+    btn.classList.add('rippling');
+    setTimeout(()=>btn.classList.remove('rippling'),520);
+  });
+});
+
+// Counter animado — anima el número al cambiar
+function animateCounter(el){
+  if(!el)return;
+  el.classList.remove('counting');
+  requestAnimationFrame(()=>{
+    el.classList.add('counting');
+    setTimeout(()=>el.classList.remove('counting'),320);
+  });
+}
+window._animateCounter=animateCounter;
+
+// Anima todos los tot-val y kpi strong al actualizar
+function pulseKPIs(){
+  document.querySelectorAll('.tot-val,.kpi strong').forEach(el=>animateCounter(el));
+}
+window._pulseKPIs=pulseKPIs;
+/* ────────────────────────────────────────────────────────── */
+
 const _app=initializeApp({apiKey:"AIzaSyAwxVoWx1S9C9W-JbNeTGCm-SfCc4Sdlcc",authDomain:"jugeria-faltantes.firebaseapp.com",databaseURL:"https://jugeria-faltantes-default-rtdb.firebaseio.com",projectId:"jugeria-faltantes",storageBucket:"jugeria-faltantes.firebasestorage.app",messagingSenderId:"507586811385",appId:"1:507586811385:web:5bc8c9f7283c354e4f1928"});
 const db=getDatabase(_app);
 const auth=getAuth(_app);
@@ -2377,7 +2528,17 @@ function limpiarDuplicados(){
   const aEl=[];grupos.forEach(items=>{if(items.length<=1)return;items.sort((a,b)=>{const aA=a.fbKey.startsWith('arch_')?0:1,bA=b.fbKey.startsWith('arch_')?0:1;return aA!==bA?aA-bA:a.fbKey<b.fbKey?-1:1;});items.slice(1).forEach(it=>aEl.push(it.fbKey));});
   if(aEl.length)aEl.forEach(k=>{if(k.startsWith('arch_'))remove(ref(db,`archivo/${k}`));else remove(ref(db,`faltantes/${k}`));});
 }
-function setConn(t,txt){const b=document.getElementById('conn-badge');b.className=`conn-badge ${t}`;b.textContent=txt;}
+function setConn(t,txt){
+  const b=document.getElementById('conn-badge');
+  const prev=b.className;
+  b.className=`conn-badge ${t}`;
+  b.textContent=txt;
+  if(!prev.includes(t)){
+    b.classList.remove('pop');
+    requestAnimationFrame(()=>b.classList.add('pop'));
+    setTimeout(()=>b.classList.remove('pop'),400);
+  }
+}
 function todosComp(){return[...activos.filter(i=>i.comprado),...historial].sort((a,b)=>(b.tsComprado||0)-(a.tsComprado||0));}
 
 // UTILS
@@ -3078,6 +3239,12 @@ window.eliminarItem=function(key){if(!window._permisos?.eliminar){showModal('�
 // CAMBIAR A COMPRADO
 window.cambiarAComprado=function(key){
   const item=activos.find(i=>i.fbKey===key);if(!item)return;
+  // Bounce en la card antes de abrir el modal
+  const cardEl=document.getElementById(`card-${key}`);
+  if(cardEl){
+    cardEl.classList.add('just-completed');
+    setTimeout(()=>cardEl.classList.remove('just-completed'),550);
+  }
   window.editarItem(key);
   const eb=document.getElementById('btn-comp');
   if(eb&&estA!=='comp')window.setEst(eb,'comp');
@@ -3136,6 +3303,7 @@ function renderLista(){
   bp.style.display=pend.length?'inline':'none';if(pend.length){bp.textContent=urgAlta>0?`🔴${pend.length}`:pend.length;bp.className='lstab-badge yellow';}
   bc.style.display=compHoy.length?'inline':'none';if(compHoy.length){bc.textContent=compHoy.length;bc.className='lstab-badge yellow';}
   document.getElementById('cnt-urg').textContent=urgAlta;const _cmdEl=document.getElementById('cnt-med');if(_cmdEl)_cmdEl.textContent=urgMedia;document.getElementById('cnt-nor').textContent=nor;
+  window._pulseKPIs&&window._pulseKPIs();
   const lp=document.getElementById('lista-pend');
   if(!pend.length){lp.innerHTML=`<div class="empty-s"><div class="ei">🎉</div><div class="et">¡Sin pendientes!</div></div>`;}
   else{
@@ -3168,6 +3336,7 @@ function renderLista(){
     const totalDia=compParaTotal.reduce((s,i)=>s+getP(i),0);
     totEl.style.display=compParaTotal.length?'block':'none';
     totVal.textContent=`S/ ${totalDia.toFixed(2)}`;
+    window._animateCounter&&window._animateCounter(totVal);
     if(_esSoloSuyosRL){totEl.querySelector('span:first-child').textContent='💰 Mi total hoy';}
     else{const _tl=totEl.querySelector('span:first-child');if(_tl)_tl.textContent='💰 Total gastado hoy';}
     const _fnb=(window._nombreActual||'DESCONOCIDO').toUpperCase();
