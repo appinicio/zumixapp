@@ -295,7 +295,6 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
   box-shadow:var(--sh);letter-spacing:.02em;
 }
 .lstab.active{background:var(--text);border-color:var(--text);color:var(--bg);}
-[data-theme="dark"] .lstab.active{background:var(--accent);border-color:var(--accent);color:#111009;}
 .lstab-icon{font-size:1.05rem;display:block;margin-bottom:3px;}
 .lstab-txt{display:block;font-size:var(--fs-xs);}
 .lstab-badge{
@@ -692,7 +691,6 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 }
 .fbtn:hover{border-color:var(--border2);}
 .fbtn.active{background:var(--text);border-color:var(--text);color:var(--bg);}
-[data-theme="dark"] .fbtn.active{background:var(--accent);border-color:var(--accent);color:#111009;}
 
 /* ─── SEARCH ─────────────────────────────────────────── */
 .search-wrap{position:relative;margin-bottom:10px;}
@@ -720,7 +718,6 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
   color:var(--text2);cursor:pointer;transition:var(--transition);letter-spacing:.02em;text-transform:uppercase;
 }
 .stab.active{background:var(--text);border-color:var(--text);color:var(--bg);}
-[data-theme="dark"] .stab.active{background:var(--accent);border-color:var(--accent);color:#111009;}
 .subpane{display:none;}
 .subpane.active{display:block;}
 
@@ -907,6 +904,12 @@ details summary::-webkit-details-marker{display:none;}
 [data-theme="dark"] .lstab:hover{
   background:rgba(255,255,255,.07);
 }
+[data-theme="dark"] .lstab.active{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#0E0C08;
+  box-shadow:0 2px 10px var(--accent-glow);
+}
 
 /* ── Stats subtabs ── */
 [data-theme="dark"] .stab{
@@ -924,10 +927,17 @@ details summary::-webkit-details-marker{display:none;}
 [data-theme="dark"] .fbtn{
   background:rgba(255,255,255,.04);
   border-color:var(--border);
+  color:var(--text2);
 }
 [data-theme="dark"] .fbtn:hover{
   background:rgba(255,255,255,.07);
   border-color:var(--border2);
+}
+[data-theme="dark"] .fbtn.active{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#0E0C08;
+  box-shadow:0 2px 10px var(--accent-glow);
 }
 
 /* ── Historial items ── */
