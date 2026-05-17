@@ -524,15 +524,14 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 .item-card:active{transform:scale(.99);box-shadow:var(--sh);}
 .item-card.comp-hoy{
   background:var(--surface);
-  opacity:.78;
+  border-color:var(--border);
 }
+.item-card.comp-hoy .item-precio{color:var(--text3);}
 [data-theme="dark"] .item-card.comp-hoy{
   background:var(--surface);
-  opacity:.72;
+  border-color:var(--border);
 }
-.item-card.urgente,.item-card.alta{
-  background:var(--surface);
-}
+.item-card.urgente,.item-card.alta{background:var(--surface);}
 .item-card.nuevo{
   border-color:var(--accent);
   box-shadow:0 0 0 2px rgba(212,168,67,.15),var(--shmd);
@@ -807,15 +806,40 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 .search-clear.show{display:block;}
 
 /* ─── SUBTABS (stats) ────────────────────────────────── */
-.subtabs{display:flex;gap:8px;margin-bottom:14px;}
-.stab{
-  flex:1;padding:10px 8px;text-align:center;font-size:var(--fs-sm);font-weight:700;
-  border-radius:var(--rmd);border:1.5px solid var(--border);background:var(--surface);
-  color:var(--text2);cursor:pointer;transition:var(--transition);letter-spacing:.02em;text-transform:uppercase;
+/* ─── STATS SEGMENTED NAV ────────────────────────────── */
+.subtabs{
+  display:flex;align-items:stretch;
+  background:var(--surface2);
+  border:1.5px solid var(--border);
+  border-radius:var(--rmd);
+  padding:3px;gap:2px;
+  margin-bottom:14px;
+  overflow-x:auto;scrollbar-width:none;
 }
-.stab.active{background:var(--text);border-color:var(--text);color:var(--bg);}
+.subtabs::-webkit-scrollbar{display:none;}
+.stab{
+  flex:1;min-width:0;padding:7px 4px;text-align:center;
+  font-size:var(--fs-xs);font-weight:700;
+  border-radius:8px;border:none;background:transparent;
+  color:var(--text3);cursor:pointer;
+  transition:background .15s,color .15s,box-shadow .15s;
+  letter-spacing:.01em;text-transform:uppercase;
+  white-space:nowrap;flex-shrink:0;line-height:1.2;
+  -webkit-tap-highlight-color:transparent;
+}
+.stab:active{opacity:.7;}
+.stab.active{
+  background:var(--surface);
+  color:var(--text);
+  box-shadow:0 1px 4px rgba(0,0,0,.12),0 0 0 1px var(--border);
+}
+[data-theme="dark"] .stab.active{
+  background:var(--surface3);
+  color:var(--accent2);
+  box-shadow:0 1px 6px rgba(0,0,0,.4),0 0 0 1px rgba(224,184,74,.2);
+}
 .subpane{display:none;}
-.subpane.active{display:block;}
+.subpane.active{display:block;animation:fadeIn .18s ease-out;}
 
 /* ─── STAT CARDS ─────────────────────────────────────── */
 .stat-card{
@@ -1148,8 +1172,8 @@ details summary::-webkit-details-marker{display:none;}
   box-shadow:0 0 0 2px var(--accent-glow),0 2px 12px rgba(0,0,0,.4);
 }
 [data-theme="dark"] .item-card.comp-hoy{
-  background:linear-gradient(135deg,rgba(13,34,24,.7) 0%,var(--surface) 100%);
-  border-color:rgba(68,190,132,.12);
+  background:var(--surface);
+  border-color:var(--border);
 }
 [data-theme="dark"] .item-card.urgente,
 [data-theme="dark"] .item-card.alta{
@@ -1755,7 +1779,8 @@ details summary::-webkit-details-marker{display:none;}
 
 <!-- PANE HISTORIAL -->
 <div class="pane" id="pane-historial">
-  <!-- Fila 1: períodos predefinidos + botón 📅 Rango (solo super_admin/admin_supremo) -->
+
+  <!-- ① PERÍODO — lo primero que el usuario necesita elegir -->
   <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;">
     <div id="filt-hist" style="display:flex;gap:6px;flex-shrink:0;">
       <button class="fbtn active" id="fhbtn-hoy" onclick="setFH(this,'hoy')">Hoy</button>
@@ -1763,17 +1788,15 @@ details summary::-webkit-details-marker{display:none;}
       <button class="fbtn" id="fhbtn-7d" onclick="setFH(this,'7d')">Semana</button>
       <button class="fbtn" id="fhbtn-15d" onclick="setFH(this,'15d')">Quincenal</button>
       <button class="fbtn" id="fhbtn-30d" onclick="setFH(this,'30d')">Mensual</button>
-      <!-- Botón Todo: oculto para admin, visible para super_admin+ -->
       <button class="fbtn" id="fhbtn-todo" onclick="setFH(this,'todo')" style="display:none;">Todo</button>
     </div>
-    <!-- Botón Rango: solo super_admin / admin_supremo -->
     <button id="btn-hist-rango" onclick="toggleHistRango(this)" title="Filtro por rango de fechas"
       style="display:none;flex-shrink:0;padding:5px 11px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.72rem;font-weight:700;border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);white-space:nowrap;transition:var(--transition);position:relative;">
       📅 Rango
       <span id="hfilt-dot" style="display:none;position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;background:var(--accent);border:1.5px solid var(--surface);"></span>
     </button>
   </div>
-  <!-- Panel rango de fechas: colapsable — estandarizado para todos los roles -->
+  <!-- Panel rango de fechas colapsable -->
   <div id="hist-rango-panel" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:10px 12px;margin-bottom:6px;">
     <div style="display:flex;gap:8px;">
       <div style="flex:1;">
@@ -1789,22 +1812,72 @@ details summary::-webkit-details-marker{display:none;}
       </div>
     </div>
   </div>
-  <!-- Fila 2: Filtro por usuario — autocomplete con badges (igual que stats, lógica varía por rol) -->
-  <div id="hist-user-row" style="display:none;margin-bottom:8px;">
-    <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">👤 Filtrar por usuario</div>
-    <div style="display:flex;gap:6px;align-items:center;">
-      <div style="flex:1;position:relative;">
-        <input type="text" id="hist-user-input" placeholder="Buscar usuario…" autocomplete="off"
-          class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
-          oninput="filtrarSugerenciasUsuarioHist()" onfocus="filtrarSugerenciasUsuarioHist()"/>
-        <div id="hist-user-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
-      </div>
-      <button onclick="limpiarUsuarioHist()" id="btn-clear-user-hist"
-        style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
-    </div>
-    <div id="hist-user-chip" style="display:none;margin-top:5px;"></div>
+
+  <!-- ② BÚSQUEDA — inmediata, siempre visible -->
+  <div class="search-wrap" style="margin-bottom:8px;">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" type="text" id="search-hist" placeholder="Buscar en historial…" oninput="filtrarHist()"/>
+    <button class="search-clear" id="search-hist-clear" onclick="limpiarBusquedaHist()">✕</button>
   </div>
-  <div id="admin-panel-hist" style="display:none;" class="admin-panel">
+
+  <!-- ③ FILTROS SECUNDARIOS — agrupados visualmente en un bloque -->
+  <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:10px 12px;margin-bottom:10px;">
+    <div style="font-size:var(--fs-xs);font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">🔎 Filtros</div>
+    <!-- Filtro usuario — solo roles con acceso -->
+    <div id="hist-user-row" style="display:none;margin-bottom:8px;">
+      <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:600;margin-bottom:4px;">👤 Por usuario</div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <div style="flex:1;position:relative;">
+          <input type="text" id="hist-user-input" placeholder="Buscar usuario…" autocomplete="off"
+            class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
+            oninput="filtrarSugerenciasUsuarioHist()" onfocus="filtrarSugerenciasUsuarioHist()"/>
+          <div id="hist-user-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
+        </div>
+        <button onclick="limpiarUsuarioHist()" id="btn-clear-user-hist"
+          style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
+      </div>
+      <div id="hist-user-chip" style="display:none;margin-top:5px;"></div>
+    </div>
+    <!-- Filtro categoría -->
+    <div id="hist-cat-filter-row">
+      <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:600;margin-bottom:4px;">🏷 Por categoría</div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <select id="hist-cat-select" class="select-f" style="font-size:.78rem;padding:6px 10px;flex:1;" onchange="aplicarFiltroCatHist()">
+          <option value="">— Todas —</option>
+          <option value="CARNES">🥩 Carnes</option>
+          <option value="VERDURAS">🥦 Verduras</option>
+          <option value="LACTEOS">🥛 Lácteos</option>
+          <option value="FRUTAS">🍎 Frutas</option>
+          <option value="INSUMOS">🧪 Insumos</option>
+          <option value="PREPARADOS">🍱 Preparados</option>
+          <option value="BEBIDAS">🥤 Bebidas</option>
+          <option value="ENVASES">📦 Envases</option>
+          <option value="LIMPIEZA">🧹 Limpieza</option>
+          <option value="OTROS">⚙️ Otros</option>
+        </select>
+        <button id="btn-clear-cat-hist" onclick="limpiarFiltroCatHist()" style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ KPIs RESUMEN — resultado del filtro activo -->
+  <div class="kpi-grid" style="margin-bottom:10px;">
+    <div class="kpi"><strong id="hk-t">0</strong><span>compras</span></div>
+    <div class="kpi"><strong id="hk-g">S/0</strong><span>gastado</span></div>
+    <div class="kpi"><strong id="hk-u">0</strong><span>alta prio.</span></div>
+    <div class="kpi"><strong id="hk-e">0</strong><span>personas</span></div>
+  </div>
+
+  <!-- ⑤ LISTA DE REGISTROS -->
+  <div id="lista-hist"></div>
+
+  <!-- ⑥ ACCIONES — exportar y edición admin, al fondo -->
+  <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+    <button onclick="exportarExcel()" style="width:100%;padding:11px;background:var(--surface);border:1.5px solid var(--green);border-radius:var(--rmd);font-family:var(--ff);font-size:var(--fs-sm);font-weight:700;color:var(--green);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:var(--transition);">📊 Exportar a Excel</button>
+    <button id="btn-admin-hist" onclick="abrirAdminPanel()" style="width:100%;padding:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);font-family:var(--ff);font-size:var(--fs-sm);font-weight:700;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:var(--transition);">🔐 Editar registros del historial</button>
+  </div>
+  <!-- Panel admin (aparece al activar) -->
+  <div id="admin-panel-hist" style="display:none;margin-top:8px;" class="admin-panel">
     <div class="admin-header">
       <span class="admin-title">🔐 Panel de edición</span>
       <span class="admin-badge">Administrador</span>
@@ -1816,40 +1889,7 @@ details summary::-webkit-details-marker{display:none;}
     </div>
     <button class="btn-admin-close" onclick="cerrarAdminPanel()">✕ Cerrar panel de edición</button>
   </div>
-  <button id="btn-admin-hist" onclick="abrirAdminPanel()" style="width:100%;padding:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);font-family:var(--ff);font-size:.78rem;font-weight:700;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px;transition:var(--transition);">🔐 Editar registros del historial</button>
-  <div class="kpi-grid">
-    <div class="kpi"><strong id="hk-t">0</strong><span>compras</span></div>
-    <div class="kpi"><strong id="hk-g">S/0</strong><span>gastado</span></div>
-    <div class="kpi"><strong id="hk-u">0</strong><span>alta prio.</span></div>
-    <div class="kpi"><strong id="hk-e">0</strong><span>personas</span></div>
-  </div>
-  <!-- Filtro por categoría en Historial -->
-  <div id="hist-cat-filter-row" style="margin-bottom:8px;">
-    <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">🏷 Filtrar por categoría</div>
-    <div style="display:flex;gap:6px;align-items:center;">
-      <select id="hist-cat-select" class="select-f" style="font-size:.78rem;padding:6px 10px;flex:1;" onchange="aplicarFiltroCatHist()">
-        <option value="">— Todas las categorías —</option>
-        <option value="CARNES">🥩 Carnes</option>
-        <option value="VERDURAS">🥦 Verduras y hojas</option>
-        <option value="LACTEOS">🥛 Lácteos, huevos y derivados</option>
-        <option value="FRUTAS">🍎 Frutas</option>
-        <option value="INSUMOS">🧪 Otros insumos</option>
-        <option value="PREPARADOS">🍱 Preparados</option>
-        <option value="BEBIDAS">🥤 Bebidas envasadas</option>
-        <option value="ENVASES">📦 Envases y embalaje</option>
-        <option value="LIMPIEZA">🧹 Limpieza</option>
-        <option value="OTROS">⚙️ Otros</option>
-      </select>
-      <button id="btn-clear-cat-hist" onclick="limpiarFiltroCatHist()" style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-    </div>
-  </div>
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input class="search-input" type="text" id="search-hist" placeholder="Buscar en historial…" oninput="filtrarHist()"/>
-    <button class="search-clear" id="search-hist-clear" onclick="limpiarBusquedaHist()">✕</button>
-  </div>
-  <button onclick="exportarExcel()" style="width:100%;padding:11px;background:var(--surface);border:1.5px solid var(--green);border-radius:var(--rmd);font-family:var(--ff);font-size:.82rem;font-weight:700;color:var(--green);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px;transition:var(--transition);">📊 Exportar a Excel (filtro actual)</button>
-  <div id="lista-hist"></div>
+
 </div>
 
 <!-- PANE STATS -->
