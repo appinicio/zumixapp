@@ -285,16 +285,18 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 /* ─── LISTA SUBTABS ──────────────────────────────────── */
 .lista-subtabs{display:flex;gap:6px;margin-bottom:14px;}
 .lstab{
-  flex:1;padding:9px 6px 8px;text-align:center;
+  flex:1;padding:8px 6px;text-align:center;
+  display:flex;align-items:center;justify-content:center;gap:5px;
   font-size:var(--fs-xs);font-weight:700;border-radius:var(--rmd);
   border:1.5px solid var(--border);background:var(--surface);color:var(--text2);
   cursor:pointer;transition:background .15s,border-color .15s,color .15s,transform .1s;
   position:relative;box-shadow:var(--sh);letter-spacing:.02em;
+  line-height:1;white-space:nowrap;
 }
 .lstab:active{transform:scale(.96);}
 .lstab.active{background:var(--text);border-color:var(--text);color:var(--bg);}
-.lstab-icon{font-size:.85rem;display:block;margin-bottom:2px;line-height:1;}
-.lstab-txt{display:block;font-size:var(--fs-xs);line-height:1;}
+.lstab-icon{font-size:.8rem;line-height:1;flex-shrink:0;}
+.lstab-txt{font-size:var(--fs-xs);line-height:1;}
 .lstab-badge{
   position:absolute;top:-7px;right:-5px;
   background:var(--red);color:#fff;
@@ -521,8 +523,12 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 
 .item-card:active{transform:scale(.99);box-shadow:var(--sh);}
 .item-card.comp-hoy{
-  background:linear-gradient(135deg,var(--green-bg) 0%,var(--surface) 100%);
-  opacity:.82;
+  background:var(--surface);
+  opacity:.78;
+}
+[data-theme="dark"] .item-card.comp-hoy{
+  background:var(--surface);
+  opacity:.72;
 }
 .item-card.urgente,.item-card.alta{
   background:var(--surface);
@@ -711,6 +717,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
   border:1.5px solid var(--border);
   box-shadow:var(--sh);
   background:var(--surface);
+  margin-bottom:10px;
 }
 .arch-item{
   display:flex;align-items:center;gap:12px;padding:13px 14px;
@@ -1083,6 +1090,7 @@ details summary::-webkit-details-marker{display:none;}
 .swipe-wrap .item-card{
   margin-bottom:0;border-radius:var(--r);
   position:relative;z-index:2;
+  isolation:isolate;
   will-change:transform;
   transition:transform .22s cubic-bezier(.4,0,.2,1);
 }
@@ -2285,22 +2293,23 @@ window._pulseKPIs=pulseKPIs;
     const wrap=document.createElement('div');
     wrap.className='swipe-wrap';
     card.parentNode.insertBefore(wrap,card);
-    wrap.appendChild(card);
 
-    // Fondo derecha (swipe →): acción primaria positiva
+    // Insertar fondos PRIMERO (antes de la card en el DOM)
+    // → la card queda encima en el stacking context naturalmente
     if(opts.right){
       const bg=document.createElement('div');
       bg.className='swipe-bg right';
       bg.innerHTML=`<span class="swipe-bg-icon">${opts.right.icon}</span><span>${opts.right.label}</span>`;
       wrap.appendChild(bg);
     }
-    // Fondo izquierda (swipe ←): editar o eliminar
     if(opts.left){
       const bg=document.createElement('div');
       bg.className=`swipe-bg ${opts.left.danger?'left-del':'left-edit'}`;
       bg.innerHTML=`<span>${opts.left.label}</span><span class="swipe-bg-icon">${opts.left.icon}</span>`;
       wrap.appendChild(bg);
     }
+    // Card va al final → mayor z-index implícito en el stacking context
+    wrap.appendChild(card);
     attachSwipe(wrap,card,opts);
   }
 
