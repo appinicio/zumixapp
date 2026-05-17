@@ -1016,7 +1016,59 @@ details summary::-webkit-details-marker{display:none;}
 
 
 /* ═══════════════════════════════════════════════════════
-   DARK MODE — COMPONENTES PREMIUM
+   FAB — Floating Action Button
+   ══════════════════════════════════════════════════════ */
+.fab{
+  position:fixed;
+  bottom:calc(72px + env(safe-area-inset-bottom) + 12px);
+  right:18px;
+  z-index:99;
+  display:flex;align-items:center;gap:0;
+  background:var(--accent);
+  color:#0E0C08;
+  border:none;border-radius:28px;
+  height:52px;
+  padding:0 18px 0 16px;
+  font-family:var(--ff);font-size:var(--fs-md);font-weight:800;
+  cursor:pointer;
+  box-shadow:0 4px 20px rgba(212,168,67,.45),0 2px 8px rgba(0,0,0,.18);
+  transition:
+    opacity .22s ease-out,
+    transform .28s cubic-bezier(.34,1.4,.64,1),
+    box-shadow .2s,
+    padding .25s cubic-bezier(.34,1.2,.64,1),
+    width .25s cubic-bezier(.34,1.2,.64,1);
+  overflow:hidden;
+  white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+.fab.hidden{
+  opacity:0;
+  transform:scale(.7) translateY(12px);
+  pointer-events:none;
+}
+.fab:active{
+  transform:scale(.94);
+  box-shadow:0 2px 10px rgba(212,168,67,.35);
+}
+[data-theme="dark"] .fab{
+  background:var(--accent);
+  color:#0E0C08;
+  box-shadow:0 4px 24px var(--accent-glow),0 2px 12px rgba(0,0,0,.4);
+}
+.fab-icon{
+  font-size:1.35rem;line-height:1;flex-shrink:0;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  margin-right:8px;
+}
+.fab:active .fab-icon{transform:rotate(45deg) scale(1.1);}
+.fab-label{
+  font-size:var(--fs-sm);font-weight:800;letter-spacing:.01em;
+  transition:opacity .18s,max-width .25s;
+  max-width:120px;opacity:1;
+}
+
    Espresso cálido · Dorado vivo · Capas profundas
    ══════════════════════════════════════════════════════ */
 
@@ -2104,6 +2156,12 @@ details summary::-webkit-details-marker{display:none;}
   </div>
 </div>
 
+<!-- FAB — Registrar producto -->
+<button class="fab hidden" id="fab-reg" onclick="fabRegistrar()" aria-label="Registrar producto">
+  <span class="fab-icon">＋</span>
+  <span class="fab-label">Registrar</span>
+</button>
+
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
   <div class="tab active" id="tab-lista" onclick="switchTab('lista')">
@@ -2563,6 +2621,25 @@ function showModal(icon,title,msg,btns){
 window.closeModal=()=>document.getElementById('overlay').classList.remove('show');
 
 // TABS
+/* ── FAB utils ── */
+function _updateFab(){
+  const fab=document.getElementById('fab-reg');
+  if(!fab)return;
+  // Visible solo en pane-lista + subtab pend o comp
+  const enLista=document.getElementById('pane-lista')?.classList.contains('active');
+  const enPend=document.getElementById('lsp-pend')?.classList.contains('active');
+  const enComp=document.getElementById('lsp-comp')?.classList.contains('active');
+  const show=enLista&&(enPend||enComp);
+  fab.classList.toggle('hidden',!show);
+}
+window.fabRegistrar=function(){
+  switchLista('reg');
+  setTimeout(()=>{
+    const inp=document.getElementById('ni-nom');
+    if(inp)inp.focus();
+  },120);
+};
+
 window.switchTab=function(t){
   // Usar IDs para no depender de orden/visibilidad de los tabs
   ['lista','historial','stats'].forEach(name=>{
@@ -2575,6 +2652,7 @@ window.switchTab=function(t){
   if(t==='lista'&&!editKey){limpiarForm();}
   if(t==='historial')renderHist();
   if(t==='stats'){renderStats();setTimeout(()=>renderComparaciones(),0);}
+  _updateFab();
 };
 window.switchST=function(t){
   ['metricas','comparaciones','usuarios','comparar','logs'].forEach(id=>{
@@ -2607,6 +2685,7 @@ window.switchLista=function(t){
   if(t!=='pend'){document.getElementById('prev-pend').classList.remove('show');}
   if(t!=='comp'){document.getElementById('prev-comp').classList.remove('show');}
   if(t==='pend'||t==='comp'){ultimoKey=null;renderLista();}
+  _updateFab();
 };
 
 // FIREBASE
