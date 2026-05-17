@@ -1069,6 +1069,55 @@ details summary::-webkit-details-marker{display:none;}
   max-width:120px;opacity:1;
 }
 
+/* ═══════════════════════════════════════════════════════
+   SWIPE ACTIONS — Gestos nativos en cards
+   ══════════════════════════════════════════════════════ */
+.swipe-wrap{
+  position:relative;overflow:hidden;
+  border-radius:var(--r);margin-bottom:9px;
+}
+.swipe-wrap .item-card{
+  margin-bottom:0;border-radius:var(--r);
+  position:relative;z-index:2;
+  will-change:transform;
+  transition:transform .22s cubic-bezier(.4,0,.2,1);
+}
+.swipe-wrap .item-card.swiping{transition:none;}
+
+.swipe-bg{
+  position:absolute;inset:0;border-radius:var(--r);
+  display:flex;align-items:center;
+  padding:0 20px;gap:8px;
+  font-size:var(--fs-sm);font-weight:800;
+  white-space:nowrap;
+  pointer-events:none;
+}
+.swipe-bg.right{
+  background:var(--green);color:#fff;
+  justify-content:flex-start;
+}
+.swipe-bg.left-edit{
+  background:var(--accent);color:#0E0C08;
+  justify-content:flex-end;
+}
+.swipe-bg.left-del{
+  background:var(--red);color:#fff;
+  justify-content:flex-end;
+}
+.swipe-bg-icon{font-size:1.15rem;line-height:1;}
+
+@keyframes swipeHint{
+  0%{transform:translateX(0)}
+  25%{transform:translateX(-32px)}
+  50%{transform:translateX(10px)}
+  75%{transform:translateX(-6px)}
+  100%{transform:translateX(0)}
+}
+.swipe-wrap.hint .item-card{
+  animation:swipeHint .65s cubic-bezier(.34,1.2,.64,1) .5s both;
+}
+
+/* ═══════════════════════════════════════════════════════
    Espresso cálido · Dorado vivo · Capas profundas
    ══════════════════════════════════════════════════════ */
 
@@ -2213,6 +2262,133 @@ function pulseKPIs(){
   document.querySelectorAll('.tot-val,.kpi strong').forEach(el=>animateCounter(el));
 }
 window._pulseKPIs=pulseKPIs;
+
+/* ── SWIPE ENGINE ──────────────────────────────────────────── */
+(function(){
+  const THRESHOLD=72;   // px mínimo para disparar acción
+  const MAX=110;        // px máximo de arrastre visible
+  const HINT_KEY='zumix_swipe_hinted';
+
+  // Envuelve una card existente en un swipe-wrap con su fondo
+  function wrapCard(card,opts){
+    if(card.closest('.swipe-wrap'))return; // ya envuelta
+    const wrap=document.createElement('div');
+    wrap.className='swipe-wrap';
+    card.parentNode.insertBefore(wrap,card);
+    wrap.appendChild(card);
+
+    // Fondo derecha (swipe →): acción primaria positiva
+    if(opts.right){
+      const bg=document.createElement('div');
+      bg.className='swipe-bg right';
+      bg.innerHTML=`<span class="swipe-bg-icon">${opts.right.icon}</span><span>${opts.right.label}</span>`;
+      wrap.appendChild(bg);
+    }
+    // Fondo izquierda (swipe ←): editar o eliminar
+    if(opts.left){
+      const bg=document.createElement('div');
+      bg.className=`swipe-bg ${opts.left.danger?'left-del':'left-edit'}`;
+      bg.innerHTML=`<span>${opts.left.label}</span><span class="swipe-bg-icon">${opts.left.icon}</span>`;
+      wrap.appendChild(bg);
+    }
+    attachSwipe(wrap,card,opts);
+  }
+
+  function attachSwipe(wrap,card,opts){
+    let startX=0,startY=0,dx=0,tracking=false,fired=false,maybeScroll=false;
+
+    card.addEventListener('touchstart',e=>{
+      if(e.touches.length>1)return;
+      startX=e.touches[0].clientX;
+      startY=e.touches[0].clientY;
+      dx=0;tracking=true;fired=false;maybeScroll=false;
+    },{passive:true});
+
+    card.addEventListener('touchmove',e=>{
+      if(!tracking||fired)return;
+      const cx=e.touches[0].clientX;
+      const cy=e.touches[0].clientY;
+      const adx=Math.abs(cx-startX);
+      const ady=Math.abs(cy-startY);
+      // Si el primer movimiento es más vertical que horizontal → scroll normal
+      if(!maybeScroll&&adx<6&&ady>adx){maybeScroll=true;}
+      if(maybeScroll)return;
+      if(adx>6)e.preventDefault(); // bloquea scroll solo si es horizontal
+      dx=Math.max(-MAX,Math.min(MAX,cx-startX));
+      // Solo permitir dirección con acción disponible
+      if(dx>0&&!opts.right)dx=0;
+      if(dx<0&&!opts.left)dx=0;
+      card.classList.add('swiping');
+      card.style.transform=`translateX(${dx}px)`;
+    },{passive:false});
+
+    card.addEventListener('touchend',()=>{
+      if(!tracking)return;
+      tracking=false;
+      card.classList.remove('swiping');
+      card.style.transform='';
+      if(fired)return;
+      if(dx>=THRESHOLD&&opts.right){
+        fired=true;
+        _swipeFeedback(card,'right',()=>opts.right.action());
+      }else if(dx<=-THRESHOLD&&opts.left){
+        fired=true;
+        _swipeFeedback(card,'left',()=>opts.left.action());
+      }
+      dx=0;
+    });
+  }
+
+  // Animación de confirmación antes de ejecutar la acción
+  function _swipeFeedback(card,dir,cb){
+    const tx=dir==='right'?'100%':'-100%';
+    card.style.transition='transform .28s cubic-bezier(.4,0,.2,1),opacity .22s';
+    card.style.transform=`translateX(${tx})`;
+    card.style.opacity='0';
+    setTimeout(()=>{
+      card.style.transform='';
+      card.style.opacity='';
+      card.style.transition='';
+      cb();
+    },260);
+  }
+
+  // Inicializar swipe en todas las cards del contenedor dado
+  window._initSwipe=function(containerId,mode){
+    const container=document.getElementById(containerId);
+    if(!container)return;
+    container.querySelectorAll('.item-card:not(.swipe-init)').forEach(card=>{
+      card.classList.add('swipe-init');
+      const key=card.id.replace('card-','');
+      const canDel=window._permisos?.eliminar;
+      const rol=window._rol||'usuario';
+      const soloSuyos=(rol==='usuario'||rol==='admin');
+      const miNombre=(window._nombreActual||'').toUpperCase().trim();
+      const esPropia=(card.querySelector('.item-nom')?.textContent||'').length>0; // siempre true
+      // Determinar opciones según modo (pend / comp)
+      let opts={};
+      if(mode==='pend'){
+        opts.right={icon:'✅',label:'Marcar comprado',action:()=>window.cambiarAComprado(key)};
+        opts.left={icon:'✏️',label:'Editar',action:()=>window.editarItem(key)};
+      }else if(mode==='comp'){
+        opts.right={icon:'✏️',label:'Editar',action:()=>window.editarItem(key)};
+        if(canDel){
+          opts.left={icon:'🗑',label:'Eliminar',danger:true,action:()=>window.eliminarItem(key)};
+        }
+      }
+      wrapCard(card,opts);
+    });
+    // Mostrar hint de swipe la primera vez
+    if(!sessionStorage.getItem(HINT_KEY)){
+      const first=container.querySelector('.swipe-wrap');
+      if(first){
+        first.classList.add('hint');
+        sessionStorage.setItem(HINT_KEY,'1');
+        setTimeout(()=>first.classList.remove('hint'),1400);
+      }
+    }
+  };
+})();
 /* ────────────────────────────────────────────────────────── */
 
 const _app=initializeApp({apiKey:"AIzaSyAwxVoWx1S9C9W-JbNeTGCm-SfCc4Sdlcc",authDomain:"jugeria-faltantes.firebaseapp.com",databaseURL:"https://jugeria-faltantes-default-rtdb.firebaseio.com",projectId:"jugeria-faltantes",storageBucket:"jugeria-faltantes.firebasestorage.app",messagingSenderId:"507586811385",appId:"1:507586811385:web:5bc8c9f7283c354e4f1928"});
@@ -3552,6 +3728,11 @@ function renderLista(){
     if(conP.length>=2){const mx=conP.reduce((a,b)=>getP(a)>getP(b)?a:b);const mn=conP.reduce((a,b)=>getP(a)<getP(b)?a:b);mmDiv.style.display='flex';mmDiv.innerHTML=`<div class="mm max"><div class="mm-lab">💚 Más caro</div><div class="mm-nom">${mx.nombre}</div><div class="mm-precio">S/ ${getP(mx).toFixed(2)}</div></div><div class="mm min"><div class="mm-lab">🔵 Más económico</div><div class="mm-nom">${mn.nombre}</div><div class="mm-precio">S/ ${getP(mn).toFixed(2)}</div></div>`;}
     else mmDiv.style.display='none';
   }else{lc.innerHTML=`<div class="empty-s"><div class="ei">🛍️</div><div class="et">Nada comprado hoy aún</div></div>`;mmDiv.style.display='none';totEl.style.display='none';resEl.innerHTML='';}
+  // Inicializar swipe en las cards recién renderizadas
+  requestAnimationFrame(()=>{
+    window._initSwipe&&window._initSwipe('lista-pend','pend');
+    window._initSwipe&&window._initSwipe('lista-comp','comp');
+  });
 }
 
 function msL(f){const a=Date.now(),h=new Date();h.setHours(0,0,0,0);if(f==='hoy')return h.getTime();if(f==='3d')return a-3*864e5;if(f==='7d')return a-7*864e5;if(f==='15d')return a-15*864e5;if(f==='30d')return a-30*864e5;return 0;}
