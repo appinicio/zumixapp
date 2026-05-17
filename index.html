@@ -283,23 +283,24 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 .pane.active{display:block;}
 
 /* ─── LISTA SUBTABS ──────────────────────────────────── */
-.lista-subtabs{display:flex;gap:8px;margin-bottom:14px;}
+.lista-subtabs{display:flex;gap:6px;margin-bottom:14px;}
 .lstab{
-  flex:1;padding:10px 6px 9px;text-align:center;
+  flex:1;padding:9px 6px 8px;text-align:center;
   font-size:var(--fs-xs);font-weight:700;border-radius:var(--rmd);
   border:1.5px solid var(--border);background:var(--surface);color:var(--text2);
-  cursor:pointer;transition:var(--transition);position:relative;
-  box-shadow:var(--sh);letter-spacing:.02em;
+  cursor:pointer;transition:background .15s,border-color .15s,color .15s,transform .1s;
+  position:relative;box-shadow:var(--sh);letter-spacing:.02em;
 }
+.lstab:active{transform:scale(.96);}
 .lstab.active{background:var(--text);border-color:var(--text);color:var(--bg);}
-.lstab-icon{font-size:1.05rem;display:block;margin-bottom:3px;}
-.lstab-txt{display:block;font-size:var(--fs-xs);}
+.lstab-icon{font-size:.85rem;display:block;margin-bottom:2px;line-height:1;}
+.lstab-txt{display:block;font-size:var(--fs-xs);line-height:1;}
 .lstab-badge{
   position:absolute;top:-7px;right:-5px;
   background:var(--red);color:#fff;
-  font-size:var(--fs-xs);font-weight:700;padding:2px 5px;
+  font-size:.55rem;font-weight:800;padding:2px 5px;
   border-radius:20px;min-width:17px;text-align:center;
-  font-family:var(--ffmono);
+  font-family:var(--ffmono);border:2px solid var(--surface);
 }
 .lstab-badge.green{background:var(--green);}
 .lstab-badge.yellow{background:var(--accent);color:#1a1814;}
@@ -522,6 +523,9 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 .item-card.comp-hoy{
   background:linear-gradient(135deg,var(--green-bg) 0%,var(--surface) 100%);
   opacity:.82;
+}
+.item-card.urgente,.item-card.alta{
+  background:var(--surface);
 }
 .item-card.nuevo{
   border-color:var(--accent);
@@ -1091,6 +1095,7 @@ details summary::-webkit-details-marker{display:none;}
   font-size:var(--fs-sm);font-weight:800;
   white-space:nowrap;
   pointer-events:none;
+  z-index:1;
 }
 .swipe-bg.right{
   background:var(--green);color:#fff;
@@ -1140,7 +1145,7 @@ details summary::-webkit-details-marker{display:none;}
 }
 [data-theme="dark"] .item-card.urgente,
 [data-theme="dark"] .item-card.alta{
-  background:rgba(42,12,10,.4);
+  background:var(--surface);
 }
 [data-theme="dark"] .item-icon{
   background:rgba(255,255,255,.05);
@@ -1148,11 +1153,11 @@ details summary::-webkit-details-marker{display:none;}
 }
 [data-theme="dark"] .item-card.urgente .item-icon,
 [data-theme="dark"] .item-card.alta .item-icon{
-  background:rgba(42,12,10,.8);
-  border-color:rgba(197,56,42,.2);
+  background:rgba(232,88,72,.1);
+  border-color:rgba(232,88,72,.18);
 }
 [data-theme="dark"] .item-card.comp-hoy .item-icon{
-  background:rgba(13,34,24,.8);
+  background:rgba(68,190,132,.1);
   border-color:rgba(68,190,132,.15);
 }
 [data-theme="dark"] @keyframes hpulse{
@@ -1237,15 +1242,20 @@ details summary::-webkit-details-marker{display:none;}
 [data-theme="dark"] .lstab{
   background:rgba(255,255,255,.04);
   border-color:var(--border);
+  color:var(--text3);
 }
 [data-theme="dark"] .lstab:hover{
   background:rgba(255,255,255,.07);
+  color:var(--text2);
 }
 [data-theme="dark"] .lstab.active{
   background:var(--accent);
   border-color:var(--accent);
   color:#0E0C08;
   box-shadow:0 2px 10px var(--accent-glow);
+}
+[data-theme="dark"] .lstab-badge{
+  border-color:var(--surface);
 }
 
 /* ── Stats subtabs ── */
