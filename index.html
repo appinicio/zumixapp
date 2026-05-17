@@ -13,45 +13,45 @@
 <meta name="apple-mobile-web-app-title" content="Zumix Stock">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ─── DESIGN TOKENS ─────────────────────────────────── */
 :root{
-  --bg:#F7F6F2;
+  --bg:#F5F4F0;
   --surface:#FFFFFF;
-  --surface2:#F2F1EC;
-  --surface3:#ECEAE3;
-  --border:#E4E1D8;
-  --border2:#D0CCBF;
-  --text:#18160F;
-  --text2:#62605A;
-  --text3:#9E9B93;
-  --accent:#C89B38;
-  --accent2:#A67E22;
-  --accent-bg:#FAF3E0;
-  --green:#1E7A50;
-  --green-bg:#EAF5F0;
-  --red:#C0352A;
+  --surface2:#F0EFE9;
+  --surface3:#E8E6DF;
+  --border:#E2DFD5;
+  --border2:#D4D0C4;
+  --text:#1A1814;
+  --text2:#6B6760;
+  --text3:#A09C94;
+  --accent:#D4A843;
+  --accent2:#B8902F;
+  --accent-bg:#FBF4E3;
+  --green:#2D8B5E;
+  --green-bg:#EBF7F1;
+  --red:#C5382A;
   --red-bg:#FDF0EE;
-  --orange:#B8700E;
-  --orange-bg:#FDF4E7;
-  --blue:#2660A4;
-  --blue-bg:#EAF1FB;
-  --r:12px;
-  --rsm:8px;
-  --rmd:10px;
-  --sh:0 1px 3px rgba(24,22,15,.06),0 0 0 1px rgba(24,22,15,.05);
-  --shmd:0 4px 14px rgba(24,22,15,.09),0 1px 3px rgba(24,22,15,.05);
-  --shlg:0 12px 36px rgba(24,22,15,.14),0 2px 8px rgba(24,22,15,.07);
-  --ff:'Plus Jakarta Sans',sans-serif;
-  --ffmono:'JetBrains Mono',monospace;
-  --transition:all .18s cubic-bezier(.4,0,.2,1);
+  --orange:#C07A1A;
+  --orange-bg:#FDF5E8;
+  --blue:#2B6CB0;
+  --blue-bg:#EBF4FF;
+  --r:14px;
+  --rsm:9px;
+  --rmd:11px;
+  --sh:0 1px 4px rgba(26,24,20,.07),0 0 0 1px rgba(26,24,20,.04);
+  --shmd:0 4px 16px rgba(26,24,20,.1),0 1px 4px rgba(26,24,20,.06);
+  --shlg:0 12px 40px rgba(26,24,20,.15),0 2px 8px rgba(26,24,20,.08);
+  --ff:'Sora',sans-serif;
+  --ffmono:'DM Mono',monospace;
+  --transition:all .2s cubic-bezier(.4,0,.2,1);
   /* ─── TYPE SCALE ──────────────────────────── */
-  --fs-xs:  .70rem;
-  --fs-sm:  .80rem;
-  --fs-md:  .88rem;
-  --fs-lg:  1rem;
-  --fs-xl:  1.6rem;
+  --fs-xs:  .68rem;   /* metadata, badges, timestamps, hints  */
+  --fs-sm:  .78rem;   /* labels, captions, sub-info           */
+  --fs-md:  .88rem;   /* body, inputs, list items             */
+  --fs-lg:  1rem;     /* titles, primary actions              */
+  --fs-xl:  1.6rem;   /* hero numbers, onboarding title       */
   /* ─── SPACE SCALE ────────────────────────── */
   --sp-1: 4px;
   --sp-2: 8px;
@@ -61,30 +61,36 @@
   --sp-6: 32px;
 }
 [data-theme="dark"]{
-  --bg:#0C0A07;
-  --surface:#171410;
-  --surface2:#201D17;
-  --surface3:#29261E;
-  --border:#343028;
-  --border2:#4A4638;
-  --text:#EDE7D0;
-  --text2:#A89878;
-  --text3:#6A6254;
-  --accent:#D4A843;
-  --accent2:#ECC060;
-  --accent-bg:#271F0C;
-  --accent-glow:rgba(212,168,67,.16);
-  --green:#3DB87A;
-  --green-bg:#0B201A;
-  --red:#E05040;
-  --red-bg:#280C0A;
-  --orange:#D48A28;
-  --orange-bg:#281808;
-  --blue:#4E8ED4;
-  --blue-bg:#0A1C30;
-  --sh:0 1px 3px rgba(0,0,0,.5),0 0 0 1px rgba(255,240,200,.03);
-  --shmd:0 4px 18px rgba(0,0,0,.55),0 1px 4px rgba(0,0,0,.3);
-  --shlg:0 16px 48px rgba(0,0,0,.65),0 4px 12px rgba(0,0,0,.4);
+  /* ── Fondos: espresso cálido, no negro frío ── */
+  --bg:#0E0C08;
+  --surface:#1A1710;
+  --surface2:#22201A;
+  --surface3:#2C2920;
+  /* ── Bordes: más visibles, dorado sutil ── */
+  --border:#3A3528;
+  --border2:#504A38;
+  /* ── Texto: crema cálida con degradé legible ── */
+  --text:#F0EAD2;
+  --text2:#A89880;
+  --text3:#6E6454;
+  /* ── Acento: dorado más vivo en oscuro ── */
+  --accent:#E0B84A;
+  --accent2:#F0CC6A;
+  --accent-bg:#2C2210;
+  --accent-glow:rgba(224,184,74,.18);
+  /* ── Semánticos: más saturados sobre negro ── */
+  --green:#44BE84;
+  --green-bg:#0D2218;
+  --red:#E85848;
+  --red-bg:#2A0C0A;
+  --orange:#E09430;
+  --orange-bg:#2A1C08;
+  --blue:#5898D8;
+  --blue-bg:#0C1E30;
+  /* ── Sombras: cálidas con tono ámbar sutil ── */
+  --sh:0 1px 3px rgba(0,0,0,.45),0 0 0 1px rgba(255,240,200,.04);
+  --shmd:0 4px 20px rgba(0,0,0,.55),0 1px 4px rgba(0,0,0,.3),0 0 0 1px rgba(255,240,200,.03);
+  --shlg:0 16px 48px rgba(0,0,0,.65),0 4px 12px rgba(0,0,0,.4),0 0 0 1px rgba(255,240,200,.03);
 }
 
 /* ─── RESET ─────────────────────────────────────────── */
@@ -1416,518 +1422,28 @@ details summary::-webkit-details-marker{display:none;}
   background:rgba(255,255,255,.03);
   border-color:var(--border);
 }
-
-/* ═══════════════════════════════════════════════════════
-   ██████████  ZUMIX STOCK — UI REDESIGN LAYER  ████████
-   Refined spatial system · Tighter typographic hierarchy
-   Cleaner surfaces · Reduced cognitive noise
-   ══════════════════════════════════════════════════════ */
-
-/* ── Body & App shell ─────────────────────────────────── */
-body{
-  font-family:var(--ff);
-  letter-spacing:-.01em;
-  font-size:15px;
-}
-.app{max-width:430px;}
-
-/* ── TOPBAR — cleaner, more compact ──────────────────── */
-.topbar{
-  padding:10px 16px;
-  border-bottom-width:1px;
-}
-[data-theme="dark"] .topbar{
-  background:rgba(23,20,16,.96);
-  border-bottom-color:rgba(212,168,67,.10);
-}
-.brand-emblem{
-  width:32px;height:32px;border-radius:8px;font-size:.95rem;
-}
-.brand-title{font-size:.94rem;font-weight:800;letter-spacing:-.03em;}
-.brand-user{font-size:.65rem;font-weight:500;font-family:var(--ffmono);opacity:.75;}
-.brand-edit-btn{opacity:.5;font-size:.65rem;padding:1px 4px;}
-.conn-badge{
-  font-size:.62rem;padding:3px 8px;border-radius:20px;
-  font-family:var(--ffmono);font-weight:600;letter-spacing:.01em;
-}
-.icon-btn{
-  width:32px;height:32px;border-radius:8px;font-size:.85rem;border-width:1px;
-  background:var(--surface2);
-}
-[data-theme="dark"] .icon-btn{
-  background:rgba(255,240,200,.04);
-  border-color:rgba(255,240,200,.08);
-}
-
-/* ── BOTTOM NAV — more refined ────────────────────────── */
-.bottom-nav{
-  border-top-width:1px;
-  padding-bottom:max(env(safe-area-inset-bottom), 6px);
-}
-[data-theme="dark"] .bottom-nav{
-  background:rgba(23,20,16,.97);
-  border-top-color:rgba(212,168,67,.10);
-}
-.tab{
-  padding:9px 4px 10px;gap:3px;
-  border-top-width:2px;
-}
-.tab-icon{font-size:1.15rem;}
-.tab-label{
-  font-size:.58rem;font-weight:700;letter-spacing:.05em;
-  text-transform:uppercase;
-}
-.tab.active{
-  color:var(--accent);
-  border-top-color:var(--accent);
-}
-[data-theme="dark"] .tab.active{
-  color:var(--accent2);
-  border-top-color:var(--accent2);
-}
-
-/* ── PANE — better breathing room ────────────────────── */
-.pane{padding:14px 14px 100px;}
-
-/* ── LISTA SUBTABS — cleaner pill design ─────────────── */
-.lista-subtabs{
-  display:flex;gap:5px;margin-bottom:16px;
-  background:var(--surface2);border-radius:10px;
-  padding:4px;border:1px solid var(--border);
-}
-.lstab{
-  flex:1;padding:8px 6px;border-radius:8px;
-  border:none;background:transparent;
-  font-size:.65rem;font-weight:700;color:var(--text3);
-  letter-spacing:.04em;box-shadow:none;
-  gap:4px;
-  transition:background .15s,color .15s;
-}
-.lstab.active{
-  background:var(--surface);color:var(--text);
-  box-shadow:0 1px 4px rgba(0,0,0,.1),0 0 0 1px var(--border);
-}
-[data-theme="dark"] .lstab{
-  background:transparent;border:none;color:var(--text3);
-}
-[data-theme="dark"] .lstab.active{
-  background:var(--accent);color:#0C0A07;
-  box-shadow:0 2px 8px rgba(212,168,67,.3);
-}
-.lstab-icon{font-size:.75rem;}
-.lstab-txt{font-size:.65rem;}
-.lstab-badge{
-  top:-6px;right:-4px;
-  font-size:.52rem;padding:1px 4px;min-width:14px;
-  border-width:1.5px;
-}
-
-/* ── FORM CARD — softer, more airy ───────────────────── */
-.form-card{
-  border-width:1px;border-radius:12px;
-  padding:18px 16px;
-  background:var(--surface);
-}
-
-/* ── FIELD LABEL — less shouting ─────────────────────── */
-.field-label{
-  font-size:.70rem;font-weight:700;color:var(--text3);
-  margin-bottom:7px;letter-spacing:.04em;text-transform:uppercase;
-}
-.field{margin-bottom:14px;}
-
-/* ── STATUS DOTS — smaller ────────────────────────────── */
-.sdot{width:15px;height:15px;font-size:.55rem;}
-
-/* ── INPUTS — cleaner focus ring ─────────────────────── */
-.input-f,.select-f,.textarea-f{
-  border-radius:9px;border-width:1px;
-  font-size:var(--fs-md);
-  padding:10px 13px;
-  background:var(--surface2);
-}
-.input-f:focus,.select-f:focus,.textarea-f:focus{
-  border-color:var(--accent);
-  background:var(--surface);
-  box-shadow:0 0 0 3px rgba(200,155,56,.12);
-}
-[data-theme="dark"] .input-f,
-[data-theme="dark"] .select-f,
-[data-theme="dark"] .textarea-f{
-  background:rgba(255,255,255,.04);
-  border-color:var(--border2);
-}
-[data-theme="dark"] .input-f:focus,
-[data-theme="dark"] .select-f:focus,
-[data-theme="dark"] .textarea-f:focus{
-  background:var(--surface2);
-  border-color:var(--accent);
-  box-shadow:0 0 0 3px var(--accent-glow);
-}
-
-/* ── FORM SECTION ────────────────────────────────────── */
-.form-section{
-  border-width:1px;border-radius:9px;padding:12px 13px;margin-bottom:10px;
-}
-.form-section-title{
-  font-size:.65rem;font-weight:700;letter-spacing:.08em;
-  color:var(--text3);margin-bottom:9px;
-}
-[data-theme="dark"] .form-section{
-  background:rgba(255,255,255,.025);border-color:var(--border);
-}
-
-/* ── TOGGLE ROW ──────────────────────────────────────── */
-.tgl{
-  border-radius:9px;padding:10px 8px;font-size:.82rem;font-weight:600;border-width:1px;
-  background:var(--surface2);color:var(--text2);
-}
-.tgl.urgente.sel{background:var(--red-bg);border-color:rgba(192,53,42,.25);color:var(--red);}
-.tgl.media.sel{background:var(--blue-bg);border-color:rgba(38,96,164,.25);color:var(--blue);}
-.tgl.baja.sel,.tgl.normal.sel{background:var(--green-bg);border-color:rgba(30,122,80,.25);color:var(--green);}
-.tgl.pc.sel{background:var(--blue-bg);border-color:rgba(38,96,164,.25);color:var(--blue);}
-.tgl.comp.sel{background:var(--green-bg);border-color:rgba(30,122,80,.25);color:var(--green);}
-
-/* ── BUTTONS — tighter, more confident ───────────────── */
-.btn-primary{
-  border-radius:10px;padding:13px;font-size:.88rem;font-weight:700;
-  letter-spacing:-.01em;
-}
-[data-theme="dark"] .btn-primary{background:var(--accent);color:#0C0A07;}
-.btn-ghost{
-  border-radius:10px;padding:10px;font-size:.84rem;border-width:1px;
-  color:var(--text3);
-}
-.btn-ghost:hover{border-color:var(--border2);color:var(--text2);background:var(--surface2);}
-.btn-wsp{border-radius:10px;padding:12px;font-size:.88rem;}
-
-/* ── CALC PREVIEW ────────────────────────────────────── */
-.calc-preview{
-  border-width:1px;border-radius:9px;padding:10px 13px;
-}
-[data-theme="dark"] .calc-preview{
-  background:rgba(40,30,10,.7);
-  border-color:rgba(212,168,67,.25);
-}
-
-/* ── ITEM CARDS — refined spacing ────────────────────── */
-.item-card{
-  border-radius:11px;border-width:1px;
-  padding:12px 13px 12px 15px;margin-bottom:7px;
-  gap:10px;
-}
-.item-card::before{width:3px;}
-.item-icon{
-  width:34px;height:34px;border-radius:9px;font-size:1.1rem;border-width:1px;
-}
-.item-nom{font-size:.88rem;font-weight:700;letter-spacing:-.01em;}
-.item-sub{font-size:.65rem;margin-top:3px;gap:2px 5px;}
-.item-precio{font-size:.88rem;font-weight:700;font-family:var(--ffmono);}
-.ia-sm{border-radius:7px;padding:5px 7px;font-size:.65rem;border-width:1px;}
-.btn-comp-ahora{font-size:.65rem;padding:4px 10px;border-radius:20px;font-weight:700;}
-
-/* ── SWIPE WRAP ───────────────────────────────────────── */
-.swipe-wrap{border-radius:11px;margin-bottom:7px;}
-.swipe-wrap .item-card{border-radius:11px;margin-bottom:0;}
-
-/* ── SEARCH ──────────────────────────────────────────── */
-.search-input{
-  border-radius:9px;border-width:1px;font-size:.85rem;
-  padding:9px 13px 9px 34px;
-}
-.search-input:focus{
-  border-color:var(--accent);background:var(--surface);
-  box-shadow:0 0 0 3px rgba(200,155,56,.1);
-}
-
-/* ── FILTER BUTTONS ──────────────────────────────────── */
-.fbtn{
-  padding:6px 11px;font-size:.68rem;border-radius:20px;border-width:1px;font-weight:600;
-}
-.fbtn.active{background:var(--text);border-color:var(--text);color:var(--bg);}
-[data-theme="dark"] .fbtn.active{
-  background:var(--accent);border-color:var(--accent);color:#0C0A07;
-  box-shadow:0 2px 8px rgba(212,168,67,.25);
-}
-.fbtn-sec{
-  padding:5px 11px;font-size:.68rem;border-radius:20px;border-width:1px;font-weight:600;
-}
-.fbtn-sec.active{
-  background:var(--blue);border-color:var(--blue);color:#fff;
-  box-shadow:0 2px 6px rgba(38,96,164,.22);
-}
-
-/* ── SUBTABS (stats) — refined pill ──────────────────── */
-.subtabs{
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:10px;padding:3px;gap:2px;margin-bottom:14px;
-}
-.stab{
-  border-radius:8px;font-size:.65rem;font-weight:700;letter-spacing:.03em;
-  padding:7px 5px;
-}
-.stab.active{
-  background:var(--surface);color:var(--text);
-  box-shadow:0 1px 3px rgba(0,0,0,.1),0 0 0 1px var(--border);
-}
-[data-theme="dark"] .stab{background:transparent;color:var(--text3);}
-[data-theme="dark"] .stab.active{
-  background:var(--accent);color:#0C0A07;
-  box-shadow:0 2px 10px var(--accent-glow);
-}
-
-/* ── FILTER GROUP CARD ───────────────────────────────── */
-.filter-group{
-  border-radius:10px;border-width:1px;padding:12px 13px;margin-bottom:10px;
-  background:var(--surface2);
-}
-.filter-group-label{
-  font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
-  color:var(--text3);margin-bottom:7px;
-}
-.filter-group-divider{height:1px;background:var(--border);margin:8px 0;}
-
-/* ── KPI GRID — more impactful ───────────────────────── */
-.kpi-grid{grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:14px;}
-.kpi{
-  border-width:1px;border-radius:10px;
-  padding:11px 5px 10px;
-}
-.kpi strong{font-size:.95rem;font-weight:800;font-family:var(--ffmono);}
-.kpi span{font-size:.58rem;color:var(--text3);letter-spacing:.04em;}
-
-/* ── TOTALS GRID ─────────────────────────────────────── */
-.tot-grid{gap:6px;margin-bottom:12px;}
-.tot-box{
-  border-width:1px;border-radius:10px;padding:13px 10px 11px;
-}
-.tot-val{font-size:1.45rem;font-weight:800;font-family:var(--ffmono);}
-.tot-lab{font-size:.62rem;color:var(--text3);margin-top:4px;}
-[data-theme="dark"] .tot-val{color:var(--accent2);}
-[data-theme="dark"] .tot-box{background:var(--surface);border-color:var(--border);}
-
-/* ── STAT CARD ───────────────────────────────────────── */
-.stat-card{
-  border-width:1px;border-radius:11px;padding:14px 14px;margin-bottom:9px;
-}
-.stat-title{
-  font-size:.65rem;font-weight:700;letter-spacing:.09em;
-  color:var(--text3);margin-bottom:12px;
-}
-.stat-title::before{
-  width:2.5px;height:10px;border-radius:2px;background:var(--accent);
-}
-
-/* ── ARCH LIST / HISTORIAL ───────────────────────────── */
-.arch-list{border-width:1px;border-radius:10px;}
-.arch-item{padding:11px 13px;gap:10px;}
-
-/* ── COMPARISON GRID ─────────────────────────────────── */
-.comp-grid{gap:5px;}
-.comp-c{border-width:1px;border-radius:9px;padding:11px 6px;}
-.cc-g{font-size:.95rem;font-weight:800;font-family:var(--ffmono);}
-.cc-per{font-size:.62rem;font-weight:700;letter-spacing:.04em;}
-
-/* ── STAT ROWS ───────────────────────────────────────── */
-.sr{margin-bottom:7px;}
-.sr-n{font-size:.84rem;font-weight:600;}
-.sr-bg{width:56px;height:3px;}
-.sr-bar{height:3px;}
-[data-theme="dark"] .sr-bar{background:var(--accent);}
-
-/* ── GROUP HEADER ────────────────────────────────────── */
-.grupo-header{
-  border-radius:9px;border-width:1px;padding:9px 12px;
-  margin-bottom:6px;margin-top:12px;
-}
-.grupo-title{font-size:.75rem;gap:7px;letter-spacing:.02em;}
-.grupo-badge{
-  font-size:.62rem;padding:2px 7px;border-radius:20px;border-width:1px;
-}
-
-/* ── MIN/MAX ─────────────────────────────────────────── */
-.minmax{gap:6px;margin-bottom:9px;}
-.mm{border-width:1px;border-radius:9px;padding:10px 11px;}
-.mm-nom{font-size:.80rem;font-weight:600;}
-.mm-precio{font-size:.84rem;font-weight:800;font-family:var(--ffmono);}
-
-/* ── ADMIN PANEL ─────────────────────────────────────── */
-.admin-panel{
-  border-width:1.5px;border-radius:11px;padding:14px;margin-bottom:10px;
-}
-[data-theme="dark"] .admin-panel{
-  background:rgba(40,28,12,.6);border-color:rgba(212,168,67,.22);
-}
-.admin-title{font-size:.84rem;}
-
-/* ── MODAL ────────────────────────────────────────────── */
-.modal{border-radius:18px 18px 0 0;padding:24px 20px 34px;}
-.modal-handle{width:32px;height:3px;margin-bottom:18px;}
-.m-icon{font-size:2rem;margin-bottom:8px;}
-.m-title{font-size:.95rem;font-weight:800;margin-bottom:5px;}
-.m-msg{font-size:.84rem;line-height:1.6;margin-bottom:18px;}
-.mbtn{
-  border-radius:10px;padding:12px;font-size:.84rem;font-weight:600;
-}
-.mbtn.primary{background:var(--text);color:var(--bg);}
-[data-theme="dark"] .mbtn.primary{background:var(--accent);color:#0C0A07;}
-.mbtn.secondary{border-width:1px;}
-.mbtn.danger{border-width:1px;}
-[data-theme="dark"] .modal{
-  background:var(--surface);
-  border:1px solid var(--border);
-  box-shadow:0 24px 60px rgba(0,0,0,.7),0 4px 16px rgba(0,0,0,.4);
-}
-.modal-box{border-radius:18px 18px 0 0;padding:22px 18px 30px;}
-
-/* ── SUGGESTION BOX ─────────────────────────────────── */
-.sug-box{border-radius:0 0 9px 9px;}
-.sug-item{padding:9px 12px;font-size:.84rem;}
-.sug-tag{font-size:.62rem;border-radius:20px;padding:2px 6px;border-width:1px;}
-
-/* ── ONBOARDING ─────────────────────────────────────── */
-.ob-emblem{width:64px;height:64px;border-radius:17px;font-size:2rem;border-width:1.5px;}
-.ob-title{font-size:1.5rem;font-weight:800;letter-spacing:-.03em;}
-.ob-card{border-radius:14px;border-width:1px;}
-.ob-input{border-radius:9px;border-width:1px;font-size:.95rem;}
-.ob-btn{border-radius:10px;font-size:.92rem;}
-.ob-label{font-size:.70rem;letter-spacing:.05em;}
-
-/* ── SWIPE BACKGROUNDS ──────────────────────────────── */
-.swipe-bg{border-radius:11px;font-size:.84rem;}
-
-/* ── FAB ────────────────────────────────────────────── */
-.fab{
-  border-radius:26px;height:50px;
-  box-shadow:0 4px 18px rgba(200,155,56,.42),0 2px 8px rgba(0,0,0,.16);
-}
-.fab-label{font-size:.82rem;font-weight:800;}
-
-/* ── EMPTY STATE ────────────────────────────────────── */
-.empty-s{padding:28px 14px;}
-.empty-s .ei{font-size:2.2rem;}
-.empty-s .et{font-size:.84rem;}
-
-/* ── TOTAL HOY CARD ─────────────────────────────────── */
-#comp-total-dia{
-  border-left-width:3px;border-radius:11px;border-width:1px;
-  padding:12px 14px;margin-bottom:10px;
-}
-[data-theme="dark"] #comp-total-dia{
-  border-color:rgba(212,168,67,.18);
-}
-
-/* ── PDF BUTTON ─────────────────────────────────────── */
-.btn-pdf-full{
-  border-radius:10px;padding:10px;margin-bottom:9px;border-width:1.5px;
-}
-
-/* ── OVERLAY BACKDROP ───────────────────────────────── */
-[data-theme="dark"] .overlay{
-  background:rgba(6,5,3,.72);
-}
-
-/* ── SCROLLBAR ──────────────────────────────────────── */
-::-webkit-scrollbar{width:3px;}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-
-/* ── Subtle topbar active indicator fix ─────────────── */
-[data-theme="dark"] .stab.active{color:#0C0A07;}
-[data-theme="dark"] .lstab.active{color:#0C0A07;}
-[data-theme="dark"] .fbtn.active{color:#0C0A07;}
-
-/* ── Better filter chip in dark ─────────────────────── */
-[data-theme="dark"] .fbtn{
-  background:rgba(255,255,255,.04);border-color:var(--border);color:var(--text2);
-}
-[data-theme="dark"] .fbtn:hover{background:rgba(255,255,255,.07);}
-[data-theme="dark"] .filter-group{
-  background:rgba(255,255,255,.02);border-color:var(--border);
-}
-
-/* ── Stats subtabs scrollbar hidden ─────────────────── */
-.subtabs{scrollbar-width:none;}
-.subtabs::-webkit-scrollbar{display:none;}
-
-/* ── Historial filter group refinement ──────────────── */
-#pane-historial .filter-group,
-#pane-historial [style*="background:var(--surface2)"][style*="border:1.5px solid var(--border)"][style*="border-radius:var(--rmd)"]{
-  border-width:1px;border-radius:10px;
-}
-
-/* ── Compras hoy total card ──────────────────────────── */
-#comp-resumen-users{
-  margin-bottom:8px;
-}
-
-/* ── WhatsApp button ─────────────────────────────────── */
-.btn-copy{border-radius:9px;}
-.preview-c{border-radius:10px;border-width:1px;}
-.preview-txt{border-radius:8px;border-width:1px;font-size:.75rem;}
-
-/* ── Login screen polish ─────────────────────────────── */
-#screen-login{
-  background:linear-gradient(160deg,#141210 0%,#1E1809 100%) !important;
-}
-
-/* ── Section add variation ──────────────────────────── */
-.btn-add-var{border-radius:9px;border-width:1.5px;font-size:.82rem;}
-.variacion-item{border-radius:9px;border-width:1px;padding:10px 11px;margin-bottom:7px;}
-.btn-var-del{border-radius:6px;border-width:1px;padding:3px 6px;font-size:.72rem;}
-
-/* ── Reminder modal time input ──────────────────────── */
-#rem-time-wrap .input-f[type="time"]{border-radius:9px;border-width:1px;}
-
-/* ── Accesos modal ──────────────────────────────────── */
-#lista-accesos [style*="border-radius:10px"]{border-radius:9px;}
-
-/* ── Better visual hierarchy in stat cards ──────────── */
-.stat-title span[style*="display:inline-block"]{
-  width:2.5px;height:10px;
-}
-
-/* ── Refined sw (toggle switch) ─────────────────────── */
-.sw{width:40px;height:23px;}
-.sw-slider{border-radius:12px;}
-.sw-slider:before{width:17px;height:17px;}
-.sw input:checked+.sw-slider:before{transform:translateX(17px);}
-
-/* ── Totals in comp hoy text ─────────────────────────── */
-#comp-total-val{font-family:var(--ffmono);letter-spacing:-.02em;}
-
-/* ── Better link between modal handle and title ──────── */
-.m-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.m-close{
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:8px;width:30px;height:30px;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:.85rem;color:var(--text3);
-  transition:var(--transition);
-}
-.m-close:hover{background:var(--surface3);color:var(--text);}
-[data-theme="dark"] .m-close{
-  background:rgba(255,255,255,.05);border-color:var(--border);
-}
 </style>
 </head>
 <body>
 
 <!-- PANTALLA LOGIN -->
-<div id="screen-login" style="display:none;position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,#141210 0%,#1E1809 100%);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;font-family:'Plus Jakarta Sans',sans-serif;">
-  <div style="width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:0;">
-    <div style="font-size:56px;margin-bottom:10px;filter:drop-shadow(0 4px 20px rgba(200,155,56,0.35));">🧃</div>
-    <div style="font-size:26px;font-weight:800;color:#C89B38;letter-spacing:-.5px;margin-bottom:3px;">Zumix <span style="color:#EDE7D0;font-weight:400;">Stock</span></div>
-    <div style="font-size:.65rem;color:#5A5448;margin-bottom:38px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;">Control de Compras</div>
-    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(200,155,56,0.18);border-radius:16px;padding:26px 22px;width:100%;text-align:center;backdrop-filter:blur(10px);">
-      <div style="font-size:.84rem;color:#A89878;margin-bottom:20px;line-height:1.65;">Inicia sesión para acceder<br>al sistema de gestión</div>
-      <button id="btn-google-login" onclick="loginConGoogle()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#18160F;border:none;border-radius:11px;padding:13px 20px;font-size:.88rem;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;transition:all .2s;box-shadow:0 2px 12px rgba(0,0,0,0.35);">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px;">
+<div id="screen-login" style="display:none;position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,#1a1a1a 0%,#2a2108 100%);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;font-family:'Sora',sans-serif;">
+  <div style="width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:0;">
+    <!-- Logo -->
+    <div style="font-size:64px;margin-bottom:8px;filter:drop-shadow(0 4px 16px rgba(212,168,67,0.4));">🧃</div>
+    <div style="font-size:28px;font-weight:800;color:#D4A843;letter-spacing:-0.5px;margin-bottom:4px;">Zumix <span style="color:#fff;font-weight:400;">Stock</span></div>
+    <div style="font-size:.78rem;color:#888;margin-bottom:40px;letter-spacing:.5px;">CONTROL DE COMPRAS</div>
+    <!-- Card -->
+    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(212,168,67,0.2);border-radius:20px;padding:28px 24px;width:100%;text-align:center;">
+      <div style="font-size:.88rem;color:#ccc;margin-bottom:20px;line-height:1.6;">Inicia sesión para acceder<br>al sistema de gestión</div>
+      <button id="btn-google-login" onclick="loginConGoogle()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1a1a1a;border:none;border-radius:12px;padding:14px 20px;font-size:.92rem;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer;transition:all .2s;box-shadow:0 2px 12px rgba(0,0,0,0.3);">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;">
         Continuar con Google
       </button>
-      <div style="font-size:.66rem;color:#4A4438;margin-top:14px;line-height:1.6;">Solo cuentas autorizadas pueden acceder</div>
+      <div style="font-size:.70rem;color:#555;margin-top:16px;line-height:1.5;">Solo cuentas autorizadas<br>pueden acceder</div>
     </div>
-    <div id="login-error" style="display:none;font-size:.72rem;color:#ff6b6b;margin-top:14px;text-align:center;background:rgba(255,50,50,0.08);border-radius:10px;padding:9px 14px;max-width:340px;border:1px solid rgba(255,50,50,.15);"></div>
-    <div style="font-size:.62rem;color:#3A3430;margin-top:16px;">Zumix Stock · Uso interno</div>
+    <div id="login-error" style="display:none;font-size:.75rem;color:#ff6b6b;margin-top:16px;text-align:center;background:rgba(255,50,50,0.1);border-radius:10px;padding:10px 14px;max-width:360px;"></div>
+    <div style="font-size:.65rem;color:#444;margin-top:16px;">Zumix Stock · Uso interno</div>
   </div>
 </div>
 
@@ -2109,9 +1625,9 @@ body{
         <div class="brand-title">Zumix <span>Stock</span></div>
         <div class="brand-user-row">
           <span class="brand-user" id="brand-user">—</span>
-          <button class="brand-edit-btn" onclick="pedirEditEmp()" title="Editar nombre">✏️</button>
-          <button id="btn-logout" onclick="cerrarSesion()" title="Cerrar sesión" style="display:none;background:none;border:none;cursor:pointer;font-size:.62rem;color:var(--text3);padding:1px 5px;border-radius:5px;opacity:.6;">🚪</button>
-          <button id="btn-gestionar-accesos" onclick="abrirGestionAccesos()" title="Gestionar accesos" style="display:none;background:none;border:none;cursor:pointer;font-size:.62rem;color:var(--text3);padding:1px 5px;border-radius:5px;opacity:.6;">🔐</button>
+          <button class="brand-edit-btn" onclick="pedirEditEmp()">✏️</button>
+          <button id="btn-logout" onclick="cerrarSesion()" title="Cerrar sesión" style="display:none;background:none;border:none;cursor:pointer;font-size:.75rem;color:#888;padding:2px 6px;border-radius:6px;">🚪</button>
+          <button id="btn-gestionar-accesos" onclick="abrirGestionAccesos()" title="Gestionar accesos" style="display:none;background:none;border:none;cursor:pointer;font-size:.75rem;color:#888;padding:2px 6px;border-radius:6px;">🔐</button>
         </div>
       </div>
     </div>
