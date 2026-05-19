@@ -182,7 +182,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 .topbar{
   background:var(--surface);border-bottom:1.5px solid var(--border);
   padding:12px 16px;position:sticky;top:0;z-index:100;
-  transition:background .25s,border-color .25s;
+  position:relative; /* para menú desplegable */
 }
 [data-theme="dark"] .topbar{
   background:rgba(26,23,16,.92);
@@ -191,6 +191,10 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
   -webkit-backdrop-filter:blur(16px);
 }
 .topbar-head{display:flex;align-items:center;justify-content:space-between;}
+
+/* Menú perfil */
+#perfil-menu button:hover{background:var(--surface2);}
+#perfil-menu button:active{background:var(--surface3);}
 .brand-row{display:flex;align-items:center;gap:10px;}
 .brand-emblem{
   width:34px;height:34px;background:var(--accent-bg);border:1.5px solid var(--accent);
@@ -748,15 +752,15 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 .ia-sm:hover{background:var(--surface2);color:var(--text2);}
 .ia-sm.del:hover{background:var(--red-bg);border-color:rgba(197,56,42,.3);color:var(--red);}
 
-/* ── Marcar comprado — compacto ── */
+/* ── Marcar comprado — ícono compacto ── */
 .btn-comp-ahora{
-  font-size:var(--fs-xs);font-weight:700;color:var(--green);
+  font-size:1rem;font-weight:700;color:var(--green);
   background:transparent;border:1px solid rgba(45,139,94,.35);
-  border-radius:7px;padding:4px 8px;cursor:pointer;white-space:nowrap;
-  transition:background .15s,transform .1s;
+  border-radius:8px;padding:5px 8px;cursor:pointer;
+  transition:background .15s,transform .1s;line-height:1;
 }
 .btn-comp-ahora:hover{background:var(--green-bg);}
-.btn-comp-ahora:active{transform:scale(.93);}
+.btn-comp-ahora:active{transform:scale(.88);}
 .tot-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
 .tot-box{
   background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);
@@ -1862,32 +1866,38 @@ details summary::-webkit-details-marker{display:none;}
         <div class="brand-title">Zumix <span>Stock</span></div>
         <div class="brand-user-row">
           <span class="brand-user" id="brand-user">—</span>
-          <button class="brand-edit-btn" onclick="pedirEditEmp()">✏️</button>
-          <button id="btn-logout" onclick="cerrarSesion()" title="Cerrar sesión" style="display:none;background:none;border:none;cursor:pointer;font-size:.75rem;color:#888;padding:2px 6px;border-radius:6px;">🚪</button>
-          <button id="btn-gestionar-accesos" onclick="abrirGestionAccesos()" title="Gestionar accesos" style="display:none;background:none;border:none;cursor:pointer;font-size:.75rem;color:#888;padding:2px 6px;border-radius:6px;">🔐</button>
+          <!-- Menú perfil: agrupa lápiz, puerta, candado en un solo botón -->
+          <button class="brand-edit-btn" id="btn-perfil-menu" onclick="togglePerfilMenu()" title="Mi perfil y configuración">⚙️</button>
         </div>
       </div>
     </div>
     <div class="topbar-right">
       <div class="conn-badge load" id="conn-badge">Conectando…</div>
-      <div class="icon-btn" onclick="openReminder()" title="Recordatorio">⏰</div>
-      <div class="icon-btn" onclick="toggleTheme()" id="theme-btn">🌙</div>
+      <div class="icon-btn" onclick="openReminder()" title="Configurar recordatorio diario">⏰</div>
+      <div class="icon-btn" onclick="toggleTheme()" id="theme-btn" title="Cambiar tema claro/oscuro">🌙</div>
     </div>
+  </div>
+  <!-- Menú perfil desplegable -->
+  <div id="perfil-menu" style="display:none;position:absolute;top:100%;right:14px;z-index:300;
+    background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);
+    box-shadow:var(--shmd);min-width:180px;overflow:hidden;">
+    <button onclick="pedirEditEmp();togglePerfilMenu()" style="width:100%;padding:11px 14px;text-align:left;background:none;border:none;border-bottom:1px solid var(--border);font-family:var(--ff);font-size:var(--fs-sm);color:var(--text);cursor:pointer;display:flex;align-items:center;gap:9px;">✏️ Cambiar mi nombre</button>
+    <button id="btn-gestionar-accesos" onclick="abrirGestionAccesos();togglePerfilMenu()" style="display:none;width:100%;padding:11px 14px;text-align:left;background:none;border:none;border-bottom:1px solid var(--border);font-family:var(--ff);font-size:var(--fs-sm);color:var(--text);cursor:pointer;display:flex;align-items:center;gap:9px;">🔐 Gestionar accesos</button>
+    <button id="btn-logout" onclick="cerrarSesion()" style="display:none;width:100%;padding:11px 14px;text-align:left;background:none;border:none;font-family:var(--ff);font-size:var(--fs-sm);color:var(--red);cursor:pointer;display:flex;align-items:center;gap:9px;">🚪 Cerrar sesión</button>
   </div>
 </div>
 
 <!-- PANE LISTA -->
 <div class="pane active" id="pane-lista">
   <div class="lista-subtabs">
-    <div class="lstab active" id="lstab-reg" onclick="switchLista('reg')">
-      <span class="lstab-icon">📝</span><span class="lstab-txt">Registrar</span>
-    </div>
     <div class="lstab" id="lstab-pend" onclick="switchLista('pend')">
-      <span class="lstab-icon">🛒</span><span class="lstab-txt">Pendientes</span>
+      <span class="lstab-icon">🛒</span>
+      <span class="lstab-txt">Pendientes</span>
       <span class="lstab-badge" id="badge-pend-tab" style="display:none">0</span>
     </div>
     <div class="lstab" id="lstab-comp" onclick="switchLista('comp')">
-      <span class="lstab-icon">✅</span><span class="lstab-txt">Comprados hoy</span>
+      <span class="lstab-icon">✅</span>
+      <span class="lstab-txt">Comprados hoy</span>
       <span class="lstab-badge green" id="badge-comp-tab" style="display:none">0</span>
     </div>
   </div>
@@ -3184,6 +3194,25 @@ window.fabRegistrar=function(){
   },120);
 };
 
+// TOGGLE PERFIL MENU
+window.togglePerfilMenu=function(){
+  const m=document.getElementById('perfil-menu');
+  if(!m)return;
+  const open=m.style.display==='none'||!m.style.display;
+  m.style.display=open?'block':'none';
+  // cerrar al click afuera
+  if(open){
+    setTimeout(()=>{
+      document.addEventListener('click',function _c(e){
+        if(!m.contains(e.target)&&!document.getElementById('btn-perfil-menu').contains(e.target)){
+          m.style.display='none';
+        }
+        document.removeEventListener('click',_c);
+      });
+    },0);
+  }
+};
+
 // TOGGLE HISTORIAL FILTERS PANEL
 window.toggleHistFilters=function(btn){
   const panel=document.getElementById('hist-filters-panel');
@@ -3258,13 +3287,17 @@ window.switchST=function(t){
 };
 let _skipLimpiarForm=false;
 window.switchLista=function(t){
-  ['reg','pend','comp'].forEach(id=>{document.getElementById(`lstab-${id}`).classList.toggle('active',id===t);document.getElementById(`lsp-${id}`).classList.toggle('active',id===t);});
-  // Limpiar formulario al volver a Registrar si no hay edición activa y no hay flag de skip
+  // lstab-reg ya no existe como tab visual — el formulario sigue existiendo como lsp-reg
+  ['reg','pend','comp'].forEach(id=>{
+    const tab=document.getElementById(`lstab-${id}`);
+    if(tab)tab.classList.toggle('active',id===t);
+    const pane=document.getElementById(`lsp-${id}`);
+    if(pane)pane.classList.toggle('active',id===t);
+  });
   if(t==='reg'&&!editKey&&!_skipLimpiarForm){limpiarForm();}
   _skipLimpiarForm=false;
-  // Cerrar previews de WhatsApp al cambiar de subtab
-  if(t!=='pend'){document.getElementById('prev-pend').classList.remove('show');}
-  if(t!=='comp'){document.getElementById('prev-comp').classList.remove('show');}
+  if(t!=='pend'){const pp=document.getElementById('prev-pend');if(pp)pp.classList.remove('show');}
+  if(t!=='comp'){const pc=document.getElementById('prev-comp');if(pc)pc.classList.remove('show');}
   if(t==='pend'||t==='comp'){ultimoKey=null;renderLista();}
   _updateFab();
 };
@@ -4056,10 +4089,12 @@ function mkCard(item,opts={}){
   // super_admin + admin_supremo : supervisión — ven y editan todo
   const _esSoloSuyos=(_rolMkCard==='usuario'||_rolMkCard==='admin');
   const _puedeEditarEsteComp=!_esSoloSuyos||_esPropiaMk;
-  const actions=esComp
-    ?(_puedeEditarEsteComp?`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>`:'')
-    :`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>${_puedeElim?`<button class="ia-sm del" onclick="eliminarItem('${item.fbKey}')" title="Eliminar">🗑</button>`:''}`;
-  const derecha=esComp?`<span class="item-precio">${precioStr}</span>`:`<button class="btn-comp-ahora" onclick="cambiarAComprado('${item.fbKey}')">☐ Marcar comprado</button>`;
+  // Acciones: ocultas en la card — el swipe las expone
+  // Solo mantenemos "Marcar comprado" como acción principal visible en pendientes
+  const actions=''; // editar/eliminar solo por swipe
+  const derecha=esComp
+    ?`<span class="item-precio">${precioStr}</span>`
+    :`<button class="btn-comp-ahora" onclick="cambiarAComprado('${item.fbKey}')" title="Marcar como comprado">☑</button>`;
   // quién compró: usuario+admin solo ven el suyo; super_admin+admin_supremo ven todos
   const _miNombre=(window._nombreActual||'').toUpperCase().trim();
   const _esPropio=(item.quien||'').toUpperCase().trim()===_miNombre;
