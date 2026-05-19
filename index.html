@@ -13,45 +13,45 @@
 <meta name="apple-mobile-web-app-title" content="Zumix Stock">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ─── DESIGN TOKENS ─────────────────────────────────── */
 :root{
-  --bg:#F7F6F2;
+  --bg:#F5F4F0;
   --surface:#FFFFFF;
-  --surface2:#F2F1EC;
-  --surface3:#ECEAE3;
-  --border:#E4E1D8;
-  --border2:#D0CCBF;
-  --text:#18160F;
-  --text2:#62605A;
-  --text3:#9E9B93;
-  --accent:#C89B38;
-  --accent2:#A67E22;
-  --accent-bg:#FAF3E0;
-  --green:#1E7A50;
-  --green-bg:#EAF5F0;
-  --red:#C0352A;
+  --surface2:#F0EFE9;
+  --surface3:#E8E6DF;
+  --border:#E2DFD5;
+  --border2:#D4D0C4;
+  --text:#1A1814;
+  --text2:#6B6760;
+  --text3:#A09C94;
+  --accent:#D4A843;
+  --accent2:#B8902F;
+  --accent-bg:#FBF4E3;
+  --green:#2D8B5E;
+  --green-bg:#EBF7F1;
+  --red:#C5382A;
   --red-bg:#FDF0EE;
-  --orange:#B8700E;
-  --orange-bg:#FDF4E7;
-  --blue:#2660A4;
-  --blue-bg:#EAF1FB;
-  --r:12px;
-  --rsm:8px;
-  --rmd:10px;
-  --sh:0 1px 3px rgba(24,22,15,.06),0 0 0 1px rgba(24,22,15,.05);
-  --shmd:0 4px 14px rgba(24,22,15,.09),0 1px 3px rgba(24,22,15,.05);
-  --shlg:0 12px 36px rgba(24,22,15,.14),0 2px 8px rgba(24,22,15,.07);
-  --ff:'Plus Jakarta Sans',sans-serif;
-  --ffmono:'JetBrains Mono',monospace;
-  --transition:all .18s cubic-bezier(.4,0,.2,1);
+  --orange:#C07A1A;
+  --orange-bg:#FDF5E8;
+  --blue:#2B6CB0;
+  --blue-bg:#EBF4FF;
+  --r:14px;
+  --rsm:9px;
+  --rmd:11px;
+  --sh:0 1px 4px rgba(26,24,20,.07),0 0 0 1px rgba(26,24,20,.04);
+  --shmd:0 4px 16px rgba(26,24,20,.1),0 1px 4px rgba(26,24,20,.06);
+  --shlg:0 12px 40px rgba(26,24,20,.15),0 2px 8px rgba(26,24,20,.08);
+  --ff:'Sora',sans-serif;
+  --ffmono:'DM Mono',monospace;
+  --transition:all .2s cubic-bezier(.4,0,.2,1);
   /* ─── TYPE SCALE ──────────────────────────── */
-  --fs-xs:  .70rem;
-  --fs-sm:  .80rem;
-  --fs-md:  .88rem;
-  --fs-lg:  1rem;
-  --fs-xl:  1.6rem;
+  --fs-xs:  .68rem;   /* metadata, badges, timestamps, hints  */
+  --fs-sm:  .78rem;   /* labels, captions, sub-info           */
+  --fs-md:  .88rem;   /* body, inputs, list items             */
+  --fs-lg:  1rem;     /* titles, primary actions              */
+  --fs-xl:  1.6rem;   /* hero numbers, onboarding title       */
   /* ─── SPACE SCALE ────────────────────────── */
   --sp-1: 4px;
   --sp-2: 8px;
@@ -61,30 +61,36 @@
   --sp-6: 32px;
 }
 [data-theme="dark"]{
-  --bg:#0C0A07;
-  --surface:#171410;
-  --surface2:#201D17;
-  --surface3:#29261E;
-  --border:#343028;
-  --border2:#4A4638;
-  --text:#EDE7D0;
-  --text2:#A89878;
-  --text3:#6A6254;
-  --accent:#D4A843;
-  --accent2:#ECC060;
-  --accent-bg:#271F0C;
-  --accent-glow:rgba(212,168,67,.16);
-  --green:#3DB87A;
-  --green-bg:#0B201A;
-  --red:#E05040;
-  --red-bg:#280C0A;
-  --orange:#D48A28;
-  --orange-bg:#281808;
-  --blue:#4E8ED4;
-  --blue-bg:#0A1C30;
-  --sh:0 1px 3px rgba(0,0,0,.5),0 0 0 1px rgba(255,240,200,.03);
-  --shmd:0 4px 18px rgba(0,0,0,.55),0 1px 4px rgba(0,0,0,.3);
-  --shlg:0 16px 48px rgba(0,0,0,.65),0 4px 12px rgba(0,0,0,.4);
+  /* ── Fondos: espresso cálido, no negro frío ── */
+  --bg:#0E0C08;
+  --surface:#1A1710;
+  --surface2:#22201A;
+  --surface3:#2C2920;
+  /* ── Bordes: más visibles, dorado sutil ── */
+  --border:#3A3528;
+  --border2:#504A38;
+  /* ── Texto: crema cálida con degradé legible ── */
+  --text:#F0EAD2;
+  --text2:#A89880;
+  --text3:#6E6454;
+  /* ── Acento: dorado más vivo en oscuro ── */
+  --accent:#E0B84A;
+  --accent2:#F0CC6A;
+  --accent-bg:#2C2210;
+  --accent-glow:rgba(224,184,74,.18);
+  /* ── Semánticos: más saturados sobre negro ── */
+  --green:#44BE84;
+  --green-bg:#0D2218;
+  --red:#E85848;
+  --red-bg:#2A0C0A;
+  --orange:#E09430;
+  --orange-bg:#2A1C08;
+  --blue:#5898D8;
+  --blue-bg:#0C1E30;
+  /* ── Sombras: cálidas con tono ámbar sutil ── */
+  --sh:0 1px 3px rgba(0,0,0,.45),0 0 0 1px rgba(255,240,200,.04);
+  --shmd:0 4px 20px rgba(0,0,0,.55),0 1px 4px rgba(0,0,0,.3),0 0 0 1px rgba(255,240,200,.03);
+  --shlg:0 16px 48px rgba(0,0,0,.65),0 4px 12px rgba(0,0,0,.4),0 0 0 1px rgba(255,240,200,.03);
 }
 
 /* ─── RESET ─────────────────────────────────────────── */
@@ -176,7 +182,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 .topbar{
   background:var(--surface);border-bottom:1.5px solid var(--border);
   padding:12px 16px;position:sticky;top:0;z-index:100;
-  transition:background .25s,border-color .25s;
+  position:relative; /* para menú desplegable */
 }
 [data-theme="dark"] .topbar{
   background:rgba(26,23,16,.92);
@@ -185,6 +191,10 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
   -webkit-backdrop-filter:blur(16px);
 }
 .topbar-head{display:flex;align-items:center;justify-content:space-between;}
+
+/* Menú perfil */
+#perfil-menu button:hover{background:var(--surface2);}
+#perfil-menu button:active{background:var(--surface3);}
 .brand-row{display:flex;align-items:center;gap:10px;}
 .brand-emblem{
   width:34px;height:34px;background:var(--accent-bg);border:1.5px solid var(--accent);
@@ -603,29 +613,154 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 .empty-s .ei{font-size:2.4rem;margin-bottom:8px;}
 .empty-s .et{font-size:var(--fs-md);font-weight:500;}
 
-/* ─── GROUP HEADER ───────────────────────────────────── */
+/* ─── URGENCY BAR (reemplaza tot-box en pendientes) ─── */
+.urg-bar{
+  display:flex;gap:6px;margin-bottom:10px;
+}
+.urg-chip{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:5px;
+  padding:7px 6px;border-radius:var(--rmd);cursor:pointer;
+  border:1.5px solid transparent;
+  transition:background .15s,border-color .15s,transform .1s;
+  user-select:none;-webkit-tap-highlight-color:transparent;
+}
+.urg-chip:active{transform:scale(.95);}
+.urg-chip.u-alta{background:rgba(197,56,42,.1);border-color:rgba(197,56,42,.2);}
+.urg-chip.u-media{background:rgba(77,144,208,.1);border-color:rgba(77,144,208,.2);}
+.urg-chip.u-baja{background:rgba(45,139,94,.1);border-color:rgba(45,139,94,.2);}
+.urg-chip.active.u-alta{background:var(--red);border-color:var(--red);}
+.urg-chip.active.u-media{background:var(--blue);border-color:var(--blue);}
+.urg-chip.active.u-baja{background:var(--green);border-color:var(--green);}
+.urg-chip.active .urg-num,.urg-chip.active .urg-lbl{color:#fff!important;}
+.urg-num{
+  font-size:1.05rem;font-weight:800;font-family:var(--ffmono);
+  letter-spacing:-.03em;line-height:1;
+}
+.urg-chip.u-alta .urg-num{color:var(--red);}
+.urg-chip.u-media .urg-num{color:var(--blue);}
+.urg-chip.u-baja .urg-num{color:var(--green);}
+.urg-lbl{
+  font-size:.6rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--text3);
+}
+
+/* ─── GRUPO HEADER — como separador de sección ──────── */
 .grupo-header{
   display:flex;align-items:center;justify-content:space-between;
-  padding:10px 13px;background:var(--surface2);border:1.5px solid var(--border);
-  border-radius:var(--rmd);margin-bottom:7px;margin-top:14px;
-  cursor:pointer;user-select:none;transition:background .15s;
+  padding:5px 2px;background:transparent;border:none;
+  border-bottom:1px solid var(--border);
+  border-radius:0;margin-bottom:8px;margin-top:16px;
+  cursor:pointer;user-select:none;transition:opacity .15s;
 }
-.grupo-header:hover{background:var(--surface3);}
-.grupo-header:active{background:var(--surface3);}
-.grupo-header:first-child{margin-top:0;}
+.grupo-header:hover{opacity:.8;}
+.grupo-header:active{opacity:.7;}
+.grupo-header:first-child{margin-top:4px;}
 .grupo-title{
-  font-size:var(--fs-sm);font-weight:700;color:var(--text2);
-  display:flex;align-items:center;gap:8px;letter-spacing:.02em;text-transform:uppercase;
+  font-size:var(--fs-xs);font-weight:700;color:var(--text3);
+  display:flex;align-items:center;gap:6px;
+  letter-spacing:.07em;text-transform:uppercase;
 }
 .grupo-badge{
-  font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;
-  background:var(--surface);border:1.5px solid var(--border);color:var(--text3);
+  font-size:var(--fs-xs);font-weight:700;padding:1px 7px;border-radius:20px;
+  background:var(--surface2);border:1px solid var(--border);color:var(--text3);
   font-family:var(--ffmono);
 }
-.grupo-arrow{font-size:var(--fs-xs);color:var(--text3);transition:transform .22s cubic-bezier(.34,1.2,.64,1);}
+.grupo-arrow{
+  font-size:.6rem;color:var(--text3);
+  transition:transform .22s cubic-bezier(.34,1.2,.64,1);
+}
 .grupo-arrow.open{transform:rotate(180deg);}
 
-/* ─── TOTALS GRID ────────────────────────────────────── */
+/* ─── ITEM CARD — más compacta ───────────────────────── */
+.item-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--rmd);
+  padding:10px 12px 10px 14px;margin-bottom:6px;
+  display:flex;align-items:center;gap:10px;
+  box-shadow:none;
+  transition:background .18s,transform .15s;
+  animation:cardStagger .22s ease-out both;
+  position:relative;overflow:hidden;cursor:default;
+}
+.item-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--border2);transition:background .2s;
+}
+.item-card.urgente::before,.item-card.alta::before{background:var(--red);}
+.item-card.media::before{background:var(--blue);}
+.item-card.baja::before,.item-card.normal::before{background:var(--green);}
+.item-card.comp-hoy::before{background:var(--green);opacity:.4;}
+.item-card.comp-hoy.alta::before,.item-card.comp-hoy.urgente::before{background:var(--red);opacity:.4;}
+.item-card.comp-hoy.media::before{background:var(--blue);opacity:.4;}
+.item-card.urgente,.item-card.alta,
+.item-card.normal,.item-card.media,.item-card.baja{border-left:none;}
+.item-card:active{transform:scale(.99);}
+.item-card.comp-hoy{background:var(--surface);border-color:var(--border);}
+.item-card.comp-hoy .item-precio{color:var(--text3);}
+.item-card.urgente,.item-card.alta{background:var(--surface);}
+.item-card.nuevo{
+  border-color:var(--accent);
+  box-shadow:0 0 0 2px rgba(212,168,67,.12);
+}
+.item-card.highlight-pulse{animation:hpulse 2s ease-out;}
+@keyframes hpulse{
+  0%,100%{box-shadow:none;}
+  30%,60%{box-shadow:0 0 0 3px rgba(212,168,67,.35);}
+}
+
+/* ── Icon — más pequeño ── */
+.item-icon{
+  font-size:1.1rem;flex-shrink:0;
+  width:32px;height:32px;border-radius:9px;
+  background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  transition:background .2s;
+}
+.item-card.comp-hoy .item-icon{filter:grayscale(.4);}
+.item-card.urgente .item-icon,.item-card.alta .item-icon{
+  background:rgba(197,56,42,.08);border-color:rgba(197,56,42,.15);
+}
+
+/* ── Body ── */
+.item-body{flex:1;min-width:0;}
+.item-nom{
+  font-size:var(--fs-md);font-weight:700;color:var(--text);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  letter-spacing:-.01em;line-height:1.2;
+}
+.item-card.comp-hoy .item-nom{text-decoration:line-through;color:var(--text3);}
+.item-sub{
+  font-size:var(--fs-xs);color:var(--text2);margin-top:3px;
+  display:flex;flex-wrap:wrap;align-items:center;gap:2px 5px;
+  font-family:var(--ffmono);line-height:1.4;opacity:.8;
+}
+.item-sub span{display:flex;align-items:center;gap:2px;}
+
+/* ── Right side — compacto ── */
+.item-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
+.item-precio{
+  font-size:var(--fs-sm);font-weight:800;color:var(--text);
+  font-family:var(--ffmono);letter-spacing:-.02em;
+}
+.item-actions{display:flex;gap:4px;}
+.ia-sm{
+  background:transparent;border:1px solid var(--border);border-radius:7px;
+  padding:4px 7px;font-size:var(--fs-xs);cursor:pointer;color:var(--text3);
+  transition:background .15s,border-color .15s,color .15s,transform .1s;
+  line-height:1;
+}
+.ia-sm:active{transform:scale(.88);}
+.ia-sm:hover{background:var(--surface2);color:var(--text2);}
+.ia-sm.del:hover{background:var(--red-bg);border-color:rgba(197,56,42,.3);color:var(--red);}
+
+/* ── Marcar comprado — ícono compacto ── */
+.btn-comp-ahora{
+  font-size:1rem;font-weight:700;color:var(--green);
+  background:transparent;border:1px solid rgba(45,139,94,.35);
+  border-radius:8px;padding:5px 8px;cursor:pointer;
+  transition:background .15s,transform .1s;line-height:1;
+}
+.btn-comp-ahora:hover{background:var(--green-bg);}
+.btn-comp-ahora:active{transform:scale(.88);}
 .tot-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
 .tot-box{
   background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);
@@ -930,6 +1065,120 @@ details summary::-webkit-details-marker{display:none;}
 .ds-bar-wrap:hover .ds-bar{filter:brightness(1.15);}
 .ds-bar-wrap:active{transform:scaleY(.97);}
 .sr.ds-open{background:var(--surface2);border-radius:var(--rsm);}
+
+/* ─── KPI MINI (historial compact) ──────────────────── */
+.kpi-mini-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:5px;margin-bottom:8px;
+}
+.kpi-mini{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--rmd);padding:7px 4px;text-align:center;
+}
+.kpi-mini strong{
+  display:block;font-size:.9rem;font-weight:800;
+  color:var(--text);font-family:var(--ffmono);line-height:1;
+}
+.kpi-mini span{
+  font-size:.58rem;color:var(--text3);text-transform:uppercase;
+  letter-spacing:.04em;font-weight:700;margin-top:2px;display:block;
+}
+
+/* ─── ACCIONES HISTORIAL (fila compacta) ─────────────── */
+.hist-actions-row{
+  display:flex;gap:6px;margin-bottom:10px;align-items:center;
+}
+.hist-action-btn{
+  flex:1;padding:8px 6px;
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:var(--rmd);
+  font-family:var(--ff);font-size:var(--fs-xs);font-weight:700;
+  color:var(--text2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  transition:background .15s,border-color .15s;
+  white-space:nowrap;
+}
+.hist-action-btn:active{transform:scale(.97);}
+.hist-action-btn.green{color:var(--green);border-color:rgba(45,139,94,.4);}
+.hist-action-btn.green:hover{background:var(--green-bg);}
+.hist-action-btn.filter{position:relative;}
+.hist-action-btn.filter .dot{
+  position:absolute;top:4px;right:4px;
+  width:6px;height:6px;border-radius:50%;
+  background:var(--accent);border:1.5px solid var(--surface);
+  display:none;
+}
+
+/* ─── ACCORDION FILTROS ──────────────────────────────── */
+.accordion-header{
+  display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.accordion-arrow{
+  font-size:.65rem;color:var(--text3);
+  transition:transform .2s cubic-bezier(.34,1.2,.64,1);
+}
+.accordion-body{
+  overflow:hidden;
+  max-height:0;
+  transition:max-height .28s cubic-bezier(.4,0,.2,1),
+             opacity .22s ease-out,
+             margin-top .2s;
+  opacity:0;margin-top:0;
+}
+.accordion-body.open{
+  max-height:600px;opacity:1;margin-top:8px;
+}
+.accordion-header.open .accordion-arrow{transform:rotate(180deg);}
+
+/* ─── STATS FILTER INLINE (compacto) ────────────────── */
+.stats-filter-inline{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:var(--rmd);
+  padding:8px 10px;
+  margin-bottom:8px;
+}
+.stats-filter-row{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.stats-filter-label{
+  font-size:var(--fs-xs);font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;
+  min-width:44px;
+}
+
+/* ─── PERIODOS INFO INLINE ───────────────────────────── */
+.per-info-inline{
+  font-size:var(--fs-xs);color:var(--text3);
+  padding:5px 10px;margin-bottom:6px;
+  border-left:2px solid var(--border2);
+}
+
+/* ─── STAT CARD COMPACT ──────────────────────────────── */
+.stat-card-compact{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--rmd);padding:11px 12px;margin-bottom:8px;
+  box-shadow:var(--sh);
+}
+.stat-title-compact{
+  font-size:var(--fs-xs);font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--text3);margin-bottom:8px;
+  display:flex;align-items:center;gap:5px;
+}
+.stat-title-compact::before{
+  content:'';display:inline-block;width:2px;height:10px;
+  background:var(--accent);border-radius:2px;flex-shrink:0;
+}
+
+/* ─── COMPARAR COMPACT ───────────────────────────────── */
+.cmp-section{margin-bottom:12px;}
+.cmp-section-label{
+  font-size:var(--fs-xs);font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;
+}
 
 /* ─── STAT CARD ──────────────────────────────────────── */
 .stat-card{
@@ -1299,12 +1548,10 @@ details summary::-webkit-details-marker{display:none;}
 
 /* ── Group headers ── */
 [data-theme="dark"] .grupo-header{
-  background:rgba(255,255,255,.03);
-  border-color:var(--border);
+  border-bottom-color:var(--border);
+  background:transparent;
 }
-[data-theme="dark"] .grupo-header:hover{
-  background:rgba(255,255,255,.05);
-}
+[data-theme="dark"] .grupo-header:hover{opacity:.75;}
 
 /* ── Subtabs (lista) ── */
 [data-theme="dark"] .lstab{
@@ -1416,518 +1663,28 @@ details summary::-webkit-details-marker{display:none;}
   background:rgba(255,255,255,.03);
   border-color:var(--border);
 }
-
-/* ═══════════════════════════════════════════════════════
-   ██████████  ZUMIX STOCK — UI REDESIGN LAYER  ████████
-   Refined spatial system · Tighter typographic hierarchy
-   Cleaner surfaces · Reduced cognitive noise
-   ══════════════════════════════════════════════════════ */
-
-/* ── Body & App shell ─────────────────────────────────── */
-body{
-  font-family:var(--ff);
-  letter-spacing:-.01em;
-  font-size:15px;
-}
-.app{max-width:430px;}
-
-/* ── TOPBAR — cleaner, more compact ──────────────────── */
-.topbar{
-  padding:10px 16px;
-  border-bottom-width:1px;
-}
-[data-theme="dark"] .topbar{
-  background:rgba(23,20,16,.96);
-  border-bottom-color:rgba(212,168,67,.10);
-}
-.brand-emblem{
-  width:32px;height:32px;border-radius:8px;font-size:.95rem;
-}
-.brand-title{font-size:.94rem;font-weight:800;letter-spacing:-.03em;}
-.brand-user{font-size:.65rem;font-weight:500;font-family:var(--ffmono);opacity:.75;}
-.brand-edit-btn{opacity:.5;font-size:.65rem;padding:1px 4px;}
-.conn-badge{
-  font-size:.62rem;padding:3px 8px;border-radius:20px;
-  font-family:var(--ffmono);font-weight:600;letter-spacing:.01em;
-}
-.icon-btn{
-  width:32px;height:32px;border-radius:8px;font-size:.85rem;border-width:1px;
-  background:var(--surface2);
-}
-[data-theme="dark"] .icon-btn{
-  background:rgba(255,240,200,.04);
-  border-color:rgba(255,240,200,.08);
-}
-
-/* ── BOTTOM NAV — more refined ────────────────────────── */
-.bottom-nav{
-  border-top-width:1px;
-  padding-bottom:max(env(safe-area-inset-bottom), 6px);
-}
-[data-theme="dark"] .bottom-nav{
-  background:rgba(23,20,16,.97);
-  border-top-color:rgba(212,168,67,.10);
-}
-.tab{
-  padding:9px 4px 10px;gap:3px;
-  border-top-width:2px;
-}
-.tab-icon{font-size:1.15rem;}
-.tab-label{
-  font-size:.58rem;font-weight:700;letter-spacing:.05em;
-  text-transform:uppercase;
-}
-.tab.active{
-  color:var(--accent);
-  border-top-color:var(--accent);
-}
-[data-theme="dark"] .tab.active{
-  color:var(--accent2);
-  border-top-color:var(--accent2);
-}
-
-/* ── PANE — better breathing room ────────────────────── */
-.pane{padding:14px 14px 100px;}
-
-/* ── LISTA SUBTABS — cleaner pill design ─────────────── */
-.lista-subtabs{
-  display:flex;gap:5px;margin-bottom:16px;
-  background:var(--surface2);border-radius:10px;
-  padding:4px;border:1px solid var(--border);
-}
-.lstab{
-  flex:1;padding:8px 6px;border-radius:8px;
-  border:none;background:transparent;
-  font-size:.65rem;font-weight:700;color:var(--text3);
-  letter-spacing:.04em;box-shadow:none;
-  gap:4px;
-  transition:background .15s,color .15s;
-}
-.lstab.active{
-  background:var(--surface);color:var(--text);
-  box-shadow:0 1px 4px rgba(0,0,0,.1),0 0 0 1px var(--border);
-}
-[data-theme="dark"] .lstab{
-  background:transparent;border:none;color:var(--text3);
-}
-[data-theme="dark"] .lstab.active{
-  background:var(--accent);color:#0C0A07;
-  box-shadow:0 2px 8px rgba(212,168,67,.3);
-}
-.lstab-icon{font-size:.75rem;}
-.lstab-txt{font-size:.65rem;}
-.lstab-badge{
-  top:-6px;right:-4px;
-  font-size:.52rem;padding:1px 4px;min-width:14px;
-  border-width:1.5px;
-}
-
-/* ── FORM CARD — softer, more airy ───────────────────── */
-.form-card{
-  border-width:1px;border-radius:12px;
-  padding:18px 16px;
-  background:var(--surface);
-}
-
-/* ── FIELD LABEL — less shouting ─────────────────────── */
-.field-label{
-  font-size:.70rem;font-weight:700;color:var(--text3);
-  margin-bottom:7px;letter-spacing:.04em;text-transform:uppercase;
-}
-.field{margin-bottom:14px;}
-
-/* ── STATUS DOTS — smaller ────────────────────────────── */
-.sdot{width:15px;height:15px;font-size:.55rem;}
-
-/* ── INPUTS — cleaner focus ring ─────────────────────── */
-.input-f,.select-f,.textarea-f{
-  border-radius:9px;border-width:1px;
-  font-size:var(--fs-md);
-  padding:10px 13px;
-  background:var(--surface2);
-}
-.input-f:focus,.select-f:focus,.textarea-f:focus{
-  border-color:var(--accent);
-  background:var(--surface);
-  box-shadow:0 0 0 3px rgba(200,155,56,.12);
-}
-[data-theme="dark"] .input-f,
-[data-theme="dark"] .select-f,
-[data-theme="dark"] .textarea-f{
-  background:rgba(255,255,255,.04);
-  border-color:var(--border2);
-}
-[data-theme="dark"] .input-f:focus,
-[data-theme="dark"] .select-f:focus,
-[data-theme="dark"] .textarea-f:focus{
-  background:var(--surface2);
-  border-color:var(--accent);
-  box-shadow:0 0 0 3px var(--accent-glow);
-}
-
-/* ── FORM SECTION ────────────────────────────────────── */
-.form-section{
-  border-width:1px;border-radius:9px;padding:12px 13px;margin-bottom:10px;
-}
-.form-section-title{
-  font-size:.65rem;font-weight:700;letter-spacing:.08em;
-  color:var(--text3);margin-bottom:9px;
-}
-[data-theme="dark"] .form-section{
-  background:rgba(255,255,255,.025);border-color:var(--border);
-}
-
-/* ── TOGGLE ROW ──────────────────────────────────────── */
-.tgl{
-  border-radius:9px;padding:10px 8px;font-size:.82rem;font-weight:600;border-width:1px;
-  background:var(--surface2);color:var(--text2);
-}
-.tgl.urgente.sel{background:var(--red-bg);border-color:rgba(192,53,42,.25);color:var(--red);}
-.tgl.media.sel{background:var(--blue-bg);border-color:rgba(38,96,164,.25);color:var(--blue);}
-.tgl.baja.sel,.tgl.normal.sel{background:var(--green-bg);border-color:rgba(30,122,80,.25);color:var(--green);}
-.tgl.pc.sel{background:var(--blue-bg);border-color:rgba(38,96,164,.25);color:var(--blue);}
-.tgl.comp.sel{background:var(--green-bg);border-color:rgba(30,122,80,.25);color:var(--green);}
-
-/* ── BUTTONS — tighter, more confident ───────────────── */
-.btn-primary{
-  border-radius:10px;padding:13px;font-size:.88rem;font-weight:700;
-  letter-spacing:-.01em;
-}
-[data-theme="dark"] .btn-primary{background:var(--accent);color:#0C0A07;}
-.btn-ghost{
-  border-radius:10px;padding:10px;font-size:.84rem;border-width:1px;
-  color:var(--text3);
-}
-.btn-ghost:hover{border-color:var(--border2);color:var(--text2);background:var(--surface2);}
-.btn-wsp{border-radius:10px;padding:12px;font-size:.88rem;}
-
-/* ── CALC PREVIEW ────────────────────────────────────── */
-.calc-preview{
-  border-width:1px;border-radius:9px;padding:10px 13px;
-}
-[data-theme="dark"] .calc-preview{
-  background:rgba(40,30,10,.7);
-  border-color:rgba(212,168,67,.25);
-}
-
-/* ── ITEM CARDS — refined spacing ────────────────────── */
-.item-card{
-  border-radius:11px;border-width:1px;
-  padding:12px 13px 12px 15px;margin-bottom:7px;
-  gap:10px;
-}
-.item-card::before{width:3px;}
-.item-icon{
-  width:34px;height:34px;border-radius:9px;font-size:1.1rem;border-width:1px;
-}
-.item-nom{font-size:.88rem;font-weight:700;letter-spacing:-.01em;}
-.item-sub{font-size:.65rem;margin-top:3px;gap:2px 5px;}
-.item-precio{font-size:.88rem;font-weight:700;font-family:var(--ffmono);}
-.ia-sm{border-radius:7px;padding:5px 7px;font-size:.65rem;border-width:1px;}
-.btn-comp-ahora{font-size:.65rem;padding:4px 10px;border-radius:20px;font-weight:700;}
-
-/* ── SWIPE WRAP ───────────────────────────────────────── */
-.swipe-wrap{border-radius:11px;margin-bottom:7px;}
-.swipe-wrap .item-card{border-radius:11px;margin-bottom:0;}
-
-/* ── SEARCH ──────────────────────────────────────────── */
-.search-input{
-  border-radius:9px;border-width:1px;font-size:.85rem;
-  padding:9px 13px 9px 34px;
-}
-.search-input:focus{
-  border-color:var(--accent);background:var(--surface);
-  box-shadow:0 0 0 3px rgba(200,155,56,.1);
-}
-
-/* ── FILTER BUTTONS ──────────────────────────────────── */
-.fbtn{
-  padding:6px 11px;font-size:.68rem;border-radius:20px;border-width:1px;font-weight:600;
-}
-.fbtn.active{background:var(--text);border-color:var(--text);color:var(--bg);}
-[data-theme="dark"] .fbtn.active{
-  background:var(--accent);border-color:var(--accent);color:#0C0A07;
-  box-shadow:0 2px 8px rgba(212,168,67,.25);
-}
-.fbtn-sec{
-  padding:5px 11px;font-size:.68rem;border-radius:20px;border-width:1px;font-weight:600;
-}
-.fbtn-sec.active{
-  background:var(--blue);border-color:var(--blue);color:#fff;
-  box-shadow:0 2px 6px rgba(38,96,164,.22);
-}
-
-/* ── SUBTABS (stats) — refined pill ──────────────────── */
-.subtabs{
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:10px;padding:3px;gap:2px;margin-bottom:14px;
-}
-.stab{
-  border-radius:8px;font-size:.65rem;font-weight:700;letter-spacing:.03em;
-  padding:7px 5px;
-}
-.stab.active{
-  background:var(--surface);color:var(--text);
-  box-shadow:0 1px 3px rgba(0,0,0,.1),0 0 0 1px var(--border);
-}
-[data-theme="dark"] .stab{background:transparent;color:var(--text3);}
-[data-theme="dark"] .stab.active{
-  background:var(--accent);color:#0C0A07;
-  box-shadow:0 2px 10px var(--accent-glow);
-}
-
-/* ── FILTER GROUP CARD ───────────────────────────────── */
-.filter-group{
-  border-radius:10px;border-width:1px;padding:12px 13px;margin-bottom:10px;
-  background:var(--surface2);
-}
-.filter-group-label{
-  font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
-  color:var(--text3);margin-bottom:7px;
-}
-.filter-group-divider{height:1px;background:var(--border);margin:8px 0;}
-
-/* ── KPI GRID — more impactful ───────────────────────── */
-.kpi-grid{grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:14px;}
-.kpi{
-  border-width:1px;border-radius:10px;
-  padding:11px 5px 10px;
-}
-.kpi strong{font-size:.95rem;font-weight:800;font-family:var(--ffmono);}
-.kpi span{font-size:.58rem;color:var(--text3);letter-spacing:.04em;}
-
-/* ── TOTALS GRID ─────────────────────────────────────── */
-.tot-grid{gap:6px;margin-bottom:12px;}
-.tot-box{
-  border-width:1px;border-radius:10px;padding:13px 10px 11px;
-}
-.tot-val{font-size:1.45rem;font-weight:800;font-family:var(--ffmono);}
-.tot-lab{font-size:.62rem;color:var(--text3);margin-top:4px;}
-[data-theme="dark"] .tot-val{color:var(--accent2);}
-[data-theme="dark"] .tot-box{background:var(--surface);border-color:var(--border);}
-
-/* ── STAT CARD ───────────────────────────────────────── */
-.stat-card{
-  border-width:1px;border-radius:11px;padding:14px 14px;margin-bottom:9px;
-}
-.stat-title{
-  font-size:.65rem;font-weight:700;letter-spacing:.09em;
-  color:var(--text3);margin-bottom:12px;
-}
-.stat-title::before{
-  width:2.5px;height:10px;border-radius:2px;background:var(--accent);
-}
-
-/* ── ARCH LIST / HISTORIAL ───────────────────────────── */
-.arch-list{border-width:1px;border-radius:10px;}
-.arch-item{padding:11px 13px;gap:10px;}
-
-/* ── COMPARISON GRID ─────────────────────────────────── */
-.comp-grid{gap:5px;}
-.comp-c{border-width:1px;border-radius:9px;padding:11px 6px;}
-.cc-g{font-size:.95rem;font-weight:800;font-family:var(--ffmono);}
-.cc-per{font-size:.62rem;font-weight:700;letter-spacing:.04em;}
-
-/* ── STAT ROWS ───────────────────────────────────────── */
-.sr{margin-bottom:7px;}
-.sr-n{font-size:.84rem;font-weight:600;}
-.sr-bg{width:56px;height:3px;}
-.sr-bar{height:3px;}
-[data-theme="dark"] .sr-bar{background:var(--accent);}
-
-/* ── GROUP HEADER ────────────────────────────────────── */
-.grupo-header{
-  border-radius:9px;border-width:1px;padding:9px 12px;
-  margin-bottom:6px;margin-top:12px;
-}
-.grupo-title{font-size:.75rem;gap:7px;letter-spacing:.02em;}
-.grupo-badge{
-  font-size:.62rem;padding:2px 7px;border-radius:20px;border-width:1px;
-}
-
-/* ── MIN/MAX ─────────────────────────────────────────── */
-.minmax{gap:6px;margin-bottom:9px;}
-.mm{border-width:1px;border-radius:9px;padding:10px 11px;}
-.mm-nom{font-size:.80rem;font-weight:600;}
-.mm-precio{font-size:.84rem;font-weight:800;font-family:var(--ffmono);}
-
-/* ── ADMIN PANEL ─────────────────────────────────────── */
-.admin-panel{
-  border-width:1.5px;border-radius:11px;padding:14px;margin-bottom:10px;
-}
-[data-theme="dark"] .admin-panel{
-  background:rgba(40,28,12,.6);border-color:rgba(212,168,67,.22);
-}
-.admin-title{font-size:.84rem;}
-
-/* ── MODAL ────────────────────────────────────────────── */
-.modal{border-radius:18px 18px 0 0;padding:24px 20px 34px;}
-.modal-handle{width:32px;height:3px;margin-bottom:18px;}
-.m-icon{font-size:2rem;margin-bottom:8px;}
-.m-title{font-size:.95rem;font-weight:800;margin-bottom:5px;}
-.m-msg{font-size:.84rem;line-height:1.6;margin-bottom:18px;}
-.mbtn{
-  border-radius:10px;padding:12px;font-size:.84rem;font-weight:600;
-}
-.mbtn.primary{background:var(--text);color:var(--bg);}
-[data-theme="dark"] .mbtn.primary{background:var(--accent);color:#0C0A07;}
-.mbtn.secondary{border-width:1px;}
-.mbtn.danger{border-width:1px;}
-[data-theme="dark"] .modal{
-  background:var(--surface);
-  border:1px solid var(--border);
-  box-shadow:0 24px 60px rgba(0,0,0,.7),0 4px 16px rgba(0,0,0,.4);
-}
-.modal-box{border-radius:18px 18px 0 0;padding:22px 18px 30px;}
-
-/* ── SUGGESTION BOX ─────────────────────────────────── */
-.sug-box{border-radius:0 0 9px 9px;}
-.sug-item{padding:9px 12px;font-size:.84rem;}
-.sug-tag{font-size:.62rem;border-radius:20px;padding:2px 6px;border-width:1px;}
-
-/* ── ONBOARDING ─────────────────────────────────────── */
-.ob-emblem{width:64px;height:64px;border-radius:17px;font-size:2rem;border-width:1.5px;}
-.ob-title{font-size:1.5rem;font-weight:800;letter-spacing:-.03em;}
-.ob-card{border-radius:14px;border-width:1px;}
-.ob-input{border-radius:9px;border-width:1px;font-size:.95rem;}
-.ob-btn{border-radius:10px;font-size:.92rem;}
-.ob-label{font-size:.70rem;letter-spacing:.05em;}
-
-/* ── SWIPE BACKGROUNDS ──────────────────────────────── */
-.swipe-bg{border-radius:11px;font-size:.84rem;}
-
-/* ── FAB ────────────────────────────────────────────── */
-.fab{
-  border-radius:26px;height:50px;
-  box-shadow:0 4px 18px rgba(200,155,56,.42),0 2px 8px rgba(0,0,0,.16);
-}
-.fab-label{font-size:.82rem;font-weight:800;}
-
-/* ── EMPTY STATE ────────────────────────────────────── */
-.empty-s{padding:28px 14px;}
-.empty-s .ei{font-size:2.2rem;}
-.empty-s .et{font-size:.84rem;}
-
-/* ── TOTAL HOY CARD ─────────────────────────────────── */
-#comp-total-dia{
-  border-left-width:3px;border-radius:11px;border-width:1px;
-  padding:12px 14px;margin-bottom:10px;
-}
-[data-theme="dark"] #comp-total-dia{
-  border-color:rgba(212,168,67,.18);
-}
-
-/* ── PDF BUTTON ─────────────────────────────────────── */
-.btn-pdf-full{
-  border-radius:10px;padding:10px;margin-bottom:9px;border-width:1.5px;
-}
-
-/* ── OVERLAY BACKDROP ───────────────────────────────── */
-[data-theme="dark"] .overlay{
-  background:rgba(6,5,3,.72);
-}
-
-/* ── SCROLLBAR ──────────────────────────────────────── */
-::-webkit-scrollbar{width:3px;}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-
-/* ── Subtle topbar active indicator fix ─────────────── */
-[data-theme="dark"] .stab.active{color:#0C0A07;}
-[data-theme="dark"] .lstab.active{color:#0C0A07;}
-[data-theme="dark"] .fbtn.active{color:#0C0A07;}
-
-/* ── Better filter chip in dark ─────────────────────── */
-[data-theme="dark"] .fbtn{
-  background:rgba(255,255,255,.04);border-color:var(--border);color:var(--text2);
-}
-[data-theme="dark"] .fbtn:hover{background:rgba(255,255,255,.07);}
-[data-theme="dark"] .filter-group{
-  background:rgba(255,255,255,.02);border-color:var(--border);
-}
-
-/* ── Stats subtabs scrollbar hidden ─────────────────── */
-.subtabs{scrollbar-width:none;}
-.subtabs::-webkit-scrollbar{display:none;}
-
-/* ── Historial filter group refinement ──────────────── */
-#pane-historial .filter-group,
-#pane-historial [style*="background:var(--surface2)"][style*="border:1.5px solid var(--border)"][style*="border-radius:var(--rmd)"]{
-  border-width:1px;border-radius:10px;
-}
-
-/* ── Compras hoy total card ──────────────────────────── */
-#comp-resumen-users{
-  margin-bottom:8px;
-}
-
-/* ── WhatsApp button ─────────────────────────────────── */
-.btn-copy{border-radius:9px;}
-.preview-c{border-radius:10px;border-width:1px;}
-.preview-txt{border-radius:8px;border-width:1px;font-size:.75rem;}
-
-/* ── Login screen polish ─────────────────────────────── */
-#screen-login{
-  background:linear-gradient(160deg,#141210 0%,#1E1809 100%) !important;
-}
-
-/* ── Section add variation ──────────────────────────── */
-.btn-add-var{border-radius:9px;border-width:1.5px;font-size:.82rem;}
-.variacion-item{border-radius:9px;border-width:1px;padding:10px 11px;margin-bottom:7px;}
-.btn-var-del{border-radius:6px;border-width:1px;padding:3px 6px;font-size:.72rem;}
-
-/* ── Reminder modal time input ──────────────────────── */
-#rem-time-wrap .input-f[type="time"]{border-radius:9px;border-width:1px;}
-
-/* ── Accesos modal ──────────────────────────────────── */
-#lista-accesos [style*="border-radius:10px"]{border-radius:9px;}
-
-/* ── Better visual hierarchy in stat cards ──────────── */
-.stat-title span[style*="display:inline-block"]{
-  width:2.5px;height:10px;
-}
-
-/* ── Refined sw (toggle switch) ─────────────────────── */
-.sw{width:40px;height:23px;}
-.sw-slider{border-radius:12px;}
-.sw-slider:before{width:17px;height:17px;}
-.sw input:checked+.sw-slider:before{transform:translateX(17px);}
-
-/* ── Totals in comp hoy text ─────────────────────────── */
-#comp-total-val{font-family:var(--ffmono);letter-spacing:-.02em;}
-
-/* ── Better link between modal handle and title ──────── */
-.m-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.m-close{
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:8px;width:30px;height:30px;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:.85rem;color:var(--text3);
-  transition:var(--transition);
-}
-.m-close:hover{background:var(--surface3);color:var(--text);}
-[data-theme="dark"] .m-close{
-  background:rgba(255,255,255,.05);border-color:var(--border);
-}
 </style>
 </head>
 <body>
 
 <!-- PANTALLA LOGIN -->
-<div id="screen-login" style="display:none;position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,#141210 0%,#1E1809 100%);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;font-family:'Plus Jakarta Sans',sans-serif;">
-  <div style="width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:0;">
-    <div style="font-size:56px;margin-bottom:10px;filter:drop-shadow(0 4px 20px rgba(200,155,56,0.35));">🧃</div>
-    <div style="font-size:26px;font-weight:800;color:#C89B38;letter-spacing:-.5px;margin-bottom:3px;">Zumix <span style="color:#EDE7D0;font-weight:400;">Stock</span></div>
-    <div style="font-size:.65rem;color:#5A5448;margin-bottom:38px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;">Control de Compras</div>
-    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(200,155,56,0.18);border-radius:16px;padding:26px 22px;width:100%;text-align:center;backdrop-filter:blur(10px);">
-      <div style="font-size:.84rem;color:#A89878;margin-bottom:20px;line-height:1.65;">Inicia sesión para acceder<br>al sistema de gestión</div>
-      <button id="btn-google-login" onclick="loginConGoogle()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#18160F;border:none;border-radius:11px;padding:13px 20px;font-size:.88rem;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;transition:all .2s;box-shadow:0 2px 12px rgba(0,0,0,0.35);">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px;">
+<div id="screen-login" style="display:none;position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,#1a1a1a 0%,#2a2108 100%);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;font-family:'Sora',sans-serif;">
+  <div style="width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:0;">
+    <!-- Logo -->
+    <div style="font-size:64px;margin-bottom:8px;filter:drop-shadow(0 4px 16px rgba(212,168,67,0.4));">🧃</div>
+    <div style="font-size:28px;font-weight:800;color:#D4A843;letter-spacing:-0.5px;margin-bottom:4px;">Zumix <span style="color:#fff;font-weight:400;">Stock</span></div>
+    <div style="font-size:.78rem;color:#888;margin-bottom:40px;letter-spacing:.5px;">CONTROL DE COMPRAS</div>
+    <!-- Card -->
+    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(212,168,67,0.2);border-radius:20px;padding:28px 24px;width:100%;text-align:center;">
+      <div style="font-size:.88rem;color:#ccc;margin-bottom:20px;line-height:1.6;">Inicia sesión para acceder<br>al sistema de gestión</div>
+      <button id="btn-google-login" onclick="loginConGoogle()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1a1a1a;border:none;border-radius:12px;padding:14px 20px;font-size:.92rem;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer;transition:all .2s;box-shadow:0 2px 12px rgba(0,0,0,0.3);">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;">
         Continuar con Google
       </button>
-      <div style="font-size:.66rem;color:#4A4438;margin-top:14px;line-height:1.6;">Solo cuentas autorizadas pueden acceder</div>
+      <div style="font-size:.70rem;color:#555;margin-top:16px;line-height:1.5;">Solo cuentas autorizadas<br>pueden acceder</div>
     </div>
-    <div id="login-error" style="display:none;font-size:.72rem;color:#ff6b6b;margin-top:14px;text-align:center;background:rgba(255,50,50,0.08);border-radius:10px;padding:9px 14px;max-width:340px;border:1px solid rgba(255,50,50,.15);"></div>
-    <div style="font-size:.62rem;color:#3A3430;margin-top:16px;">Zumix Stock · Uso interno</div>
+    <div id="login-error" style="display:none;font-size:.75rem;color:#ff6b6b;margin-top:16px;text-align:center;background:rgba(255,50,50,0.1);border-radius:10px;padding:10px 14px;max-width:360px;"></div>
+    <div style="font-size:.65rem;color:#444;margin-top:16px;">Zumix Stock · Uso interno</div>
   </div>
 </div>
 
@@ -2109,32 +1866,38 @@ body{
         <div class="brand-title">Zumix <span>Stock</span></div>
         <div class="brand-user-row">
           <span class="brand-user" id="brand-user">—</span>
-          <button class="brand-edit-btn" onclick="pedirEditEmp()" title="Editar nombre">✏️</button>
-          <button id="btn-logout" onclick="cerrarSesion()" title="Cerrar sesión" style="display:none;background:none;border:none;cursor:pointer;font-size:.62rem;color:var(--text3);padding:1px 5px;border-radius:5px;opacity:.6;">🚪</button>
-          <button id="btn-gestionar-accesos" onclick="abrirGestionAccesos()" title="Gestionar accesos" style="display:none;background:none;border:none;cursor:pointer;font-size:.62rem;color:var(--text3);padding:1px 5px;border-radius:5px;opacity:.6;">🔐</button>
+          <!-- Menú perfil: agrupa lápiz, puerta, candado en un solo botón -->
+          <button class="brand-edit-btn" id="btn-perfil-menu" onclick="togglePerfilMenu()" title="Mi perfil y configuración">⚙️</button>
         </div>
       </div>
     </div>
     <div class="topbar-right">
       <div class="conn-badge load" id="conn-badge">Conectando…</div>
-      <div class="icon-btn" onclick="openReminder()" title="Recordatorio">⏰</div>
-      <div class="icon-btn" onclick="toggleTheme()" id="theme-btn">🌙</div>
+      <div class="icon-btn" onclick="openReminder()" title="Configurar recordatorio diario">⏰</div>
+      <div class="icon-btn" onclick="toggleTheme()" id="theme-btn" title="Cambiar tema claro/oscuro">🌙</div>
     </div>
+  </div>
+  <!-- Menú perfil desplegable -->
+  <div id="perfil-menu" style="display:none;position:absolute;top:100%;right:14px;z-index:300;
+    background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);
+    box-shadow:var(--shmd);min-width:180px;overflow:hidden;">
+    <button onclick="pedirEditEmp();togglePerfilMenu()" style="width:100%;padding:11px 14px;text-align:left;background:none;border:none;border-bottom:1px solid var(--border);font-family:var(--ff);font-size:var(--fs-sm);color:var(--text);cursor:pointer;display:flex;align-items:center;gap:9px;">✏️ Cambiar mi nombre</button>
+    <button id="btn-gestionar-accesos" onclick="abrirGestionAccesos();togglePerfilMenu()" style="display:none;width:100%;padding:11px 14px;text-align:left;background:none;border:none;border-bottom:1px solid var(--border);font-family:var(--ff);font-size:var(--fs-sm);color:var(--text);cursor:pointer;display:flex;align-items:center;gap:9px;">🔐 Gestionar accesos</button>
+    <button id="btn-logout" onclick="cerrarSesion()" style="display:none;width:100%;padding:11px 14px;text-align:left;background:none;border:none;font-family:var(--ff);font-size:var(--fs-sm);color:var(--red);cursor:pointer;display:flex;align-items:center;gap:9px;">🚪 Cerrar sesión</button>
   </div>
 </div>
 
 <!-- PANE LISTA -->
 <div class="pane active" id="pane-lista">
   <div class="lista-subtabs">
-    <div class="lstab active" id="lstab-reg" onclick="switchLista('reg')">
-      <span class="lstab-icon">📝</span><span class="lstab-txt">Registrar</span>
-    </div>
     <div class="lstab" id="lstab-pend" onclick="switchLista('pend')">
-      <span class="lstab-icon">🛒</span><span class="lstab-txt">Pendientes</span>
+      <span class="lstab-icon">🛒</span>
+      <span class="lstab-txt">Pendientes</span>
       <span class="lstab-badge" id="badge-pend-tab" style="display:none">0</span>
     </div>
     <div class="lstab" id="lstab-comp" onclick="switchLista('comp')">
-      <span class="lstab-icon">✅</span><span class="lstab-txt">Comprados hoy</span>
+      <span class="lstab-icon">✅</span>
+      <span class="lstab-txt">Comprados hoy</span>
       <span class="lstab-badge green" id="badge-comp-tab" style="display:none">0</span>
     </div>
   </div>
@@ -2249,10 +2012,20 @@ body{
 
   <!-- PENDIENTES -->
   <div class="lista-subpane" id="lsp-pend">
-    <div class="tot-grid" style="grid-template-columns:1fr 1fr 1fr;">
-      <div class="tot-box"><div class="tot-val" id="cnt-urg" style="color:var(--red);">0</div><div class="tot-lab">🔴 Alta</div></div>
-      <div class="tot-box"><div class="tot-val" id="cnt-med" style="color:var(--blue);">0</div><div class="tot-lab">🔵 Media</div></div>
-      <div class="tot-box"><div class="tot-val" id="cnt-nor" style="color:var(--green);">0</div><div class="tot-lab">🟢 Espera</div></div>
+    <!-- Barra de urgencia compacta y clickeable -->
+    <div class="urg-bar">
+      <div class="urg-chip u-alta" id="urg-chip-alta" onclick="filtrarPorUrgencia('alta',this)">
+        <span class="urg-num" id="cnt-urg">0</span>
+        <span class="urg-lbl">Alta</span>
+      </div>
+      <div class="urg-chip u-media" id="urg-chip-media" onclick="filtrarPorUrgencia('media',this)">
+        <span class="urg-num" id="cnt-med">0</span>
+        <span class="urg-lbl">Media</span>
+      </div>
+      <div class="urg-chip u-baja" id="urg-chip-baja" onclick="filtrarPorUrgencia('baja',this)">
+        <span class="urg-num" id="cnt-nor">0</span>
+        <span class="urg-lbl">Espera</span>
+      </div>
     </div>
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
@@ -2306,9 +2079,9 @@ body{
 <!-- PANE HISTORIAL -->
 <div class="pane" id="pane-historial">
 
-  <!-- ① PERÍODO — lo primero que el usuario necesita elegir -->
-  <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;">
-    <div id="filt-hist" style="display:flex;gap:6px;flex-shrink:0;">
+  <!-- ① PERÍODO -->
+  <div style="display:flex;align-items:center;gap:5px;margin-bottom:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px;">
+    <div id="filt-hist" style="display:flex;gap:5px;flex-shrink:0;">
       <button class="fbtn active" id="fhbtn-hoy" onclick="setFH(this,'hoy')">Hoy</button>
       <button class="fbtn" id="fhbtn-3d" onclick="setFH(this,'3d')">3 días</button>
       <button class="fbtn" id="fhbtn-7d" onclick="setFH(this,'7d')">Semana</button>
@@ -2316,94 +2089,84 @@ body{
       <button class="fbtn" id="fhbtn-30d" onclick="setFH(this,'30d')">Mensual</button>
       <button class="fbtn" id="fhbtn-todo" onclick="setFH(this,'todo')" style="display:none;">Todo</button>
     </div>
-    <button id="btn-hist-rango" onclick="toggleHistRango(this)" title="Filtro por rango de fechas"
-      style="display:none;flex-shrink:0;padding:5px 11px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:.72rem;font-weight:700;border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);white-space:nowrap;transition:var(--transition);position:relative;">
+    <button id="btn-hist-rango" onclick="toggleHistRango(this)"
+      style="display:none;flex-shrink:0;padding:5px 10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:var(--fs-xs);font-weight:700;border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);white-space:nowrap;position:relative;">
       📅 Rango
-      <span id="hfilt-dot" style="display:none;position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;background:var(--accent);border:1.5px solid var(--surface);"></span>
+      <span id="hfilt-dot" style="display:none;position:absolute;top:2px;right:2px;width:6px;height:6px;border-radius:50%;background:var(--accent);border:1.5px solid var(--surface);"></span>
     </button>
   </div>
-  <!-- Panel rango de fechas colapsable -->
-  <div id="hist-rango-panel" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:10px 12px;margin-bottom:6px;">
+  <div id="hist-rango-panel" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rmd);padding:8px 10px;margin-bottom:6px;">
     <div style="display:flex;gap:8px;">
-      <div style="flex:1;">
-        <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">Desde</div>
-        <input type="date" id="hist-date-from" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="renderHist();actualizarDotHFilt()"/>
-      </div>
-      <div style="flex:1;">
-        <div style="font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">Hasta</div>
-        <div style="display:flex;gap:4px;align-items:center;">
-          <input type="date" id="hist-date-to" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="renderHist();actualizarDotHFilt()"/>
-          <button onclick="limpiarRangoHist()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+      <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
+        <input type="date" id="hist-date-from" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;" onchange="renderHist();actualizarDotHFilt()"/></div>
+      <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
+        <div style="display:flex;gap:4px;">
+          <input type="date" id="hist-date-to" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;" onchange="renderHist();actualizarDotHFilt()"/>
+          <button onclick="limpiarRangoHist()" style="flex-shrink:0;padding:4px 7px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ② BÚSQUEDA — inmediata, siempre visible -->
-  <div class="search-wrap" style="margin-bottom:8px;">
+  <!-- ② BUSCADOR -->
+  <div class="search-wrap" style="margin-bottom:7px;">
     <span class="search-icon">🔍</span>
     <input class="search-input" type="text" id="search-hist" placeholder="Buscar en historial…" oninput="filtrarHist()"/>
     <button class="search-clear" id="search-hist-clear" onclick="limpiarBusquedaHist()">✕</button>
   </div>
 
-  <!-- ③ FILTROS SECUNDARIOS — agrupados visualmente en un bloque -->
-  <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:10px 12px;margin-bottom:10px;">
-    <div style="font-size:var(--fs-xs);font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">🔎 Filtros</div>
-    <!-- Filtro usuario — solo roles con acceso -->
+  <!-- ③ KPIs COMPACTOS -->
+  <div class="kpi-mini-grid">
+    <div class="kpi-mini"><strong id="hk-t">0</strong><span>compras</span></div>
+    <div class="kpi-mini"><strong id="hk-g">S/0</strong><span>gastado</span></div>
+    <div class="kpi-mini"><strong id="hk-u">0</strong><span>alta prio.</span></div>
+    <div class="kpi-mini"><strong id="hk-e">0</strong><span>personas</span></div>
+  </div>
+
+  <!-- ④ FILA DE ACCIONES: Exportar | Editar | Filtros -->
+  <div class="hist-actions-row">
+    <button onclick="exportarExcel()" class="hist-action-btn green">📊 Exportar</button>
+    <button id="btn-admin-hist" onclick="abrirAdminPanel()" class="hist-action-btn" style="display:none;">🔐 Editar</button>
+    <button class="hist-action-btn filter" id="btn-toggle-hist-filters" onclick="toggleHistFilters(this)">
+      🔎 Filtros <span class="dot" id="hist-filter-dot"></span>
+      <span style="font-size:.6rem;margin-left:2px;" id="hist-filter-arrow">▾</span>
+    </button>
+  </div>
+
+  <!-- Panel filtros colapsable -->
+  <div id="hist-filters-panel" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rmd);padding:9px 11px;margin-bottom:8px;">
     <div id="hist-user-row" style="display:none;margin-bottom:8px;">
       <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:600;margin-bottom:4px;">👤 Por usuario</div>
-      <div style="display:flex;gap:6px;align-items:center;">
+      <div style="display:flex;gap:6px;">
         <div style="flex:1;position:relative;">
           <input type="text" id="hist-user-input" placeholder="Buscar usuario…" autocomplete="off"
-            class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
+            class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
             oninput="filtrarSugerenciasUsuarioHist()" onfocus="filtrarSugerenciasUsuarioHist()"/>
-          <div id="hist-user-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
+          <div id="hist-user-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
         </div>
         <button onclick="limpiarUsuarioHist()" id="btn-clear-user-hist"
-          style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
+          style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
       </div>
-      <div id="hist-user-chip" style="display:none;margin-top:5px;"></div>
+      <div id="hist-user-chip" style="display:none;margin-top:4px;"></div>
     </div>
-    <!-- Filtro categoría -->
     <div id="hist-cat-filter-row">
       <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:600;margin-bottom:4px;">🏷 Por categoría</div>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <select id="hist-cat-select" class="select-f" style="font-size:.78rem;padding:6px 10px;flex:1;" onchange="aplicarFiltroCatHist()">
+      <div style="display:flex;gap:5px;">
+        <select id="hist-cat-select" class="select-f" style="font-size:.78rem;padding:5px 9px;flex:1;" onchange="aplicarFiltroCatHist()">
           <option value="">— Todas —</option>
-          <option value="CARNES">🥩 Carnes</option>
-          <option value="VERDURAS">🥦 Verduras</option>
-          <option value="LACTEOS">🥛 Lácteos</option>
-          <option value="FRUTAS">🍎 Frutas</option>
-          <option value="INSUMOS">🧪 Insumos</option>
-          <option value="PREPARADOS">🍱 Preparados</option>
-          <option value="BEBIDAS">🥤 Bebidas</option>
-          <option value="ENVASES">📦 Envases</option>
-          <option value="LIMPIEZA">🧹 Limpieza</option>
-          <option value="OTROS">⚙️ Otros</option>
+          <option value="CARNES">🥩 Carnes</option><option value="VERDURAS">🥦 Verduras</option>
+          <option value="LACTEOS">🥛 Lácteos</option><option value="FRUTAS">🍎 Frutas</option>
+          <option value="INSUMOS">🧪 Insumos</option><option value="PREPARADOS">🍱 Preparados</option>
+          <option value="BEBIDAS">🥤 Bebidas</option><option value="ENVASES">📦 Envases</option>
+          <option value="LIMPIEZA">🧹 Limpieza</option><option value="OTROS">⚙️ Otros</option>
         </select>
-        <button id="btn-clear-cat-hist" onclick="limpiarFiltroCatHist()" style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+        <button id="btn-clear-cat-hist" onclick="limpiarFiltroCatHist()" style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
       </div>
     </div>
   </div>
 
-  <!-- ④ KPIs RESUMEN — resultado del filtro activo -->
-  <div class="kpi-grid" style="margin-bottom:10px;">
-    <div class="kpi"><strong id="hk-t">0</strong><span>compras</span></div>
-    <div class="kpi"><strong id="hk-g">S/0</strong><span>gastado</span></div>
-    <div class="kpi"><strong id="hk-u">0</strong><span>alta prio.</span></div>
-    <div class="kpi"><strong id="hk-e">0</strong><span>personas</span></div>
-  </div>
-
-  <!-- ⑤ LISTA DE REGISTROS -->
-  <div id="lista-hist"></div>
-
-  <!-- ⑥ ACCIONES — exportar y edición admin, al fondo -->
-  <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
-    <button onclick="exportarExcel()" style="width:100%;padding:11px;background:var(--surface);border:1.5px solid var(--green);border-radius:var(--rmd);font-family:var(--ff);font-size:var(--fs-sm);font-weight:700;color:var(--green);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:var(--transition);">📊 Exportar a Excel</button>
-    <button id="btn-admin-hist" onclick="abrirAdminPanel()" style="width:100%;padding:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);font-family:var(--ff);font-size:var(--fs-sm);font-weight:700;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:var(--transition);">🔐 Editar registros del historial</button>
-  </div>
-  <!-- Panel admin (aparece al activar) -->
-  <div id="admin-panel-hist" style="display:none;margin-top:8px;" class="admin-panel">
+  <!-- Panel admin -->
+  <div id="admin-panel-hist" style="display:none;margin-bottom:8px;" class="admin-panel">
     <div class="admin-header">
       <span class="admin-title">🔐 Panel de edición</span>
       <span class="admin-badge">Administrador</span>
@@ -2413,8 +2176,11 @@ body{
       <input class="search-input" type="text" id="search-admin-hist" placeholder="Buscar registro a corregir…" oninput="filtrarAdminHist()"/>
       <button class="search-clear" id="search-admin-hist-clear" onclick="limpiarAdminHist()">✕</button>
     </div>
-    <button class="btn-admin-close" onclick="cerrarAdminPanel()">✕ Cerrar panel de edición</button>
+    <button class="btn-admin-close" onclick="cerrarAdminPanel()">✕ Cerrar panel</button>
   </div>
+
+  <!-- ⑤ LISTA -->
+  <div id="lista-hist"></div>
 
 </div>
 
@@ -2433,61 +2199,62 @@ body{
        BARRA DE FILTROS GLOBAL — super_admin / admin_supremo
        Se muestra encima de TODO subtab para esos roles. Oculta para admin.
   ═══════════════════════════════════════════════════════════════════════════ -->
-  <div id="stats-global-filters-wrap" style="display:none;margin-bottom:10px;">
-    <!-- Período -->
-    <div class="filter-group">
-      <div class="filter-group-label">📅 Período</div>
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;">
-        <div id="filt-stats" style="display:flex;gap:6px;flex-shrink:0;">
-          <button class="fbtn-sec active" onclick="setFS(this,'7d')">7 días</button>
-          <button class="fbtn-sec" onclick="setFS(this,'15d')">15 días</button>
-          <button class="fbtn-sec" onclick="setFS(this,'30d')">Mes</button>
-          <button class="fbtn-sec" onclick="setFS(this,'todo')">Todo</button>
-        </div>
-        <button id="btn-stats-rango-global" onclick="toggleStatsRangoGlobal(this)" style="flex-shrink:0;padding:5px 11px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:var(--fs-xs);font-weight:700;border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);white-space:nowrap;transition:var(--transition);">📅 Rango</button>
-      </div>
-      <div id="stats-rango-global-wrap" style="display:none;margin-top:8px;gap:8px;flex-direction:row;align-items:flex-end;flex-wrap:wrap;">
-        <div style="display:flex;gap:8px;">
-          <div style="flex:1;">
-            <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
-            <input type="date" id="stats-date-from" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
+  <div id="stats-global-filters-wrap" style="display:none;margin-bottom:8px;">
+    <div class="stats-filter-inline">
+      <!-- Fila período + toggle -->
+      <div class="accordion-header" id="stats-filter-accordion-hdr" onclick="toggleStatsFilterAccordion()">
+        <div style="display:flex;align-items:center;gap:6px;overflow-x:auto;flex:1;scrollbar-width:none;">
+          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;">Período</span>
+          <div id="filt-stats" style="display:flex;gap:5px;flex-shrink:0;">
+            <button class="fbtn-sec active" onclick="setFS(this,'7d');event.stopPropagation()">7d</button>
+            <button class="fbtn-sec" onclick="setFS(this,'15d');event.stopPropagation()">15d</button>
+            <button class="fbtn-sec" onclick="setFS(this,'30d');event.stopPropagation()">Mes</button>
+            <button class="fbtn-sec" onclick="setFS(this,'todo');event.stopPropagation()">Todo</button>
+            <button id="btn-stats-rango-global" onclick="toggleStatsRangoGlobal(this);event.stopPropagation()" style="flex-shrink:0;padding:4px 9px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:var(--fs-xs);font-weight:700;border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);white-space:nowrap;">📅</button>
           </div>
-          <div style="flex:1;">
-            <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
-            <div style="display:flex;gap:4px;align-items:center;">
-              <input type="date" id="stats-date-to" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
-              <button onclick="limpiarRangoGlobal()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+        </div>
+        <span class="accordion-arrow" id="stats-filter-arrow">▾</span>
+      </div>
+      <!-- Rango fechas -->
+      <div id="stats-rango-global-wrap" style="display:none;margin-top:7px;">
+        <div style="display:flex;gap:7px;">
+          <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:2px;text-transform:uppercase;">Desde</div>
+            <input type="date" id="stats-date-from" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/></div>
+          <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:2px;text-transform:uppercase;">Hasta</div>
+            <div style="display:flex;gap:4px;">
+              <input type="date" id="stats-date-to" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
+              <button onclick="limpiarRangoGlobal()" style="flex-shrink:0;padding:4px 7px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
             </div>
           </div>
         </div>
       </div>
-      <div class="filter-group-divider"></div>
-      <!-- Fila 2: filtro usuario + tipo -->
-      <div id="stats-global-row2" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;">
-        <div id="stats-user-filter-wrap" style="flex:1;min-width:150px;position:relative;">
-          <div class="filter-group-label">👤 Por usuario</div>
-          <div id="stats-user-required-note" style="display:none;font-size:.7rem;color:var(--orange);background:var(--orange-bg,rgba(255,152,0,.1));border-radius:8px;padding:5px 9px;margin-bottom:4px;">
-            ℹ️ Como Admin debés seleccionar un usuario para ver sus stats.
-          </div>
-          <div style="display:flex;gap:6px;align-items:center;">
-            <div style="flex:1;position:relative;">
-              <input type="text" id="stats-user-input" placeholder="Buscar usuario…" autocomplete="off"
-                class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
-                oninput="filtrarSugerenciasUsuario()" onfocus="filtrarSugerenciasUsuario()" />
-              <div id="stats-user-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+      <!-- Acordeón: usuario + tipo (colapsado por defecto) -->
+      <div class="accordion-body" id="stats-filter-accordion-body">
+        <div style="height:1px;background:var(--border);margin-bottom:8px;"></div>
+        <div id="stats-global-row2" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
+          <div id="stats-user-filter-wrap" style="flex:1;min-width:140px;position:relative;">
+            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👤 Usuario</div>
+            <div id="stats-user-required-note" style="display:none;font-size:.7rem;color:var(--orange);background:var(--orange-bg,rgba(255,152,0,.1));border-radius:6px;padding:4px 8px;margin-bottom:4px;">ℹ️ Selecciona un usuario</div>
+            <div style="display:flex;gap:5px;">
+              <div style="flex:1;position:relative;">
+                <input type="text" id="stats-user-input" placeholder="Buscar usuario…" autocomplete="off"
+                  class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
+                  oninput="filtrarSugerenciasUsuario()" onfocus="filtrarSugerenciasUsuario()" />
+                <div id="stats-user-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+              </div>
+              <button onclick="limpiarFiltroUsuarioStats()" id="btn-clear-user-stat"
+                style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
             </div>
-            <button onclick="limpiarFiltroUsuarioStats()" id="btn-clear-user-stat"
-              style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+            <div id="stats-user-chip" style="display:none;margin-top:4px;"></div>
           </div>
-          <div id="stats-user-chip" style="display:none;margin-top:5px;"></div>
-        </div>
-        <div id="stats-tipo-filter-wrap" style="flex-shrink:0;">
-          <div class="filter-group-label">👥 Por tipo</div>
-          <div style="display:flex;gap:6px;">
-            <button class="fbtn-sec" id="ftipo-admins" onclick="setFiltroTipoUsuario('admins',this)">🧑‍💼 Admins</button>
-            <button class="fbtn-sec" id="ftipo-usuarios" onclick="setFiltroTipoUsuario('usuarios',this)">👷 Usuarios</button>
+          <div id="stats-tipo-filter-wrap" style="flex-shrink:0;">
+            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👥 Tipo</div>
+            <div style="display:flex;gap:5px;">
+              <button class="fbtn-sec" id="ftipo-admins" onclick="setFiltroTipoUsuario('admins',this)">Admins</button>
+              <button class="fbtn-sec" id="ftipo-usuarios" onclick="setFiltroTipoUsuario('usuarios',this)">Usuarios</button>
+            </div>
+            <div id="stats-tipo-chip" style="display:none;margin-top:4px;"></div>
           </div>
-          <div id="stats-tipo-chip" style="display:none;margin-top:5px;"></div>
         </div>
       </div>
     </div>
@@ -2536,11 +2303,9 @@ body{
       </div>
       <div id="admin-rango-warn" style="display:none;font-size:.72rem;color:var(--red);font-weight:600;background:var(--red-bg);border-radius:var(--rsm);padding:5px 9px;margin-top:4px;">⚠️ El rango no puede superar 30 días (mes actual).</div>
     </div>
-    <!-- Botón PDF — ancho completo -->
-    <div id="stats-pdf-wrap" style="display:none;">
-      <button onclick="generarReportePDF()" class="btn-pdf-full">
-        📄 Exportar reporte PDF
-      </button>
+    <!-- Botón PDF — compacto, al lado del contenido, no protagonista -->
+    <div id="stats-pdf-wrap" style="display:none;margin-bottom:8px;">
+      <button onclick="generarReportePDF()" style="padding:7px 14px;background:var(--surface);border:1.5px solid var(--red);border-radius:var(--rmd);font-family:var(--ff);font-size:var(--fs-xs);font-weight:700;color:var(--red);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:var(--transition);">📄 Exportar PDF</button>
     </div>
 
     <!-- KPI RESUMEN — visible siempre (admin+) -->
@@ -2623,16 +2388,22 @@ body{
         <div id="stats-per-tipo-chip-sa" style="display:none;margin-top:3px;"></div>
       </div>
     </div>
-    <!-- Filtros de vista de períodos -->
-    <div class="filter-group" style="margin-bottom:10px;">
-      <div class="filter-group-label">📅 Vista de períodos</div>
-      <div id="per-view-filters" style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button class="fbtn-sec active" id="pervf-3d" onclick="setPerViewFilt('3d',this)">Últimos 3 días</button>
-        <button class="fbtn-sec" id="pervf-3s" onclick="setPerViewFilt('3s',this)">Últimas 3 semanas</button>
-        <button class="fbtn-sec" id="pervf-3m" onclick="setPerViewFilt('3m',this)">Últimos 3 meses</button>
-        <button class="fbtn-sec" id="pervf-3m2" onclick="setPerViewFilt('3m2',this)">+3 meses</button>
-      </div>
+    <!-- Filtros de vista — chips compactos sin card grande -->
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;" id="per-view-filters">
+      <button class="fbtn-sec active" id="pervf-3d" onclick="setPerViewFilt('3d',this)">Últ. 3 días</button>
+      <button class="fbtn-sec" id="pervf-3s" onclick="setPerViewFilt('3s',this)">3 semanas</button>
+      <button class="fbtn-sec" id="pervf-3m" onclick="setPerViewFilt('3m',this)">3 meses</button>
+      <button class="fbtn-sec" id="pervf-3m2" onclick="setPerViewFilt('3m2',this)">+3 meses</button>
     </div>
+    <!-- Cómo funciona — acordeón colapsado -->
+    <details style="margin-bottom:8px;">
+      <summary style="font-size:var(--fs-xs);color:var(--text3);cursor:pointer;list-style:none;display:flex;align-items:center;gap:4px;user-select:none;">
+        <span>▸</span> ¿Cómo funciona?
+      </summary>
+      <div style="font-size:var(--fs-xs);color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:var(--rmd);padding:8px 10px;margin-top:5px;line-height:1.6;">
+        Cada columna muestra un día distinto. Se comparan los últimos períodos. El 📈 indica el día con mayor gasto y el 📉 el de menor gasto.
+      </div>
+    </details>
     <!-- Nota dinámica — se actualiza desde renderComparaciones() -->
     <div id="comp-nota-contexto" style="font-size:.72rem;color:var(--text3);margin-bottom:10px;padding:9px 11px;background:var(--surface2);border-radius:var(--rsm);border:1px solid var(--border);line-height:1.6;">
       📌 Mostrando datos globales (todos los usuarios).
@@ -2667,75 +2438,73 @@ body{
 
   <!-- ─── SUBPANE: COMPARAR USUARIOS ────────────────────────── -->
   <div class="subpane" id="sp-comparar">
-    <div class="stat-card">
 
-      <!-- BLOQUE 1: Tipo de comparación -->
-      <div class="filter-group" style="margin-bottom:10px;">
-        <div class="filter-group-label">👥 Tipo de comparación</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="fbtn-sec" id="cmp-ftipo-admins" onclick="setCmpTipo('admins',this)">🧑‍💼 Solo Admins</button>
-          <button class="fbtn-sec" id="cmp-ftipo-usuarios" onclick="setCmpTipo('usuarios',this)">👷 Solo Usuarios</button>
-          <button class="fbtn-sec" id="btn-cmp-grupal" onclick="toggleComparacionGrupal(this)">🔄 Admins vs Usuarios</button>
-        </div>
+    <!-- Tipo -->
+    <div class="cmp-section">
+      <div class="cmp-section-label">Tipo de comparación</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="fbtn-sec" id="cmp-ftipo-admins" onclick="setCmpTipo('admins',this)">Solo Admins</button>
+        <button class="fbtn-sec" id="cmp-ftipo-usuarios" onclick="setCmpTipo('usuarios',this)">Solo Usuarios</button>
+        <button class="fbtn-sec" id="btn-cmp-grupal" onclick="toggleComparacionGrupal(this)">Admins vs Usuarios</button>
       </div>
+    </div>
 
-      <!-- BLOQUE 2: Seleccionar usuarios -->
-      <div class="filter-group-label">👤 Seleccionar usuarios a comparar</div>
-      <div style="display:flex;gap:8px;margin-bottom:10px;">
+    <!-- Usuarios -->
+    <div class="cmp-section">
+      <div class="cmp-section-label">Usuarios a comparar</div>
+      <div style="display:flex;gap:8px;">
         <div style="flex:1;">
-          <div style="font-size:.6rem;color:var(--text3);font-weight:600;margin-bottom:4px;">Usuario A</div>
+          <div style="font-size:var(--fs-xs);color:var(--text3);margin-bottom:4px;">Usuario A</div>
           <div style="position:relative;">
-            <input type="text" id="cmp-user-a-input" placeholder="Buscar…" autocomplete="off"
+            <input type="text" id="cmp-user-a-input" placeholder="Buscar usuario A…" autocomplete="off"
               class="input-f" style="font-size:.82rem;padding:7px 10px;width:100%;box-sizing:border-box;"
               oninput="filtrarSugerenciasCmp('a')" onfocus="filtrarSugerenciasCmp('a')" />
             <div id="cmp-sug-a" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:99;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:140px;overflow-y:auto;"></div>
           </div>
-          <div id="cmp-chip-a" style="display:none;margin-top:5px;"></div>
+          <div id="cmp-chip-a" style="display:none;margin-top:4px;"></div>
         </div>
         <div style="flex:1;">
-          <div style="font-size:.6rem;color:var(--text3);font-weight:600;margin-bottom:4px;">Usuario B</div>
+          <div style="font-size:var(--fs-xs);color:var(--text3);margin-bottom:4px;">Usuario B</div>
           <div style="position:relative;">
-            <input type="text" id="cmp-user-b-input" placeholder="Buscar…" autocomplete="off"
+            <input type="text" id="cmp-user-b-input" placeholder="Buscar usuario B…" autocomplete="off"
               class="input-f" style="font-size:.82rem;padding:7px 10px;width:100%;box-sizing:border-box;"
               oninput="filtrarSugerenciasCmp('b')" onfocus="filtrarSugerenciasCmp('b')" />
             <div id="cmp-sug-b" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:99;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:140px;overflow-y:auto;"></div>
           </div>
-          <div id="cmp-chip-b" style="display:none;margin-top:5px;"></div>
+          <div id="cmp-chip-b" style="display:none;margin-top:4px;"></div>
         </div>
       </div>
+    </div>
 
-      <!-- BLOQUE 3: Período -->
-      <div class="filter-group" style="margin-bottom:10px;">
-        <div class="filter-group-label">📅 Período</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="fbtn-sec active" id="cmpf-7d" onclick="setCmpPer('7d',this)">7 días</button>
-          <button class="fbtn-sec" id="cmpf-15d" onclick="setCmpPer('15d',this)">15 días</button>
-          <button class="fbtn-sec" id="cmpf-30d" onclick="setCmpPer('30d',this)">Mes</button>
-          <button class="fbtn-sec" id="cmpf-todo" onclick="setCmpPer('todo',this)">Todo</button>
-          <button class="fbtn-sec" id="cmpf-rango" onclick="setCmpPer('rango',this)">📅 Rango</button>
-        </div>
-        <div id="cmp-rango-wrap" style="display:none;margin-top:8px;">
-          <div style="display:flex;gap:8px;">
-            <div style="flex:1;">
-              <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
-              <input type="date" id="cmp-date-from" class="input-f" style="font-size:.78rem;padding:6px 8px;width:100%;box-sizing:border-box;"/>
-            </div>
-            <div style="flex:1;">
-              <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
-              <div style="display:flex;gap:4px;">
-                <input type="date" id="cmp-date-to" class="input-f" style="font-size:.78rem;padding:6px 8px;width:100%;box-sizing:border-box;"/>
-                <button onclick="limpiarRangoCmp()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-              </div>
+    <!-- Período -->
+    <div class="cmp-section">
+      <div class="cmp-section-label">Período</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;">
+        <button class="fbtn-sec active" id="cmpf-7d" onclick="setCmpPer('7d',this)">7d</button>
+        <button class="fbtn-sec" id="cmpf-15d" onclick="setCmpPer('15d',this)">15d</button>
+        <button class="fbtn-sec" id="cmpf-30d" onclick="setCmpPer('30d',this)">Mes</button>
+        <button class="fbtn-sec" id="cmpf-todo" onclick="setCmpPer('todo',this)">Todo</button>
+        <button class="fbtn-sec" id="cmpf-rango" onclick="setCmpPer('rango',this)">📅 Rango</button>
+      </div>
+      <div id="cmp-rango-wrap" style="display:none;margin-top:8px;">
+        <div style="display:flex;gap:7px;">
+          <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:2px;text-transform:uppercase;">Desde</div>
+            <input type="date" id="cmp-date-from" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;box-sizing:border-box;"/></div>
+          <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:2px;text-transform:uppercase;">Hasta</div>
+            <div style="display:flex;gap:4px;">
+              <input type="date" id="cmp-date-to" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;box-sizing:border-box;"/>
+              <button onclick="limpiarRangoCmp()" style="flex-shrink:0;padding:4px 7px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
             </div>
           </div>
         </div>
       </div>
-
-      <button id="btn-ejecutar-cmp" onclick="toggleComparacion(this)" class="btn-primary" style="margin-top:0;">
-        🔄 Comparar
-      </button>
     </div>
-    <div id="cmp-resultado" style="display:none;"></div>
+
+    <button id="btn-ejecutar-cmp" onclick="toggleComparacion(this)" class="btn-primary" style="margin-top:4px;">
+      Comparar usuarios
+    </button>
+
+    <div id="cmp-resultado" style="display:none;margin-top:12px;"></div>
   </div>
 
   <!-- ─── SUBPANE: LOGS ───────────────────────────────────── -->
@@ -3425,6 +3194,62 @@ window.fabRegistrar=function(){
   },120);
 };
 
+// TOGGLE PERFIL MENU
+window.togglePerfilMenu=function(){
+  const m=document.getElementById('perfil-menu');
+  if(!m)return;
+  const open=m.style.display==='none'||!m.style.display;
+  m.style.display=open?'block':'none';
+  // cerrar al click afuera
+  if(open){
+    setTimeout(()=>{
+      document.addEventListener('click',function _c(e){
+        if(!m.contains(e.target)&&!document.getElementById('btn-perfil-menu').contains(e.target)){
+          m.style.display='none';
+        }
+        document.removeEventListener('click',_c);
+      });
+    },0);
+  }
+};
+
+// TOGGLE HISTORIAL FILTERS PANEL
+window.toggleHistFilters=function(btn){
+  const panel=document.getElementById('hist-filters-panel');
+  const arrow=document.getElementById('hist-filter-arrow');
+  const isOpen=panel.style.display!=='none';
+  panel.style.display=isOpen?'none':'block';
+  if(arrow)arrow.textContent=isOpen?'▾':'▴';
+};
+
+// FILTRAR POR URGENCIA desde urg-bar
+let _urgFiltro=null;
+window.filtrarPorUrgencia=function(nivel,chip){
+  const chips=document.querySelectorAll('.urg-chip');
+  if(_urgFiltro===nivel){
+    // deseleccionar
+    _urgFiltro=null;
+    chips.forEach(c=>c.classList.remove('active'));
+  }else{
+    _urgFiltro=nivel;
+    chips.forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+  }
+  renderLista();
+};
+// Exponer filtro activo para que renderLista lo use si lo necesita
+window._getUrgFiltro=()=>_urgFiltro;
+
+// TOGGLE STATS FILTER ACCORDION (usuario+tipo)
+window.toggleStatsFilterAccordion=function(){
+  const body=document.getElementById('stats-filter-accordion-body');
+  const arrow=document.getElementById('stats-filter-arrow');
+  const hdr=document.getElementById('stats-filter-accordion-hdr');
+  if(!body)return;
+  const open=body.classList.toggle('open');
+  if(arrow)arrow.style.transform=open?'rotate(180deg)':'';
+};
+
 window.switchTab=function(t){
   // Usar IDs para no depender de orden/visibilidad de los tabs
   ['lista','historial','stats'].forEach(name=>{
@@ -3462,13 +3287,17 @@ window.switchST=function(t){
 };
 let _skipLimpiarForm=false;
 window.switchLista=function(t){
-  ['reg','pend','comp'].forEach(id=>{document.getElementById(`lstab-${id}`).classList.toggle('active',id===t);document.getElementById(`lsp-${id}`).classList.toggle('active',id===t);});
-  // Limpiar formulario al volver a Registrar si no hay edición activa y no hay flag de skip
+  // lstab-reg ya no existe como tab visual — el formulario sigue existiendo como lsp-reg
+  ['reg','pend','comp'].forEach(id=>{
+    const tab=document.getElementById(`lstab-${id}`);
+    if(tab)tab.classList.toggle('active',id===t);
+    const pane=document.getElementById(`lsp-${id}`);
+    if(pane)pane.classList.toggle('active',id===t);
+  });
   if(t==='reg'&&!editKey&&!_skipLimpiarForm){limpiarForm();}
   _skipLimpiarForm=false;
-  // Cerrar previews de WhatsApp al cambiar de subtab
-  if(t!=='pend'){document.getElementById('prev-pend').classList.remove('show');}
-  if(t!=='comp'){document.getElementById('prev-comp').classList.remove('show');}
+  if(t!=='pend'){const pp=document.getElementById('prev-pend');if(pp)pp.classList.remove('show');}
+  if(t!=='comp'){const pc=document.getElementById('prev-comp');if(pc)pc.classList.remove('show');}
   if(t==='pend'||t==='comp'){ultimoKey=null;renderLista();}
   _updateFab();
 };
@@ -4260,10 +4089,12 @@ function mkCard(item,opts={}){
   // super_admin + admin_supremo : supervisión — ven y editan todo
   const _esSoloSuyos=(_rolMkCard==='usuario'||_rolMkCard==='admin');
   const _puedeEditarEsteComp=!_esSoloSuyos||_esPropiaMk;
-  const actions=esComp
-    ?(_puedeEditarEsteComp?`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>`:'')
-    :`<button class="ia-sm" onclick="editarItem('${item.fbKey}')" title="Editar">✏️</button>${_puedeElim?`<button class="ia-sm del" onclick="eliminarItem('${item.fbKey}')" title="Eliminar">🗑</button>`:''}`;
-  const derecha=esComp?`<span class="item-precio">${precioStr}</span>`:`<button class="btn-comp-ahora" onclick="cambiarAComprado('${item.fbKey}')">☐ Marcar comprado</button>`;
+  // Acciones: ocultas en la card — el swipe las expone
+  // Solo mantenemos "Marcar comprado" como acción principal visible en pendientes
+  const actions=''; // editar/eliminar solo por swipe
+  const derecha=esComp
+    ?`<span class="item-precio">${precioStr}</span>`
+    :`<button class="btn-comp-ahora" onclick="cambiarAComprado('${item.fbKey}')" title="Marcar como comprado">☑</button>`;
   // quién compró: usuario+admin solo ven el suyo; super_admin+admin_supremo ven todos
   const _miNombre=(window._nombreActual||'').toUpperCase().trim();
   const _esPropio=(item.quien||'').toUpperCase().trim()===_miNombre;
