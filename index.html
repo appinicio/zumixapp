@@ -488,11 +488,14 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 }
 .btn-ghost:hover{border-color:var(--border2);color:var(--text2);}
 .btn-wsp{
-  width:100%;padding:13px;background:#25D366;color:#fff;border:none;
-  border-radius:var(--rmd);font-family:var(--ff);font-size:var(--fs-md);
+  width:100%;padding:10px;background:transparent;color:#25D366;
+  border:1.5px solid rgba(37,211,102,.4);
+  border-radius:var(--rmd);font-family:var(--ff);font-size:var(--fs-sm);
   font-weight:700;cursor:pointer;display:flex;align-items:center;
-  justify-content:center;gap:8px;margin-top:10px;transition:var(--transition);
+  justify-content:center;gap:7px;transition:background .15s,border-color .15s;
 }
+.btn-wsp:hover{background:rgba(37,211,102,.08);border-color:rgba(37,211,102,.6);}
+.btn-wsp:active{transform:scale(.98);}
 .btn-wsp:active{transform:scale(.98);}
 
 /* ─── ITEM CARD ──────────────────────────────────────── */
@@ -2033,11 +2036,12 @@ details summary::-webkit-details-marker{display:none;}
       <button class="search-clear" id="search-pend-clear" onclick="limpiarBusqueda('pend')">✕</button>
     </div>
     <div id="lista-pend"></div>
-    <div class="field" style="margin-top:14px;margin-bottom:0">
-      <div class="field-label" style="font-size:.7rem">📝 Nota para el grupo</div>
-      <textarea class="textarea-f" id="nota-pend" rows="2" placeholder="Horario, quién va…"></textarea>
+    <!-- Nota + WhatsApp compactos en un bloque integrado -->
+    <div style="margin-top:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rmd);padding:8px 10px;">
+      <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">📝 Nota</div>
+      <textarea class="textarea-f" id="nota-pend" rows="2" placeholder="Horario, quién va…" style="margin-bottom:7px;"></textarea>
+      <button class="btn-wsp" onclick="genWSP('pend')">💬 Generar para WhatsApp</button>
     </div>
-    <button class="btn-wsp" onclick="genWSP('pend')">💬 Generar para WhatsApp</button>
     <div class="preview-c" id="prev-pend">
       <div class="preview-label">Vista previa</div>
       <div class="preview-txt" id="pt-pend"></div>
@@ -2738,25 +2742,46 @@ window._pulseKPIs=pulseKPIs;
     container.querySelectorAll('.item-card:not(.swipe-init)').forEach(card=>{
       card.classList.add('swipe-init');
       const key=card.id.replace('card-','');
-      const canDel=window._permisos?.eliminar;
       const rol=window._rol||'usuario';
-      const soloSuyos=(rol==='usuario'||rol==='admin');
+      const esSuperPrivilegiado=(rol==='super_admin'||rol==='admin_supremo');
       const miNombre=(window._nombreActual||'').toUpperCase().trim();
-      const esPropia=(card.querySelector('.item-nom')?.textContent||'').length>0; // siempre true
-      // Determinar opciones según modo (pend / comp)
+      // Determinar si esta card es propia del usuario
+      const quienEl=card.querySelector('.item-sub span[style*="color"]');
+      const cardText=card.textContent||'';
+      const esPropia=miNombre&&cardText.toUpperCase().includes(miNombre);
       let opts={};
+
       if(mode==='pend'){
-        opts.right={icon:'✅',label:'Marcar comprado',action:()=>window.cambiarAComprado(key)};
-        opts.left={icon:'✏️',label:'Editar',action:()=>window.editarItem(key)};
-      }else if(mode==='comp'){
-        opts.right={icon:'✏️',label:'Editar',action:()=>window.editarItem(key)};
-        if(canDel){
+        // PENDIENTES:
+        // → derecha: Marcar comprado (todos los roles)
+        // ← izquierda: Editar (todos) | Eliminar solo super_admin/admin_supremo
+        opts.right={icon:'✅',label:'Comprado',action:()=>window.cambiarAComprado(key)};
+        if(esSuperPrivilegiado){
+          // Super: swipe izq = eliminar
           opts.left={icon:'🗑',label:'Eliminar',danger:true,action:()=>window.eliminarItem(key)};
+        }else{
+          // Admin/usuario: swipe izq = editar
+          opts.left={icon:'✏️',label:'Editar',action:()=>window.editarItem(key)};
+        }
+
+      }else if(mode==='comp'){
+        // COMPRADOS HOY:
+        // → derecha: super/admin_sup = eliminar | admin/usuario = solo sus propias: editar
+        // ← izquierda: super/admin_sup = editar | admin/usuario = solo sus propias: editar
+        if(esSuperPrivilegiado){
+          opts.right={icon:'🗑',label:'Eliminar',danger:true,action:()=>window.eliminarItem(key)};
+          opts.left={icon:'✏️',label:'Editar',action:()=>window.editarItem(key)};
+        }else{
+          // Admin/usuario: solo pueden editar sus propias compras
+          if(esPropia){
+            opts.right={icon:'✏️',label:'Editar',action:()=>window.editarItem(key)};
+          }
+          // Sin acción izquierda — no pueden eliminar
         }
       }
       wrapCard(card,opts);
     });
-    // Mostrar hint de swipe la primera vez
+    // Hint de swipe la primera vez
     if(!sessionStorage.getItem(HINT_KEY)){
       const first=container.querySelector('.swipe-wrap');
       if(first){
@@ -4112,14 +4137,20 @@ function renderLista(){
   const urgAlta=pend.filter(i=>i.urgencia==='alta'||i.urgencia==='urgente').length;const urgMedia=pend.filter(i=>i.urgencia==='media').length;const urg=urgAlta;const nor=pend.length-urgAlta-urgMedia;
   const bp=document.getElementById('badge-pend-tab'),bc=document.getElementById('badge-comp-tab');
   bp.style.display=pend.length?'inline':'none';if(pend.length){bp.textContent=urgAlta>0?`🔴${pend.length}`:pend.length;bp.className='lstab-badge yellow';}
-  bc.style.display=compHoy.length?'inline':'none';if(compHoy.length){bc.textContent=compHoy.length;bc.className='lstab-badge yellow';}
+  bc.style.display=compHoy.length?'inline':'none';if(compHoy.length){bc.textContent=compHoy.length;bc.className='lstab-badge green';}
   document.getElementById('cnt-urg').textContent=urgAlta;const _cmdEl=document.getElementById('cnt-med');if(_cmdEl)_cmdEl.textContent=urgMedia;document.getElementById('cnt-nor').textContent=nor;
   window._pulseKPIs&&window._pulseKPIs();
   const lp=document.getElementById('lista-pend');
-  if(!pend.length){lp.innerHTML=`<div class="empty-s"><div class="ei">🎉</div><div class="et">¡Sin pendientes!</div></div>`;}
+  if(!pend.length){lp.innerHTML=`<div class="empty-s" style="padding:24px 0 8px;"><div class="ei">🎉</div><div class="et" style="margin-bottom:5px;">¡Sin pendientes!</div><div style="font-size:var(--fs-xs);color:var(--text3);margin-bottom:14px;">Usa ＋ para registrar lo que falta.</div>${historial.length?`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--rmd);padding:9px 11px;text-align:left;max-width:260px;margin:0 auto;"><div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">🕐 Último registrado</div><div style="font-size:var(--fs-md);font-weight:700;color:var(--text);">${historial[0]?.nombre||'—'}</div><div style="font-size:var(--fs-xs);color:var(--text3);font-family:var(--ffmono);">${historial[0]?.categoria||''}</div></div>`:''}</div>`;}
   else{
-    const q=norm(searchPend);const fil=q?pend.filter(i=>norm(i.nombre||'').includes(q)||norm(i.categoria||'').includes(q)):pend;
-    if(!fil.length){lp.innerHTML=`<div class="empty-s"><div class="ei">🔍</div><div class="et">Sin resultados para "${searchPend}"</div></div>`;}
+    const q=norm(searchPend);
+    // Aplicar filtro de urgencia si está activo
+    const urgF=window._getUrgFiltro?.();
+    let fil=q?pend.filter(i=>norm(i.nombre||'').includes(q)||norm(i.categoria||'').includes(q)):pend;
+    if(urgF==='alta') fil=fil.filter(i=>i.urgencia==='alta'||i.urgencia==='urgente');
+    else if(urgF==='media') fil=fil.filter(i=>i.urgencia==='media');
+    else if(urgF==='baja') fil=fil.filter(i=>!i.urgencia||i.urgencia==='baja'||i.urgencia==='normal');
+    if(!fil.length){lp.innerHTML=`<div class="empty-s"><div class="ei">🔍</div><div class="et">Sin resultados${urgF?' para esa prioridad':` para "${searchPend}"`}</div></div>`;}
     else{
       const _urgOrd=i=>(i.urgencia==='alta'||i.urgencia==='urgente')?0:i.urgencia==='media'?1:2;const ord=[...fil].sort((a,b)=>_urgOrd(a)-_urgOrd(b));
       const gDL=ord.filter(i=>i.responsable==='darlyn');const gNos=ord.filter(i=>i.responsable==='nosotros'||!i.responsable);
