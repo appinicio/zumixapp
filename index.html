@@ -242,7 +242,15 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
   display:flex;align-items:stretch;
   padding-bottom:env(safe-area-inset-bottom);
   box-shadow:0 -4px 24px rgba(26,24,20,.08),0 -1px 0 var(--border);
-  transition:background .25s,border-color .25s;
+  /* scroll-aware: transition suave */
+  transition:transform .28s cubic-bezier(.4,0,.2,1),
+             opacity .22s ease-out;
+  will-change:transform;
+}
+.bottom-nav.nav-hidden{
+  transform:translateX(-50%) translateY(100%);
+  opacity:0;
+  pointer-events:none;
 }
 [data-theme="dark"] .bottom-nav{
   background:rgba(26,23,16,.95);
@@ -1366,10 +1374,14 @@ details summary::-webkit-details-marker{display:none;}
   transition:
     opacity .22s ease-out,
     transform .28s cubic-bezier(.34,1.4,.64,1),
+    bottom .28s cubic-bezier(.4,0,.2,1),
     box-shadow .2s;
   overflow:hidden;white-space:nowrap;
   -webkit-tap-highlight-color:transparent;
   user-select:none;
+}
+.fab.nav-hidden-fab{
+  bottom:calc(10px + env(safe-area-inset-bottom));
 }
 .fab.hidden{
   opacity:0;
@@ -2648,7 +2660,64 @@ function pulseKPIs(){
 }
 window._pulseKPIs=pulseKPIs;
 
-/* ── SWIPE ENGINE ──────────────────────────────────────────── */
+/* ── SCROLL-AWARE BOTTOM NAV ───────────────────────────── */
+(function(){
+  const NAV_THRESHOLD=8; // px mínimos antes de reaccionar
+  const SHOW_ON_TOP=40;  // siempre visible cerca del top
+  let lastY=0;
+  let ticking=false;
+  let navVisible=true;
+
+  function setNav(visible){
+    if(navVisible===visible)return;
+    navVisible=visible;
+    const nav=document.querySelector('.bottom-nav');
+    const fab=document.getElementById('fab-reg');
+    if(nav){
+      nav.classList.toggle('nav-hidden',!visible);
+    }
+    if(fab&&!fab.classList.contains('hidden')){
+      fab.classList.toggle('nav-hidden-fab',!visible);
+    }
+  }
+
+  function onScroll(){
+    const y=window.scrollY||document.documentElement.scrollTop;
+    if(y<=SHOW_ON_TOP){setNav(true);lastY=y;return;}
+    const delta=y-lastY;
+    if(Math.abs(delta)<NAV_THRESHOLD){return;}
+    if(delta>0){setNav(false);}  // scroll abajo → ocultar
+    else{setNav(true);}           // scroll arriba → mostrar
+    lastY=y;
+    ticking=false;
+  }
+
+  // Escuchar scroll en window (page-wrap) y en cada pane (scroll interno)
+  window.addEventListener('scroll',()=>{
+    if(!ticking){requestAnimationFrame(onScroll);ticking=true;}
+  },{passive:true});
+
+  // También en el page-wrap si tiene overflow
+  const pw=document.getElementById('page-wrap');
+  if(pw){
+    pw.addEventListener('scroll',()=>{
+      const y=pw.scrollTop;
+      if(y<=SHOW_ON_TOP){setNav(true);lastY=y;return;}
+      const delta=y-lastY;
+      if(Math.abs(delta)<NAV_THRESHOLD)return;
+      setNav(delta>0?false:true);
+      lastY=y;
+    },{passive:true});
+  }
+
+  // Al cambiar de tab, siempre mostrar la nav
+  const origSwitchTab=window.switchTab;
+  window.switchTab=function(t){
+    if(origSwitchTab)origSwitchTab(t);
+    setNav(true);lastY=0;
+  };
+})();
+/* ─────────────────────────────────────────────────────── */
 (function(){
   const THRESHOLD=72;   // px mínimo para disparar acción
   const MAX=110;        // px máximo de arrastre visible
