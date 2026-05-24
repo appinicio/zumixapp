@@ -283,7 +283,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 }
 
 /* ─── PANE ───────────────────────────────────────────── */
-.pane{display:none;flex:1;padding:14px 14px 80px;}
+.pane{display:none;flex:1;padding:14px 14px 90px;}
 .pane.active{display:block;}
 
 /* ─── LISTA SUBTABS ──────────────────────────────────── */
@@ -303,14 +303,17 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 .lstab-txt{font-size:var(--fs-xs);line-height:1;}
 .lstab-badge{
   position:absolute;top:-5px;right:-4px;
-  background:var(--red);color:#fff;
+  background:var(--text2);color:var(--surface);
   font-size:.5rem;font-weight:800;padding:2px 4px;
   border-radius:20px;min-width:15px;text-align:center;
   font-family:var(--ffmono);border:1.5px solid var(--surface);
   line-height:1.3;
 }
-.lstab-badge.green{background:var(--green);}
-.lstab-badge.yellow{background:var(--accent);color:#1a1814;}
+.lstab-badge.green{background:var(--green);color:#fff;}
+.lstab-badge.yellow{background:var(--text2);color:var(--surface);}
+[data-theme="dark"] .lstab-badge{border-color:var(--surface2);}
+/* badge urgente: solo rojo si hay items de alta prioridad */
+.lstab-badge.urgent{background:var(--red);color:#fff;}
 
 /* ─── LISTA SUBPANES ─────────────────────────────────── */
 .lista-subpane{display:none;}
@@ -2036,8 +2039,8 @@ details summary::-webkit-details-marker{display:none;}
       <button class="search-clear" id="search-pend-clear" onclick="limpiarBusqueda('pend')">✕</button>
     </div>
     <div id="lista-pend"></div>
-    <!-- Nota + WhatsApp compactos en un bloque integrado -->
-    <div style="margin-top:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rmd);padding:8px 10px;">
+    <!-- Nota + WhatsApp: solo visible si hay registros -->
+    <div id="pend-wsp-section" style="display:none;margin-top:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rmd);padding:8px 10px;">
       <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">📝 Nota</div>
       <textarea class="textarea-f" id="nota-pend" rows="2" placeholder="Horario, quién va…" style="margin-bottom:7px;"></textarea>
       <button class="btn-wsp" onclick="genWSP('pend')">💬 Generar para WhatsApp</button>
@@ -2066,11 +2069,12 @@ details summary::-webkit-details-marker{display:none;}
     </div>
     <div class="minmax" id="minmax" style="display:none"></div>
     <div id="lista-comp"></div>
-    <div class="field" style="margin-top:14px;margin-bottom:0">
-      <div class="field-label" style="font-size:.7rem">📝 Nota</div>
-      <textarea class="textarea-f" id="nota-comp" rows="2" placeholder="Observaciones…"></textarea>
+    <!-- Nota + WhatsApp: solo visible si hay registros -->
+    <div id="comp-wsp-section" style="display:none;margin-top:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rmd);padding:8px 10px;">
+      <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">📝 Nota</div>
+      <textarea class="textarea-f" id="nota-comp" rows="2" placeholder="Observaciones…" style="margin-bottom:7px;"></textarea>
+      <button class="btn-wsp" onclick="genWSP('comp')">💬 Generar para WhatsApp</button>
     </div>
-    <button class="btn-wsp" onclick="genWSP('comp')">💬 Generar para WhatsApp</button>
     <div class="preview-c" id="prev-comp">
       <div class="preview-label">Vista previa</div>
       <div class="preview-txt" id="pt-comp"></div>
@@ -4136,8 +4140,13 @@ function renderLista(){
   const pend=activos.filter(i=>!i.comprado);const compHoy=activos.filter(i=>i.comprado&&(i.tsComprado||0)>=hT);
   const urgAlta=pend.filter(i=>i.urgencia==='alta'||i.urgencia==='urgente').length;const urgMedia=pend.filter(i=>i.urgencia==='media').length;const urg=urgAlta;const nor=pend.length-urgAlta-urgMedia;
   const bp=document.getElementById('badge-pend-tab'),bc=document.getElementById('badge-comp-tab');
-  bp.style.display=pend.length?'inline':'none';if(pend.length){bp.textContent=urgAlta>0?`🔴${pend.length}`:pend.length;bp.className='lstab-badge yellow';}
-  bc.style.display=compHoy.length?'inline':'none';if(compHoy.length){bc.textContent=compHoy.length;bc.className='lstab-badge green';}
+  bp.style.display=pend.length?'inline':'none';
+  if(pend.length){
+    bp.textContent=pend.length;
+    bp.className=urgAlta>0?'lstab-badge urgent':'lstab-badge';
+  }
+  bc.style.display=compHoy.length?'inline':'none';
+  if(compHoy.length){bc.textContent=compHoy.length;bc.className='lstab-badge green';}
   document.getElementById('cnt-urg').textContent=urgAlta;const _cmdEl=document.getElementById('cnt-med');if(_cmdEl)_cmdEl.textContent=urgMedia;document.getElementById('cnt-nor').textContent=nor;
   window._pulseKPIs&&window._pulseKPIs();
   const lp=document.getElementById('lista-pend');
@@ -4158,6 +4167,10 @@ function renderLista(){
       lp.innerHTML=rG(gDL,'darlyn','Darlyn y Luz','👑')+rG(gNos,'nosotros','Nosotros','👥');
     }
   }
+  // Mostrar nota+wsp solo si hay registros pendientes
+  const pendWsp=document.getElementById('pend-wsp-section');
+  if(pendWsp) pendWsp.style.display=pend.length?'block':'none';
+
   const lc=document.getElementById('lista-comp');const mmDiv=document.getElementById('minmax');const totEl=document.getElementById('comp-total-dia');const totVal=document.getElementById('comp-total-val');const resEl=document.getElementById('comp-resumen-users');
   if(compHoy.length){
     const qc=norm(searchComp);const filC=qc?compHoy.filter(i=>norm(i.nombre||'').includes(qc)||norm(i.categoria||'').includes(qc)):compHoy;
@@ -4227,6 +4240,10 @@ function renderLista(){
     }
     else mmDiv.style.display='none';
   }else{lc.innerHTML=`<div class="empty-s"><div class="ei">🛍️</div><div class="et">Nada comprado hoy aún</div></div>`;mmDiv.style.display='none';totEl.style.display='none';resEl.innerHTML='';}
+  // Mostrar nota+wsp comprados solo si hay registros
+  const compWsp=document.getElementById('comp-wsp-section');
+  if(compWsp) compWsp.style.display=compHoy.length?'block':'none';
+
   // Inicializar swipe en las cards recién renderizadas
   requestAnimationFrame(()=>{
     window._initSwipe&&window._initSwipe('lista-pend','pend');
