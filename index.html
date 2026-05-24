@@ -2662,60 +2662,70 @@ window._pulseKPIs=pulseKPIs;
 
 /* ── SCROLL-AWARE BOTTOM NAV ───────────────────────────── */
 (function(){
-  const NAV_THRESHOLD=8; // px mínimos antes de reaccionar
-  const SHOW_ON_TOP=40;  // siempre visible cerca del top
+  const NAV_THRESHOLD=12;
+  const SHOW_ON_TOP=50;
   let lastY=0;
-  let ticking=false;
   let navVisible=true;
+  let ticking=false;
 
   function setNav(visible){
     if(navVisible===visible)return;
     navVisible=visible;
     const nav=document.querySelector('.bottom-nav');
     const fab=document.getElementById('fab-reg');
-    if(nav){
-      nav.classList.toggle('nav-hidden',!visible);
-    }
+    if(nav)nav.classList.toggle('nav-hidden',!visible);
     if(fab&&!fab.classList.contains('hidden')){
       fab.classList.toggle('nav-hidden-fab',!visible);
     }
   }
 
-  function onScroll(){
-    const y=window.scrollY||document.documentElement.scrollTop;
+  function handleScrollY(y){
     if(y<=SHOW_ON_TOP){setNav(true);lastY=y;return;}
     const delta=y-lastY;
-    if(Math.abs(delta)<NAV_THRESHOLD){return;}
-    if(delta>0){setNav(false);}  // scroll abajo → ocultar
-    else{setNav(true);}           // scroll arriba → mostrar
+    if(Math.abs(delta)<NAV_THRESHOLD)return;
+    setNav(delta<0); // delta negativo = subiendo = mostrar
     lastY=y;
-    ticking=false;
   }
 
-  // Escuchar scroll en window (page-wrap) y en cada pane (scroll interno)
+  // 1. window scroll
   window.addEventListener('scroll',()=>{
-    if(!ticking){requestAnimationFrame(onScroll);ticking=true;}
+    if(!ticking){
+      requestAnimationFrame(()=>{
+        handleScrollY(window.scrollY||window.pageYOffset||0);
+        ticking=false;
+      });
+      ticking=true;
+    }
   },{passive:true});
 
-  // También en el page-wrap si tiene overflow
-  const pw=document.getElementById('page-wrap');
-  if(pw){
-    pw.addEventListener('scroll',()=>{
-      const y=pw.scrollTop;
-      if(y<=SHOW_ON_TOP){setNav(true);lastY=y;return;}
-      const delta=y-lastY;
-      if(Math.abs(delta)<NAV_THRESHOLD)return;
-      setNav(delta>0?false:true);
-      lastY=y;
-    },{passive:true});
-  }
+  // 2. Touch — más confiable en Android WebView y Safari
+  let touchStartY=0;
+  document.addEventListener('touchstart',e=>{
+    touchStartY=e.touches[0].clientY;
+  },{passive:true});
 
-  // Al cambiar de tab, siempre mostrar la nav
-  const origSwitchTab=window.switchTab;
-  window.switchTab=function(t){
-    if(origSwitchTab)origSwitchTab(t);
-    setNav(true);lastY=0;
-  };
+  document.addEventListener('touchmove',e=>{
+    const currentY=e.touches[0].clientY;
+    const swipeDelta=touchStartY-currentY; // positivo=scroll abajo, negativo=scroll arriba
+    if(Math.abs(swipeDelta)<NAV_THRESHOLD)return;
+    const scrollY=window.scrollY||document.documentElement.scrollTop||document.body.scrollTop||0;
+    if(scrollY<=SHOW_ON_TOP){setNav(true);return;}
+    setNav(swipeDelta<0); // dedo baja = scroll arriba = mostrar nav
+  },{passive:true});
+
+  // 3. Cualquier contenedor scrolleable interno
+  function watchScrollable(el){
+    el.addEventListener('scroll',()=>handleScrollY(el.scrollTop),{passive:true});
+  }
+  document.querySelectorAll('.pane,[data-scroll]').forEach(watchScrollable);
+  // También body y html por si acaso
+  document.body.addEventListener('scroll',()=>handleScrollY(document.body.scrollTop),{passive:true});
+
+  // 4. Al cambiar de tab/subtab → siempre mostrar nav
+  const _origSwitchTab=window.switchTab;
+  window.switchTab=function(t){if(_origSwitchTab)_origSwitchTab(t);setNav(true);lastY=0;};
+  const _origSwitchLista=window.switchLista;
+  window.switchLista=function(t){if(_origSwitchLista)_origSwitchLista(t);setNav(true);lastY=0;};
 })();
 /* ─────────────────────────────────────────────────────── */
 (function(){
