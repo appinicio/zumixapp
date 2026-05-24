@@ -853,13 +853,12 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 /* ─── ARCH LIST ──────────────────────────────────────── */
 .arch-list{
   border-radius:var(--r);overflow:hidden;
-  border:1.5px solid var(--border);
-  box-shadow:var(--sh);
+  border:1px solid var(--border);
   background:var(--surface);
   margin-bottom:10px;
 }
 .arch-item{
-  display:flex;align-items:center;gap:12px;padding:13px 14px;
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
   border-bottom:1px solid var(--border);transition:background .15s;
   position:relative;
 }
@@ -867,19 +866,32 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 .arch-item:active{background:var(--surface2);}
 .arch-item:hover{background:var(--surface2);}
 .ai-dot{
-  width:8px;height:8px;border-radius:50%;flex-shrink:0;
-  box-shadow:0 0 0 2px var(--surface);
+  width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:2px;align-self:flex-start;
 }
 .ai-dot.urg{background:var(--red);}
 .ai-dot.nor{background:var(--orange);}
 .ai-dot.med{background:var(--blue);}
 .ai-dot.baj{background:var(--green);}
 .ai-body{flex:1;min-width:0;}
-.ai-nom{font-size:var(--fs-md);font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.ai-sub{font-size:var(--fs-xs);color:var(--text3);margin-top:3px;font-family:var(--ffmono);}
+.ai-nom{
+  font-size:var(--fs-md);font-weight:600;color:var(--text);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  line-height:1.2;
+}
+.ai-sub{
+  font-size:var(--fs-xs);color:var(--text2);margin-top:2px;
+  font-family:var(--ffmono);opacity:.85;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
 .ai-right{text-align:right;flex-shrink:0;}
-.ai-precio{font-size:var(--fs-md);font-weight:700;color:var(--text);font-family:var(--ffmono);letter-spacing:-.02em;}
-.ai-fecha{font-size:var(--fs-xs);color:var(--text3);margin-top:2px;font-family:var(--ffmono);}
+.ai-precio{
+  font-size:var(--fs-sm);font-weight:700;color:var(--text);
+  font-family:var(--ffmono);letter-spacing:-.02em;
+}
+.ai-fecha{
+  font-size:.58rem;color:var(--text3);margin-top:2px;
+  font-family:var(--ffmono);
+}
 
 /* ─── HEDIT ──────────────────────────────────────────── */
 .hedit-lock-note{
@@ -1097,27 +1109,28 @@ details summary::-webkit-details-marker{display:none;}
 
 /* ─── ACCIONES HISTORIAL (fila compacta) ─────────────── */
 .hist-actions-row{
-  display:flex;gap:6px;margin-bottom:10px;align-items:center;
+  display:flex;gap:5px;margin-bottom:8px;align-items:center;
 }
 .hist-action-btn{
-  flex:1;padding:8px 6px;
-  background:var(--surface);
-  border:1.5px solid var(--border);
+  flex:1;padding:7px 6px;
+  background:transparent;
+  border:1px solid var(--border);
   border-radius:var(--rmd);
   font-family:var(--ff);font-size:var(--fs-xs);font-weight:700;
-  color:var(--text2);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;gap:5px;
-  transition:background .15s,border-color .15s;
+  color:var(--text3);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  transition:background .15s,color .15s;
   white-space:nowrap;
 }
 .hist-action-btn:active{transform:scale(.97);}
-.hist-action-btn.green{color:var(--green);border-color:rgba(45,139,94,.4);}
+.hist-action-btn:hover{background:var(--surface2);color:var(--text2);}
+.hist-action-btn.green{color:var(--green);border-color:rgba(45,139,94,.3);}
 .hist-action-btn.green:hover{background:var(--green-bg);}
 .hist-action-btn.filter{position:relative;}
 .hist-action-btn.filter .dot{
   position:absolute;top:4px;right:4px;
-  width:6px;height:6px;border-radius:50%;
-  background:var(--accent);border:1.5px solid var(--surface);
+  width:5px;height:5px;border-radius:50%;
+  background:var(--accent);
   display:none;
 }
 
@@ -1612,10 +1625,9 @@ details summary::-webkit-details-marker{display:none;}
 [data-theme="dark"] .arch-item{
   background:var(--surface);
   border-color:var(--border);
-  box-shadow:var(--sh);
 }
 [data-theme="dark"] .arch-item:hover{
-  background:var(--surface2);
+  background:rgba(255,255,255,.03);
 }
 
 /* ── Total hoy card ── */
@@ -2126,7 +2138,7 @@ details summary::-webkit-details-marker{display:none;}
   <!-- ③ KPIs COMPACTOS -->
   <div class="kpi-mini-grid">
     <div class="kpi-mini"><strong id="hk-t">0</strong><span>compras</span></div>
-    <div class="kpi-mini"><strong id="hk-g">S/0</strong><span>gastado</span></div>
+    <div class="kpi-mini"><strong id="hk-g">0</strong><span>S/ gastado</span></div>
     <div class="kpi-mini"><strong id="hk-u">0</strong><span>alta prio.</span></div>
     <div class="kpi-mini"><strong id="hk-e">0</strong><span>personas</span></div>
   </div>
@@ -4323,7 +4335,7 @@ function renderHist(){
   // Ya no se usa select — poblarUsuariosHist es legacy, no llamar aquí
 
   const gasto=todos.reduce((s,i)=>s+getP(i),0);const emps=new Set(todos.map(i=>i.quien).filter(Boolean)).size;
-  document.getElementById('hk-t').textContent=todos.length;document.getElementById('hk-g').textContent=`S/ ${gasto.toFixed(2)}`;document.getElementById('hk-u').textContent=todos.filter(i=>i.urgencia==='alta'||i.urgencia==='urgente').length;document.getElementById('hk-e').textContent=emps;
+  document.getElementById('hk-t').textContent=todos.length;document.getElementById('hk-g').textContent=gasto.toFixed(2);document.getElementById('hk-u').textContent=todos.filter(i=>i.urgencia==='alta'||i.urgencia==='urgente').length;document.getElementById('hk-e').textContent=emps;
   const cont=document.getElementById('lista-hist');const qh=norm(searchHist);
   const fil=qh?todos.filter(i=>norm(i.nombre||'').includes(qh)||norm(i.categoria||'').includes(qh)||norm(i.quien||'').includes(qh)):todos;
   if(!fil.length){cont.innerHTML=`<div class="empty-s" style="padding:28px"><div class="ei">${qh||fromVal||toVal||userFil||catFil?'🔍':'📭'}</div><div class="et">${qh?`Sin resultados para "${searchHist}"`:catFil?`Sin registros de categoría ${catFil}`:userFil?`Sin registros de ${userFil}`:fromVal||toVal?'Sin registros en ese rango de fechas':'Sin registros en este período'}</div></div>`;cont.className='';return;}
