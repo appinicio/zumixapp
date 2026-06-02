@@ -953,38 +953,71 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 }
 .search-clear.show{display:block;}
 
-/* ─── SUBTABS (stats) ────────────────────────────────── */
-/* ─── STATS SEGMENTED NAV ────────────────────────────── */
+/* ─── SUBTABS (stats) — Volume Dial ─────────────────── */
 .subtabs{
-  display:flex;align-items:stretch;
-  background:var(--surface2);
-  border:1.5px solid var(--border);
-  border-radius:var(--rmd);
-  padding:3px;gap:2px;
+  display:flex;align-items:center;
+  background:transparent;
+  padding:4px 0;gap:0;
   margin-bottom:14px;
-  overflow-x:auto;scrollbar-width:none;
+  overflow:hidden;
+  position:relative;
 }
-.subtabs::-webkit-scrollbar{display:none;}
+.subtabs::before{
+  content:'';position:absolute;left:0;right:0;top:50%;height:1.5px;
+  background:var(--border);border-radius:2px;transform:translateY(-50%);
+  z-index:0;
+}
 .stab{
-  flex:1;min-width:0;padding:7px 4px;text-align:center;
+  flex:0 0 auto;
+  padding:6px 8px;text-align:center;
   font-size:var(--fs-xs);font-weight:700;
-  border-radius:8px;border:none;background:transparent;
-  color:var(--text3);cursor:pointer;
-  transition:background .15s,color .15s,box-shadow .15s;
-  letter-spacing:.01em;text-transform:uppercase;
-  white-space:nowrap;flex-shrink:0;line-height:1.2;
-  -webkit-tap-highlight-color:transparent;
-}
-.stab:active{opacity:.7;}
-.stab.active{
+  border-radius:20px;border:1.5px solid var(--border);
   background:var(--surface);
-  color:var(--text);
-  box-shadow:0 1px 4px rgba(0,0,0,.12),0 0 0 1px var(--border);
+  color:var(--text3);cursor:pointer;
+  transition:all .25s cubic-bezier(.34,1.2,.64,1);
+  letter-spacing:.01em;text-transform:uppercase;
+  white-space:nowrap;line-height:1.2;
+  -webkit-tap-highlight-color:transparent;
+  position:relative;z-index:1;
+  transform-origin:center center;
+  opacity:.55;
+  margin:0 3px;
+  max-width:80px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.stab:active{transform:scale(.93);}
+.stab.stab-adjacent{
+  opacity:.75;
+  transform:scale(.88);
+  max-width:60px;
+}
+.stab.stab-far{
+  opacity:.3;
+  transform:scale(.72);
+  max-width:36px;
+  font-size:.5rem;
+  padding:5px 4px;
+}
+.stab.active{
+  background:var(--text);
+  border-color:var(--text);
+  color:var(--bg);
+  box-shadow:0 2px 10px rgba(0,0,0,.18);
+  transform:scale(1.08);
+  opacity:1;
+  max-width:120px;
+  z-index:2;
+}
+[data-theme="dark"] .stab{
+  background:var(--surface2);
+  border-color:var(--border);
 }
 [data-theme="dark"] .stab.active{
-  background:var(--surface3);
-  color:var(--accent2);
-  box-shadow:0 1px 6px rgba(0,0,0,.4),0 0 0 1px rgba(224,184,74,.2);
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#0E0C08;
+  box-shadow:0 2px 12px var(--accent-glow);
 }
 .subpane{display:none;}
 .subpane.active{display:block;animation:fadeIn .18s ease-out;}
@@ -1591,17 +1624,7 @@ details summary::-webkit-details-marker{display:none;}
   border-color:var(--surface);
 }
 
-/* ── Stats subtabs ── */
-[data-theme="dark"] .stab{
-  background:rgba(255,255,255,.04);
-  border-color:var(--border);
-}
-[data-theme="dark"] .stab.active{
-  background:var(--accent);
-  border-color:var(--accent);
-  color:#0E0C08;
-  box-shadow:0 2px 12px var(--accent-glow);
-}
+/* ── Stats subtabs (dark already handled in main .stab block) ── */
 
 /* ── Filter buttons ── */
 [data-theme="dark"] .fbtn{
@@ -2206,13 +2229,13 @@ details summary::-webkit-details-marker{display:none;}
 
 <!-- PANE STATS -->
 <div class="pane" id="pane-stats">
-  <!-- Subtabs dinámicos por rol (se ajustan desde _aplicarRol) -->
-  <div class="subtabs" id="stats-subtabs" style="overflow-x:auto;flex-wrap:nowrap;gap:5px;scrollbar-width:none;">
-    <div class="stab active" id="stab-metricas" onclick="switchST('metricas')" style="white-space:nowrap;flex-shrink:0;">📊 Análisis</div>
-    <div class="stab" id="stab-comparaciones" onclick="switchST('comparaciones')" style="white-space:nowrap;flex-shrink:0;">📅 Períodos</div>
-    <div class="stab" id="stab-usuarios" onclick="switchST('usuarios')" style="display:none;white-space:nowrap;flex-shrink:0;">👥 Usuarios</div>
-    <div class="stab" id="stab-comparar" onclick="switchST('comparar')" style="display:none;white-space:nowrap;flex-shrink:0;">🔄 Comparar</div>
-    <div class="stab" id="stab-logs" onclick="switchST('logs')" style="display:none;white-space:nowrap;flex-shrink:0;">🛠 Logs</div>
+  <!-- Subtabs dinámicos por rol (se ajustan desde _aplicarRol) — Volume Dial -->
+  <div class="subtabs" id="stats-subtabs">
+    <div class="stab active" id="stab-metricas" onclick="switchST('metricas')">📊 Análisis</div>
+    <div class="stab" id="stab-comparaciones" onclick="switchST('comparaciones')">📅 Períodos</div>
+    <div class="stab" id="stab-usuarios" onclick="switchST('usuarios')" style="display:none;">👥 Usuarios</div>
+    <div class="stab" id="stab-comparar" onclick="switchST('comparar')" style="display:none;">🔄 Comparar</div>
+    <div class="stab" id="stab-logs" onclick="switchST('logs')" style="display:none;">🛠 Logs</div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════
@@ -2248,9 +2271,43 @@ details summary::-webkit-details-marker{display:none;}
           </div>
         </div>
       </div>
-      <!-- Acordeón: usuario + tipo (colapsado por defecto) -->
+      <!-- Acordeón: producto + categoría + usuario + tipo (colapsado por defecto) -->
       <div class="accordion-body" id="stats-filter-accordion-body">
         <div style="height:1px;background:var(--border);margin-bottom:8px;"></div>
+        <!-- Fila 1: buscar producto + por categoría (XOR entre sí) -->
+        <div id="stats-prod-cat-row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-bottom:10px;">
+          <!-- Buscar producto -->
+          <div id="stats-prod-filter-wrap" style="flex:1;min-width:140px;position:relative;">
+            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🔍 Buscar producto</div>
+            <div style="display:flex;gap:5px;">
+              <div style="flex:1;position:relative;">
+                <input type="text" id="stats-prod-input" placeholder="Nombre del producto…" autocomplete="off"
+                  class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
+                  oninput="filtrarSugerenciasProductoStats()" onfocus="filtrarSugerenciasProductoStats()" />
+                <div id="stats-prod-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:299;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+              </div>
+              <button onclick="limpiarFiltroProductoStats()" id="btn-clear-prod-stat"
+                style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+            </div>
+            <div id="stats-prod-chip" style="display:none;margin-top:4px;"></div>
+          </div>
+          <!-- Por categoría -->
+          <div id="stats-cat-filter-wrap" style="flex-shrink:0;">
+            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🏷 Por categoría</div>
+            <div style="display:flex;gap:4px;">
+              <select id="stats-cat-select" class="select-f" style="font-size:.78rem;padding:5px 9px;" onchange="aplicarFiltroCatStats()">
+                <option value="">— Todas —</option>
+                <option value="CARNES">🥩 Carnes</option><option value="VERDURAS">🥦 Verduras</option>
+                <option value="LACTEOS">🥛 Lácteos</option><option value="FRUTAS">🍎 Frutas</option>
+                <option value="INSUMOS">🧪 Insumos</option><option value="PREPARADOS">🍱 Preparados</option>
+                <option value="BEBIDAS">🥤 Bebidas</option><option value="ENVASES">📦 Envases</option>
+                <option value="LIMPIEZA">🧹 Limpieza</option><option value="OTROS">⚙️ Otros</option>
+              </select>
+              <button id="btn-clear-cat-stats" onclick="limpiarFiltroCatStats()" style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+            </div>
+          </div>
+        </div>
+        <!-- Fila 2: usuario + tipo (XOR entre sí) -->
         <div id="stats-global-row2" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
           <div id="stats-user-filter-wrap" style="flex:1;min-width:140px;position:relative;">
             <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👤 Usuario</div>
@@ -2353,8 +2410,9 @@ details summary::-webkit-details-marker{display:none;}
     </div>
 
     <!-- Cards de análisis -->
-    <div class="stat-card"><div class="stat-title">🏆 Más comprados</div><div id="st-top"><p class="no-data">Sin datos</p></div></div>
-    <div class="stat-card"><div class="stat-title">💰 Gasto por categoría</div><div id="st-cat"><p class="no-data">Sin datos</p></div></div>
+    <div class="stat-card" id="sec-top-card"><div class="stat-title">🏆 Más comprados</div><div id="st-top"><p class="no-data">Sin datos</p></div></div>
+    <div class="stat-card" id="sec-cat-gasto-card"><div class="stat-title">💰 Gasto por categoría</div><div id="st-cat"><p class="no-data">Sin datos</p></div></div>
+    <div class="stat-card" id="sec-gasto-acum-card" style="display:none;"><div class="stat-title">💰 Gasto acumulado</div><div id="st-gasto-acum"><p class="no-data">Sin datos</p></div></div>
     <div class="stat-card"><div class="stat-title">⏱ Frecuencia de recompra</div><div id="st-freq"><p class="no-data">Sin datos</p></div></div>
     <div class="stat-card"><div class="stat-title">📦 Cantidad acumulada</div><div id="st-cant"><p class="no-data">Sin datos</p></div></div>
     <div class="stat-card"><div class="stat-title">📆 Gasto por día de semana</div><div id="st-diasem"><p class="no-data">Sin datos</p></div></div>
@@ -2366,55 +2424,103 @@ details summary::-webkit-details-marker{display:none;}
 
   <!-- ─── SUBPANE: PERÍODOS (antes Comparaciones) ─────────────────────────── -->
   <div class="subpane" id="sp-comparaciones">
-    <!-- Filtros para rol ADMIN en Períodos: solo filtro usuario estilo super_admin -->
-    <div id="stats-admin-filters-periodos-wrap" style="display:none;margin-bottom:8px;">
-      <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:3px;letter-spacing:.05em;text-transform:uppercase;">👤 Filtrar por usuario</div>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <div style="flex:1;position:relative;">
-          <input type="text" id="stats-user-inline-input-per" placeholder="Buscar usuario…" autocomplete="off"
-            class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
-            oninput="filtrarSugerenciasUsuarioInlinePer()" onfocus="filtrarSugerenciasUsuarioInlinePer()" />
-          <div id="stats-user-inline-sug-per" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
-        </div>
-        <button onclick="limpiarUsuarioStatsInlinePer()" id="btn-clear-user-inline-per"
-          style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
-      </div>
-      <div id="stats-per-user-chip" style="display:none;margin-top:5px;"></div>
-    </div>
-    <!-- Filtros para super_admin / admin_supremo en Períodos: usuario + tipo -->
-    <div id="stats-superadmin-filters-periodos-wrap" style="display:none;margin-bottom:8px;">
-      <!-- Filtrar por usuario -->
-      <div style="margin-bottom:8px;">
-        <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:3px;letter-spacing:.05em;text-transform:uppercase;">👤 Filtrar por usuario</div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <div style="flex:1;position:relative;">
-            <input type="text" id="stats-user-input-per-sa" placeholder="Buscar usuario…" autocomplete="off"
-              class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
-              oninput="filtrarSugerenciasUsuarioPerSA()" onfocus="filtrarSugerenciasUsuarioPerSA()" />
-            <div id="stats-user-sug-per-sa" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
-          </div>
-          <button onclick="limpiarUsuarioPerSA()" id="btn-clear-user-per-sa"
-            style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
-        </div>
-        <div id="stats-user-chip-per-sa" style="display:none;margin-top:5px;"></div>
-      </div>
-      <!-- Filtrar por tipo -->
-      <div>
-        <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;">👥 Filtrar por tipo</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
-          <button class="fbtn" id="pertipo-admins" onclick="setPerTipoSA('admins',this)" style="font-size:.72rem;padding:6px 13px;">🧑‍💼 Admins</button>
-          <button class="fbtn" id="pertipo-usuarios" onclick="setPerTipoSA('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios</button>
-        </div>
-        <div id="stats-per-tipo-chip-sa" style="display:none;margin-top:3px;"></div>
-      </div>
-    </div>
-    <!-- Filtros de vista — chips compactos sin card grande -->
-    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;" id="per-view-filters">
+    <!-- Filtros de vista — período en primera fila siempre visible -->
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px;" id="per-view-filters">
       <button class="fbtn-sec active" id="pervf-3d" onclick="setPerViewFilt('3d',this)">Últ. 3 días</button>
       <button class="fbtn-sec" id="pervf-3s" onclick="setPerViewFilt('3s',this)">3 semanas</button>
       <button class="fbtn-sec" id="pervf-3m" onclick="setPerViewFilt('3m',this)">3 meses</button>
       <button class="fbtn-sec" id="pervf-3m2" onclick="setPerViewFilt('3m2',this)">+3 meses</button>
     </div>
+
+    <!-- Filtros colapsables — para admin y super_admin (accordion) -->
+    <div id="per-filters-accordion-wrap" style="margin-bottom:8px;">
+      <div class="stats-filter-inline">
+        <div class="accordion-header" id="per-filter-accordion-hdr" onclick="togglePerFilterAccordion()" style="justify-content:flex-end;padding:6px 10px;">
+          <span style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;flex:1;">🔎 Filtros</span>
+          <span class="dot" id="per-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
+          <span class="accordion-arrow" id="per-filter-arrow" style="margin-left:6px;">▾</span>
+        </div>
+        <div class="accordion-body" id="per-filter-accordion-body">
+          <div style="height:1px;background:var(--border);margin-bottom:8px;"></div>
+          <!-- Fila 1: buscar producto + por categoría (XOR) -->
+          <div id="per-prod-cat-row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-bottom:10px;">
+            <div id="per-prod-filter-wrap" style="flex:1;min-width:130px;position:relative;">
+              <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🔍 Buscar producto</div>
+              <div style="display:flex;gap:5px;">
+                <div style="flex:1;position:relative;">
+                  <input type="text" id="per-prod-input" placeholder="Nombre del producto…" autocomplete="off"
+                    class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
+                    oninput="filtrarSugerenciasProductoPer()" onfocus="filtrarSugerenciasProductoPer()" />
+                  <div id="per-prod-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:299;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+                </div>
+                <button onclick="limpiarFiltroProductoPer()" id="btn-clear-prod-per"
+                  style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              </div>
+              <div id="per-prod-chip" style="display:none;margin-top:4px;"></div>
+            </div>
+            <div id="per-cat-filter-wrap" style="flex-shrink:0;">
+              <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🏷 Por categoría</div>
+              <div style="display:flex;gap:4px;">
+                <select id="per-cat-select" class="select-f" style="font-size:.78rem;padding:5px 9px;" onchange="aplicarFiltroCatPer()">
+                  <option value="">— Todas —</option>
+                  <option value="CARNES">🥩 Carnes</option><option value="VERDURAS">🥦 Verduras</option>
+                  <option value="LACTEOS">🥛 Lácteos</option><option value="FRUTAS">🍎 Frutas</option>
+                  <option value="INSUMOS">🧪 Insumos</option><option value="PREPARADOS">🍱 Preparados</option>
+                  <option value="BEBIDAS">🥤 Bebidas</option><option value="ENVASES">📦 Envases</option>
+                  <option value="LIMPIEZA">🧹 Limpieza</option><option value="OTROS">⚙️ Otros</option>
+                </select>
+                <button id="btn-clear-cat-per" onclick="limpiarFiltroCatPer()" style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fila 2: usuario + tipo (para super_admin+) -->
+          <div id="stats-superadmin-filters-periodos-wrap" style="display:none;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
+              <div style="flex:1;min-width:140px;">
+                <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👤 Filtrar por usuario</div>
+                <div style="display:flex;gap:5px;">
+                  <div style="flex:1;position:relative;">
+                    <input type="text" id="stats-user-input-per-sa" placeholder="Buscar usuario…" autocomplete="off"
+                      class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
+                      oninput="filtrarSugerenciasUsuarioPerSA()" onfocus="filtrarSugerenciasUsuarioPerSA()" />
+                    <div id="stats-user-sug-per-sa" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
+                  </div>
+                  <button onclick="limpiarUsuarioPerSA()" id="btn-clear-user-per-sa"
+                    style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
+                </div>
+                <div id="stats-user-chip-per-sa" style="display:none;margin-top:5px;"></div>
+              </div>
+              <div id="per-tipo-sa-wrap" style="flex-shrink:0;">
+                <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👥 Filtrar por tipo</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <button class="fbtn" id="pertipo-admins" onclick="setPerTipoSA('admins',this)" style="font-size:.72rem;padding:6px 13px;">🧑‍💼 Admins</button>
+                  <button class="fbtn" id="pertipo-usuarios" onclick="setPerTipoSA('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios</button>
+                </div>
+                <div id="stats-per-tipo-chip-sa" style="display:none;margin-top:3px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fila usuario (solo para admin) -->
+          <div id="stats-admin-filters-periodos-wrap" style="display:none;">
+            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:3px;">👤 Filtrar por usuario</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <div style="flex:1;position:relative;">
+                <input type="text" id="stats-user-inline-input-per" placeholder="Buscar usuario…" autocomplete="off"
+                  class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
+                  oninput="filtrarSugerenciasUsuarioInlinePer()" onfocus="filtrarSugerenciasUsuarioInlinePer()" />
+                <div id="stats-user-inline-sug-per" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
+              </div>
+              <button onclick="limpiarUsuarioStatsInlinePer()" id="btn-clear-user-inline-per"
+                style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
+            </div>
+            <div id="stats-per-user-chip" style="display:none;margin-top:5px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Cómo funciona — acordeón colapsado -->
     <details style="margin-bottom:8px;">
       <summary style="font-size:var(--fs-xs);color:var(--text3);cursor:pointer;list-style:none;display:flex;align-items:center;gap:4px;user-select:none;">
@@ -2435,13 +2541,57 @@ details summary::-webkit-details-marker{display:none;}
       Si hay un filtro de usuario activo, las comparativas se calculan solo sobre esos datos.
     </div>
     <div class="stat-card" id="per-card-3d"><div class="stat-title">📅 Últimos 3 días</div><div class="comp-grid" id="comp-dias"></div></div>
-    <div class="stat-card" id="per-card-3s"><div class="stat-title">📅 Últimas 3 semanas</div><div class="comp-grid" id="comp-sem"></div></div>
-    <div class="stat-card" id="per-card-3m"><div class="stat-title">📅 Últimos 3 meses</div><div class="comp-grid" id="comp-mes"></div></div>
+    <div class="stat-card" id="per-card-3s" style="display:none;"><div class="stat-title">📅 Últimas 3 semanas</div><div class="comp-grid" id="comp-sem"></div></div>
+    <div class="stat-card" id="per-card-3m" style="display:none;"><div class="stat-title">📅 Últimos 3 meses</div><div class="comp-grid" id="comp-mes"></div></div>
     <div class="stat-card" id="per-card-3m2" style="display:none;"><div class="stat-title">📅 Meses 4–6 anteriores</div><div class="comp-grid" id="comp-mes2"></div></div>
   </div>
 
   <!-- ─── SUBPANE: USUARIOS (super_admin+) ────────────────────────────────── -->
   <div class="subpane" id="sp-usuarios">
+    <!-- Filtros de producto/categoría para Usuarios -->
+    <div id="u-prod-cat-filters" style="margin-bottom:10px;">
+      <div class="stats-filter-inline">
+        <div class="accordion-header" id="u-filter-accordion-hdr" onclick="toggleUFilterAccordion()" style="justify-content:flex-end;padding:6px 10px;">
+          <span style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;flex:1;">🔎 Filtros</span>
+          <span class="dot" id="u-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
+          <span class="accordion-arrow" id="u-filter-arrow" style="margin-left:6px;">▾</span>
+        </div>
+        <div class="accordion-body" id="u-filter-accordion-body">
+          <div style="height:1px;background:var(--border);margin-bottom:8px;"></div>
+          <!-- Fila 1: buscar producto + por categoría (XOR) -->
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
+            <div id="u-prod-filter-wrap" style="flex:1;min-width:130px;position:relative;">
+              <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🔍 Buscar producto</div>
+              <div style="display:flex;gap:5px;">
+                <div style="flex:1;position:relative;">
+                  <input type="text" id="u-prod-input" placeholder="Nombre del producto…" autocomplete="off"
+                    class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
+                    oninput="filtrarSugerenciasProductoU()" onfocus="filtrarSugerenciasProductoU()" />
+                  <div id="u-prod-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:299;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+                </div>
+                <button onclick="limpiarFiltroProductoU()" id="btn-clear-prod-u"
+                  style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              </div>
+              <div id="u-prod-chip" style="display:none;margin-top:4px;"></div>
+            </div>
+            <div id="u-cat-filter-wrap" style="flex-shrink:0;">
+              <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🏷 Por categoría</div>
+              <div style="display:flex;gap:4px;">
+                <select id="u-cat-select" class="select-f" style="font-size:.78rem;padding:5px 9px;" onchange="aplicarFiltroCatU()">
+                  <option value="">— Todas —</option>
+                  <option value="CARNES">🥩 Carnes</option><option value="VERDURAS">🥦 Verduras</option>
+                  <option value="LACTEOS">🥛 Lácteos</option><option value="FRUTAS">🍎 Frutas</option>
+                  <option value="INSUMOS">🧪 Insumos</option><option value="PREPARADOS">🍱 Preparados</option>
+                  <option value="BEBIDAS">🥤 Bebidas</option><option value="ENVASES">📦 Envases</option>
+                  <option value="LIMPIEZA">🧹 Limpieza</option><option value="OTROS">⚙️ Otros</option>
+                </select>
+                <button id="btn-clear-cat-u" onclick="limpiarFiltroCatU()" style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- KPI resumen global de la sección usuarios -->
     <div id="u-kpi-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;"></div>
     <!-- Ranking compras -->
@@ -2459,13 +2609,81 @@ details summary::-webkit-details-marker{display:none;}
   <!-- ─── SUBPANE: COMPARAR USUARIOS ────────────────────────── -->
   <div class="subpane" id="sp-comparar">
 
+    <!-- Período — primera fila siempre visible -->
+    <div class="cmp-section">
+      <div class="cmp-section-label">Período</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;">
+        <button class="fbtn-sec active" id="cmpf-7d" onclick="setCmpPer('7d',this)">7d</button>
+        <button class="fbtn-sec" id="cmpf-15d" onclick="setCmpPer('15d',this)">15d</button>
+        <button class="fbtn-sec" id="cmpf-30d" onclick="setCmpPer('30d',this)">Mes</button>
+        <button class="fbtn-sec" id="cmpf-todo" onclick="setCmpPer('todo',this)">Todo</button>
+        <button class="fbtn-sec" id="cmpf-rango" onclick="setCmpPer('rango',this)">📅 Rango</button>
+      </div>
+      <div id="cmp-rango-wrap" style="display:none;margin-top:8px;">
+        <div style="display:flex;gap:7px;">
+          <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:2px;text-transform:uppercase;">Desde</div>
+            <input type="date" id="cmp-date-from" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;box-sizing:border-box;"/></div>
+          <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:2px;text-transform:uppercase;">Hasta</div>
+            <div style="display:flex;gap:4px;">
+              <input type="date" id="cmp-date-to" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;box-sizing:border-box;"/>
+              <button onclick="limpiarRangoCmp()" style="flex-shrink:0;padding:4px 7px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros de producto/categoría (accordion) -->
+    <div style="margin-bottom:8px;">
+      <div class="stats-filter-inline">
+        <div class="accordion-header" id="cmp-filter-accordion-hdr" onclick="toggleCmpFilterAccordion()" style="padding:6px 10px;">
+          <span style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;flex:1;">🔎 Filtros de producto / categoría</span>
+          <span class="dot" id="cmp-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
+          <span class="accordion-arrow" id="cmp-filter-arrow" style="margin-left:6px;">▾</span>
+        </div>
+        <div class="accordion-body" id="cmp-filter-accordion-body">
+          <div style="height:1px;background:var(--border);margin-bottom:8px;"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
+            <div id="cmp-prod-filter-wrap" style="flex:1;min-width:130px;position:relative;">
+              <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🔍 Buscar producto</div>
+              <div style="display:flex;gap:5px;">
+                <div style="flex:1;position:relative;">
+                  <input type="text" id="cmp-prod-input" placeholder="Nombre del producto…" autocomplete="off"
+                    class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
+                    oninput="filtrarSugerenciasProductoCmp()" onfocus="filtrarSugerenciasProductoCmp()" />
+                  <div id="cmp-prod-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:299;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+                </div>
+                <button onclick="limpiarFiltroProductoCmp()" id="btn-clear-prod-cmp"
+                  style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              </div>
+              <div id="cmp-prod-chip" style="display:none;margin-top:4px;"></div>
+            </div>
+            <div id="cmp-cat-filter-wrap" style="flex-shrink:0;">
+              <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🏷 Por categoría</div>
+              <div style="display:flex;gap:4px;">
+                <select id="cmp-cat-select" class="select-f" style="font-size:.78rem;padding:5px 9px;" onchange="aplicarFiltroCatCmp()">
+                  <option value="">— Todas —</option>
+                  <option value="CARNES">🥩 Carnes</option><option value="VERDURAS">🥦 Verduras</option>
+                  <option value="LACTEOS">🥛 Lácteos</option><option value="FRUTAS">🍎 Frutas</option>
+                  <option value="INSUMOS">🧪 Insumos</option><option value="PREPARADOS">🍱 Preparados</option>
+                  <option value="BEBIDAS">🥤 Bebidas</option><option value="ENVASES">📦 Envases</option>
+                  <option value="LIMPIEZA">🧹 Limpieza</option><option value="OTROS">⚙️ Otros</option>
+                </select>
+                <button id="btn-clear-cat-cmp" onclick="limpiarFiltroCatCmp()" style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Tipo -->
     <div class="cmp-section">
       <div class="cmp-section-label">Tipo de comparación</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
         <button class="fbtn-sec" id="cmp-ftipo-admins" onclick="setCmpTipo('admins',this)">Solo Admins</button>
         <button class="fbtn-sec" id="cmp-ftipo-usuarios" onclick="setCmpTipo('usuarios',this)">Solo Usuarios</button>
-        <button class="fbtn-sec" id="btn-cmp-grupal" onclick="toggleComparacionGrupal(this)">Admins vs Usuarios</button>
+        <button class="fbtn-sec" id="btn-cmp-grupal" onclick="toggleComparacionGrupal(this)">🔄 Admins vs Usuarios</button>
       </div>
     </div>
 
@@ -2496,32 +2714,8 @@ details summary::-webkit-details-marker{display:none;}
       </div>
     </div>
 
-    <!-- Período -->
-    <div class="cmp-section">
-      <div class="cmp-section-label">Período</div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap;">
-        <button class="fbtn-sec active" id="cmpf-7d" onclick="setCmpPer('7d',this)">7d</button>
-        <button class="fbtn-sec" id="cmpf-15d" onclick="setCmpPer('15d',this)">15d</button>
-        <button class="fbtn-sec" id="cmpf-30d" onclick="setCmpPer('30d',this)">Mes</button>
-        <button class="fbtn-sec" id="cmpf-todo" onclick="setCmpPer('todo',this)">Todo</button>
-        <button class="fbtn-sec" id="cmpf-rango" onclick="setCmpPer('rango',this)">📅 Rango</button>
-      </div>
-      <div id="cmp-rango-wrap" style="display:none;margin-top:8px;">
-        <div style="display:flex;gap:7px;">
-          <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:2px;text-transform:uppercase;">Desde</div>
-            <input type="date" id="cmp-date-from" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;box-sizing:border-box;"/></div>
-          <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:2px;text-transform:uppercase;">Hasta</div>
-            <div style="display:flex;gap:4px;">
-              <input type="date" id="cmp-date-to" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;box-sizing:border-box;"/>
-              <button onclick="limpiarRangoCmp()" style="flex-shrink:0;padding:4px 7px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <button id="btn-ejecutar-cmp" onclick="toggleComparacion(this)" class="btn-primary" style="margin-top:4px;">
-      Comparar usuarios
+      🔄 Comparar
     </button>
 
     <div id="cmp-resultado" style="display:none;margin-top:12px;"></div>
@@ -2536,8 +2730,9 @@ details summary::-webkit-details-marker{display:none;}
       <button onclick="renderLogs()" style="font-size:var(--fs-xs);padding:5px 11px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);color:var(--text2);cursor:pointer;font-family:var(--ff);font-weight:700;transition:var(--transition);">↺ Actualizar</button>
     </div>
 
-    <!-- BLOQUE FILTROS: todo agrupado en un solo contenedor -->
+    <!-- BLOQUE FILTROS: estructura igual a Análisis -->
     <div class="filter-group">
+      <!-- Primera fila: período siempre visible -->
       <div class="filter-group-label">📅 Período</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0;">
         <button class="fbtn-sec active" id="lfilt-p-7d" onclick="setLogPeriodo('7d',this)">7 días</button>
@@ -2564,36 +2759,79 @@ details summary::-webkit-details-marker{display:none;}
 
       <div class="filter-group-divider"></div>
 
-      <!-- Tipo de acción -->
+      <!-- Acordeón filtros: buscar producto, categoría, usuario, tipo -->
+      <div class="stats-filter-inline" style="margin-top:6px;">
+        <div class="accordion-header" id="log-filter-accordion-hdr" onclick="toggleLogFilterAccordion()" style="padding:6px 10px;">
+          <span style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;flex:1;">🔎 Filtros adicionales</span>
+          <span class="dot" id="log-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
+          <span class="accordion-arrow" id="log-filter-arrow" style="margin-left:6px;">▾</span>
+        </div>
+        <div class="accordion-body" id="log-filter-accordion-body">
+          <div style="height:1px;background:var(--border);margin-bottom:8px;"></div>
+          <!-- Buscar producto + Por categoría (XOR) -->
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-bottom:10px;">
+            <div id="log-prod-filter-wrap" style="flex:1;min-width:130px;position:relative;">
+              <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🔍 Buscar producto</div>
+              <div style="display:flex;gap:5px;">
+                <div style="flex:1;position:relative;">
+                  <input type="text" id="log-prod-input" placeholder="Nombre del producto…" autocomplete="off"
+                    class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
+                    oninput="filtrarSugerenciasProductoLog()" onfocus="filtrarSugerenciasProductoLog()" />
+                  <div id="log-prod-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:299;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+                </div>
+                <button onclick="limpiarFiltroProductoLog()" id="btn-clear-prod-log"
+                  style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              </div>
+              <div id="log-prod-chip" style="display:none;margin-top:4px;"></div>
+            </div>
+            <div id="log-cat-filter-wrap" style="flex-shrink:0;">
+              <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🏷 Por categoría</div>
+              <div style="display:flex;gap:4px;">
+                <select id="log-cat-select" class="select-f" style="font-size:.78rem;padding:5px 9px;" onchange="aplicarFiltroCatLog()">
+                  <option value="">— Todas —</option>
+                  <option value="CARNES">🥩 Carnes</option><option value="VERDURAS">🥦 Verduras</option>
+                  <option value="LACTEOS">🥛 Lácteos</option><option value="FRUTAS">🍎 Frutas</option>
+                  <option value="INSUMOS">🧪 Insumos</option><option value="PREPARADOS">🍱 Preparados</option>
+                  <option value="BEBIDAS">🥤 Bebidas</option><option value="ENVASES">📦 Envases</option>
+                  <option value="LIMPIEZA">🧹 Limpieza</option><option value="OTROS">⚙️ Otros</option>
+                </select>
+                <button id="btn-clear-cat-log" onclick="limpiarFiltroCatLog()" style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Usuario + tipo (XOR) -->
+          <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;">
+            <div style="flex:1;min-width:150px;">
+              <div class="filter-group-label">👤 Por usuario</div>
+              <div style="position:relative;">
+                <input type="text" id="log-user-input" placeholder="Buscar usuario…" autocomplete="off"
+                  class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
+                  oninput="filtrarSugerenciasUsuarioLog()" onfocus="filtrarSugerenciasUsuarioLog()" />
+                <div id="log-user-sug" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+              </div>
+              <div id="log-user-chip" style="display:none;margin-top:5px;"></div>
+            </div>
+            <div id="log-tipo-wrap" style="flex-shrink:0;">
+              <div class="filter-group-label">👥 Por tipo</div>
+              <div style="display:flex;gap:6px;">
+                <button class="fbtn-sec" id="lfilt-tipo-admins" onclick="setLogTipo('admins',this)">🧑‍💼 Admins</button>
+                <button class="fbtn-sec" id="lfilt-tipo-usuarios" onclick="setLogTipo('usuarios',this)">👷 Usuarios</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-group-divider"></div>
+
+      <!-- Tipo de acción — debajo del acordeón -->
       <div class="filter-group-label">⚡ Tipo de acción</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
         <button class="fbtn-sec active" id="lfilt-todo" onclick="setLogFilt('todo',this)">Todo</button>
         <button class="fbtn-sec" id="lfilt-eliminar" onclick="setLogFilt('eliminar',this)">🗑 Eliminaciones</button>
         <button class="fbtn-sec" id="lfilt-editar" onclick="setLogFilt('editar',this)">✏️ Ediciones</button>
         <button class="fbtn-sec" id="lfilt-exportar" onclick="setLogFilt('exportar',this)">📊 Exportaciones</button>
-      </div>
-
-      <div class="filter-group-divider"></div>
-
-      <!-- Filtros de usuario en dos columnas -->
-      <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;">
-        <div style="flex:1;min-width:150px;">
-          <div class="filter-group-label">👤 Por usuario</div>
-          <div style="position:relative;">
-            <input type="text" id="log-user-input" placeholder="Buscar usuario…" autocomplete="off"
-              class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
-              oninput="filtrarSugerenciasUsuarioLog()" onfocus="filtrarSugerenciasUsuarioLog()" />
-            <div id="log-user-sug" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
-          </div>
-          <div id="log-user-chip" style="display:none;margin-top:5px;"></div>
-        </div>
-        <div style="flex-shrink:0;">
-          <div class="filter-group-label">👥 Por tipo</div>
-          <div style="display:flex;gap:6px;">
-            <button class="fbtn-sec" id="lfilt-tipo-admins" onclick="setLogTipo('admins',this)">🧑‍💼 Admins</button>
-            <button class="fbtn-sec" id="lfilt-tipo-usuarios" onclick="setLogTipo('usuarios',this)">👷 Usuarios</button>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -6553,6 +6791,16 @@ function renderStats(){
       todos=todos.filter(i=>nombresPorTipo.has((i.quien||'').toUpperCase().trim()));
     }
   }
+  // ── Filtro de producto específico (buscar producto) ──
+  if(window._filtroProductoStats){
+    const _pn=(window._filtroProductoStats||'').toLowerCase().trim();
+    todos=todos.filter(i=>(i.nombre||'').toLowerCase().trim()===_pn);
+  }
+  // ── Filtro de categoría ──
+  if(window._filtroCategStats){
+    const _cn=(window._filtroCategStats||'').toUpperCase().trim();
+    todos=todos.filter(i=>(i.categoria||'').toUpperCase().trim()===_cn);
+  }
 
   if(!todos.length){['st-top','st-cant','st-freq','st-cat','st-emp','st-ticket','st-diasem'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=nd;});
     // KPIs vacios
@@ -6702,6 +6950,9 @@ function renderComparaciones(){
       const npt=_nombresDeRol(tipoF);
       if(npt&&npt.size)t=t.filter(i=>npt.has((i.quien||'').toUpperCase().trim()));
     }
+    // Filtros de producto/categoría para Períodos
+    if(window._filtroProductoPer){const _pn=(window._filtroProductoPer||'').toLowerCase().trim();t=t.filter(i=>(i.nombre||'').toLowerCase().trim()===_pn);}
+    if(window._filtroCategPer){const _cn=(window._filtroCategPer||'').toUpperCase().trim();t=t.filter(i=>(i.categoria||'').toUpperCase().trim()===_cn);}
     return t;
   };
   const compPerLocal=(desde,hasta)=>{const its=_base().filter(i=>{const t=i.tsComprado||0;return t>=desde&&t<hasta;});return{compras:its.length,gasto:its.reduce((s,i)=>s+getP(i),0)};};
@@ -6721,6 +6972,10 @@ function renderComparaciones(){
       notaEl.innerHTML=`📌 Mostrando comparativas solo de: <strong style="color:var(--accent);">👤 ${_filtroUser}</strong>. Cambiá el filtro desde la barra superior para ver otros datos.`;
     else if(tipoLabel)
       notaEl.innerHTML=`📌 Filtrando por tipo: <strong style="color:var(--blue);">${tipoLabel}</strong>. Solo se contabilizan registros de ese grupo.`;
+    else if(window._filtroProductoPer)
+      notaEl.innerHTML=`📌 Filtrando períodos por producto: <strong style="color:var(--blue);">📦 ${window._filtroProductoPer}</strong>.`;
+    else if(window._filtroCategPer)
+      notaEl.innerHTML=`📌 Filtrando períodos por categoría: <strong style="color:var(--blue);">🏷 ${window._filtroCategPer}</strong>.`;
     else
       notaEl.innerHTML=`📌 Mostrando datos <strong>globales</strong> (todos los usuarios). Podés filtrar por usuario o tipo desde la barra superior.`;
   }
@@ -6764,6 +7019,9 @@ function renderUsuariosTab(){
     const npt=_nombresDeRol(tipoU);
     if(npt&&npt.size)todosU=todosU.filter(i=>npt.has((i.quien||'').toUpperCase().trim()));
   }
+  // Filtros de producto/categoría para tab Usuarios
+  if(window._filtroProductoU){const _pnU=(window._filtroProductoU||'').toLowerCase().trim();todosU=todosU.filter(i=>(i.nombre||'').toLowerCase().trim()===_pnU);}
+  if(window._filtroCategU){const _cnU=(window._filtroCategU||'').toUpperCase().trim();todosU=todosU.filter(i=>(i.categoria||'').toUpperCase().trim()===_cnU);}
   // Construir mapa por usuario — SIEMPRE sobre todos los datos (sin filtro de usuario)
   // para poder mostrar la posición real en el ranking global
   const todosParaRanking=()=>{
@@ -6948,7 +7206,9 @@ window.ejecutarComparacion=function(){
     limDesde=msL(perStr);
     periodoLabel={'7d':'últimos 7 días','15d':'últimos 15 días','30d':'último mes','todo':'todo el historial'}[perStr]||perStr;
   }
-  const todosP=todosComp().filter(i=>{const t=i.tsComprado||0;return t>=limDesde&&t<=limHasta;});
+  let todosP=todosComp().filter(i=>{const t=i.tsComprado||0;return t>=limDesde&&t<=limHasta;});
+  if(window._filtroProductoCmp){const _pnC=(window._filtroProductoCmp||"").toLowerCase().trim();todosP=todosP.filter(i=>(i.nombre||"").toLowerCase().trim()===_pnC);}
+  if(window._filtroCategCmp){const _cnC=(window._filtroCategCmp||"").toUpperCase().trim();todosP=todosP.filter(i=>(i.categoria||"").toUpperCase().trim()===_cnC);}
   function statsUser(nombre){
     const its=nombre?todosP.filter(i=>(i.quien||'').toUpperCase().trim()===nombre.toUpperCase()):[];
     const gasto=its.reduce((s,i)=>s+getP(i),0);
@@ -8666,6 +8926,534 @@ window.cederAdmin=async function(){
     await signOut(auth);
   },2000);
 };
+
+// ═══════════════════════════════════════════════════════
+// VOLUME DIAL — Stats subtabs carousel animation
+// ═══════════════════════════════════════════════════════
+function _updateStabDial(){
+  const STAB_ORDER=['stab-metricas','stab-comparaciones','stab-usuarios','stab-comparar','stab-logs'];
+  const visible=STAB_ORDER.map(id=>document.getElementById(id)).filter(el=>el&&el.style.display!=='none');
+  const activeIdx=visible.findIndex(el=>el.classList.contains('active'));
+  visible.forEach((el,i)=>{
+    el.classList.remove('stab-adjacent','stab-far');
+    const dist=Math.abs(i-activeIdx);
+    if(dist===0){/* active — handled by CSS */}
+    else if(dist===1){el.classList.add('stab-adjacent');}
+    else{el.classList.add('stab-far');}
+  });
+}
+
+// Patch switchST to run dial update
+const _origSwitchST=window.switchST;
+window.switchST=function(t){
+  if(_origSwitchST)_origSwitchST(t);
+  _updateStabDial();
+};
+// Initial dial setup
+setTimeout(_updateStabDial,100);
+
+// ═══════════════════════════════════════════════════════
+// PRODUCTO/CATEGORÍA — Estado global
+// ═══════════════════════════════════════════════════════
+window._filtroProductoStats=null;   // nombre normalizado
+window._filtroCategStats=null;      // e.g. 'CARNES'
+window._filtroProductoPer=null;
+window._filtroCategPer=null;
+window._filtroProductoU=null;
+window._filtroCategU=null;
+window._filtroProductoCmp=null;
+window._filtroCategCmp=null;
+window._filtroProductoLog=null;
+window._filtroCategLog=null;
+
+// ── Obtener lista de productos únicos del historial ──
+function _obtenerProductosHistorial(){
+  const nombres=new Set();
+  todosComp().forEach(i=>{if(i.nombre&&i.nombre.trim())nombres.add(i.nombre.trim());});
+  return [...nombres].sort();
+}
+
+// ── Builder genérico de sugerencias de producto ──
+function _buildProdSugHtml(inputId,sugId,onSelect){
+  const input=document.getElementById(inputId);
+  const sug=document.getElementById(sugId);
+  if(!input||!sug)return;
+  const q=(input.value||'').toLowerCase().trim();
+  const lista=_obtenerProductosHistorial();
+  const filtrada=q?lista.filter(n=>n.toLowerCase().includes(q)):lista.slice(0,20);
+  if(!filtrada.length){sug.style.display='none';return;}
+  sug.innerHTML=filtrada.map(n=>
+    `<div onclick="${onSelect}('${n.replace(/'/g,"\\'")}','${inputId}','${sugId}')"
+      style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);"
+      onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">
+      📦 ${n}
+    </div>`).join('');
+  sug.style.display='block';
+}
+
+// ── Función genérica: seleccionar producto ──
+function _seleccionarProducto(nombre,inputId,sugId,stateKey,chipId,clearBtnId,catSelectId,catWrapId,prodWrapId,renderFn){
+  window[stateKey]=nombre.trim();
+  // Ocultar filtro de categoría (XOR)
+  const catSel=document.getElementById(catSelectId);
+  if(catSel)catSel.value='';
+  const catWrap=document.getElementById(catWrapId);
+  if(catWrap)catWrap.style.display='none';
+  const prodWrap=document.getElementById(prodWrapId);
+  if(prodWrap)prodWrap.style.display='';
+  const input=document.getElementById(inputId);if(input)input.value='';
+  const sug=document.getElementById(sugId);if(sug)sug.style.display='none';
+  const chip=document.getElementById(chipId);
+  if(chip){chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
+    chip.innerHTML=`<span style="font-size:.78rem;background:var(--blue);color:#fff;padding:4px 10px;border-radius:20px;font-weight:700;">📦 ${nombre}</span>`;}
+  const clrBtn=document.getElementById(clearBtnId);if(clrBtn)clrBtn.style.display='';
+  if(typeof renderFn==='function')renderFn();
+}
+
+function _limpiarProducto(stateKey,inputId,sugId,chipId,clearBtnId,catWrapId,renderFn){
+  window[stateKey]=null;
+  const input=document.getElementById(inputId);if(input)input.value='';
+  const sug=document.getElementById(sugId);if(sug)sug.style.display='none';
+  const chip=document.getElementById(chipId);if(chip){chip.style.display='none';chip.innerHTML='';}
+  const clrBtn=document.getElementById(clearBtnId);if(clrBtn)clrBtn.style.display='none';
+  // Restaurar categoría visible
+  const catWrap=document.getElementById(catWrapId);if(catWrap)catWrap.style.display='';
+  if(typeof renderFn==='function')renderFn();
+}
+
+function _seleccionarCategoria(val,stateKey,prodInputId,prodSugId,prodChipId,prodClearBtnId,prodWrapId,renderFn){
+  window[stateKey]=val||null;
+  // Si hay categoría, ocultar producto (XOR)
+  const prodWrap=document.getElementById(prodWrapId);
+  if(val){
+    if(prodWrap)prodWrap.style.display='none';
+    // Limpiar producto si había
+    _limpiarProducto(stateKey.replace('Categ','Producto'),prodInputId,prodSugId,prodChipId,prodClearBtnId,null,null);
+  }else{
+    if(prodWrap)prodWrap.style.display='';
+  }
+  if(typeof renderFn==='function')renderFn();
+}
+
+// ═══ ANÁLISIS: producto y categoría ══════════════════════
+window.filtrarSugerenciasProductoStats=function(){
+  _buildProdSugHtml('stats-prod-input','stats-prod-suggestions','_selProdStats');
+};
+window._selProdStats=function(n){
+  _seleccionarProducto(n,'stats-prod-input','stats-prod-suggestions','_filtroProductoStats','stats-prod-chip','btn-clear-prod-stat','stats-cat-select','stats-cat-filter-wrap','stats-prod-filter-wrap',()=>{_actualizarSeccionesAnalisis();renderStats();});
+};
+window.limpiarFiltroProductoStats=function(){
+  _limpiarProducto('_filtroProductoStats','stats-prod-input','stats-prod-suggestions','stats-prod-chip','btn-clear-prod-stat','stats-cat-filter-wrap',()=>{_actualizarSeccionesAnalisis();renderStats();});
+};
+window.aplicarFiltroCatStats=function(){
+  const val=document.getElementById('stats-cat-select')?.value||'';
+  window._filtroCategStats=val||null;
+  // XOR: si hay categoría, ocultar producto
+  const prodWrap=document.getElementById('stats-prod-filter-wrap');
+  if(val){
+    if(prodWrap)prodWrap.style.display='none';
+    window._filtroProductoStats=null;
+    const inp=document.getElementById('stats-prod-input');if(inp)inp.value='';
+    const chip=document.getElementById('stats-prod-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+    const clr=document.getElementById('btn-clear-prod-stat');if(clr)clr.style.display='none';
+  }else{
+    if(prodWrap)prodWrap.style.display='';
+  }
+  const clrBtn=document.getElementById('btn-clear-cat-stats');if(clrBtn)clrBtn.style.display=val?'':'none';
+  _actualizarSeccionesAnalisis();renderStats();
+};
+window.limpiarFiltroCatStats=function(){
+  window._filtroCategStats=null;
+  const sel=document.getElementById('stats-cat-select');if(sel)sel.value='';
+  const clrBtn=document.getElementById('btn-clear-cat-stats');if(clrBtn)clrBtn.style.display='none';
+  const prodWrap=document.getElementById('stats-prod-filter-wrap');if(prodWrap)prodWrap.style.display='';
+  _actualizarSeccionesAnalisis();renderStats();
+};
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#stats-prod-filter-wrap')){
+    const s=document.getElementById('stats-prod-suggestions');if(s)s.style.display='none';
+  }
+});
+
+// Controla qué secciones de Análisis mostrar según filtro activo
+function _actualizarSeccionesAnalisis(){
+  const hayProd=!!window._filtroProductoStats;
+  const hayCat=!!window._filtroCategStats;
+  const hayFiltro=hayProd||hayCat;
+  // "Más comprados" desaparece si hay filtro de producto o categoría
+  const topCard=document.getElementById('sec-top-card');
+  if(topCard)topCard.style.display=hayFiltro?'none':'';
+  // "Gasto por categoría" se reemplaza por "Gasto acumulado" si hay filtro
+  const catGastoCard=document.getElementById('sec-cat-gasto-card');
+  const gastoAcumCard=document.getElementById('sec-gasto-acum-card');
+  if(catGastoCard)catGastoCard.style.display=hayFiltro?'none':'';
+  if(gastoAcumCard)gastoAcumCard.style.display=hayFiltro?'':'none';
+}
+
+// renderStats: filtros de producto/categoría inyectados directamente en la función
+// El patch de abajo solo agrega la renderización de "Gasto acumulado" cuando hay filtro activo
+const _origRenderStatsProdCat=window.renderStats;
+window.renderStats=function(){
+  _actualizarSeccionesAnalisis();
+  if(_origRenderStatsProdCat)_origRenderStatsProdCat();
+  // Renderizar "Gasto acumulado" si hay filtro de producto o categoría
+  const hayProd=!!window._filtroProductoStats;
+  const hayCat=!!window._filtroCategStats;
+  if(hayProd||hayCat){
+    const sFrom=document.getElementById('stats-date-from')?.value;
+    const sTo=document.getElementById('stats-date-to')?.value;
+    const lim=sFrom||sTo?0:msL(fStats);
+    let base=todosComp().filter(i=>(i.tsComprado||0)>=lim);
+    if(sFrom){const d=new Date(sFrom+'T00:00:00');base=base.filter(i=>(i.tsComprado||0)>=d.getTime());}
+    if(sTo){const d=new Date(sTo+'T23:59:59');base=base.filter(i=>(i.tsComprado||0)<=d.getTime());}
+    const userF=(window._filtroUsuarioStats||'').toUpperCase().trim();
+    if(userF)base=base.filter(i=>(i.quien||'').toUpperCase().trim()===userF);
+    if(hayProd){
+      const pn=(window._filtroProductoStats||'').toLowerCase().trim();
+      base=base.filter(i=>(i.nombre||'').toLowerCase().trim()===pn);
+    }
+    if(hayCat){
+      base=base.filter(i=>(i.categoria||'').toUpperCase().trim()===(window._filtroCategStats||'').toUpperCase().trim());
+    }
+    const totalGasto=base.reduce((s,i)=>s+getP(i),0);
+    const totalCant=base.reduce((s,i)=>s+(parseFloat(i.compra?.cantidad)||parseFloat(i.cantidad)||1),0);
+    const el=document.getElementById('st-gasto-acum');
+    if(el){
+      const labelFiltro=hayProd?`📦 ${window._filtroProductoStats}`:`🏷 ${window._filtroCategStats}`;
+      el.innerHTML=`<div style="padding:4px 0;">
+        <div style="font-size:.72rem;color:var(--text3);margin-bottom:4px;">${labelFiltro} · ${base.length} compra${base.length!==1?'s':''}</div>
+        <div style="font-size:1.6rem;font-weight:800;color:var(--accent);font-family:var(--ffmono);letter-spacing:-.03em;">S/ ${totalGasto.toFixed(2)}</div>
+        <div style="font-size:.72rem;color:var(--text3);margin-top:4px;">Cantidad total: ${totalCant} unidades</div>
+      </div>`;
+    }
+  }
+};
+
+// ═══ PERÍODOS: producto y categoría ══════════════════════
+window.filtrarSugerenciasProductoPer=function(){
+  _buildProdSugHtml('per-prod-input','per-prod-suggestions','_selProdPer');
+};
+window._selProdPer=function(n){
+  window._filtroProductoPer=n.trim();
+  const catSel=document.getElementById('per-cat-select');if(catSel)catSel.value='';
+  window._filtroCategPer=null;
+  const catWrap=document.getElementById('per-cat-filter-wrap');if(catWrap)catWrap.style.display='none';
+  const prodWrap=document.getElementById('per-prod-filter-wrap');if(prodWrap)prodWrap.style.display='';
+  const input=document.getElementById('per-prod-input');if(input)input.value='';
+  const sug=document.getElementById('per-prod-suggestions');if(sug)sug.style.display='none';
+  const chip=document.getElementById('per-prod-chip');
+  if(chip){chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
+    chip.innerHTML=`<span style="font-size:.78rem;background:var(--blue);color:#fff;padding:4px 10px;border-radius:20px;font-weight:700;">📦 ${n}</span>`;}
+  const clrBtn=document.getElementById('btn-clear-prod-per');if(clrBtn)clrBtn.style.display='';
+  _actualizarPerFilterDot();renderComparaciones();
+};
+window.limpiarFiltroProductoPer=function(){
+  window._filtroProductoPer=null;
+  const input=document.getElementById('per-prod-input');if(input)input.value='';
+  const sug=document.getElementById('per-prod-suggestions');if(sug)sug.style.display='none';
+  const chip=document.getElementById('per-prod-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+  const clrBtn=document.getElementById('btn-clear-prod-per');if(clrBtn)clrBtn.style.display='none';
+  const catWrap=document.getElementById('per-cat-filter-wrap');if(catWrap)catWrap.style.display='';
+  _actualizarPerFilterDot();renderComparaciones();
+};
+window.aplicarFiltroCatPer=function(){
+  const val=document.getElementById('per-cat-select')?.value||'';
+  window._filtroCategPer=val||null;
+  if(val){
+    const prodWrap=document.getElementById('per-prod-filter-wrap');if(prodWrap)prodWrap.style.display='none';
+    window._filtroProductoPer=null;
+    const inp=document.getElementById('per-prod-input');if(inp)inp.value='';
+    const chip=document.getElementById('per-prod-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+    const clr=document.getElementById('btn-clear-prod-per');if(clr)clr.style.display='none';
+  }else{
+    const prodWrap=document.getElementById('per-prod-filter-wrap');if(prodWrap)prodWrap.style.display='';
+  }
+  const clrBtn=document.getElementById('btn-clear-cat-per');if(clrBtn)clrBtn.style.display=val?'':'none';
+  _actualizarPerFilterDot();renderComparaciones();
+};
+window.limpiarFiltroCatPer=function(){
+  window._filtroCategPer=null;
+  const sel=document.getElementById('per-cat-select');if(sel)sel.value='';
+  const clrBtn=document.getElementById('btn-clear-cat-per');if(clrBtn)clrBtn.style.display='none';
+  const prodWrap=document.getElementById('per-prod-filter-wrap');if(prodWrap)prodWrap.style.display='';
+  _actualizarPerFilterDot();renderComparaciones();
+};
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#per-prod-filter-wrap')){
+    const s=document.getElementById('per-prod-suggestions');if(s)s.style.display='none';
+  }
+});
+function _actualizarPerFilterDot(){
+  const hay=window._filtroProductoPer||window._filtroCategPer;
+  const dot=document.getElementById('per-filter-dot');if(dot)dot.style.display=hay?'block':'none';
+}
+window.togglePerFilterAccordion=function(){
+  const body=document.getElementById('per-filter-accordion-body');
+  const arrow=document.getElementById('per-filter-arrow');
+  if(!body)return;
+  const open=body.classList.toggle('open');
+  if(arrow)arrow.style.transform=open?'rotate(180deg)':'';
+};
+
+// ═══ USUARIOS: producto y categoría ══════════════════════
+window.filtrarSugerenciasProductoU=function(){
+  _buildProdSugHtml('u-prod-input','u-prod-suggestions','_selProdU');
+};
+window._selProdU=function(n){
+  window._filtroProductoU=n.trim();
+  const catSel=document.getElementById('u-cat-select');if(catSel)catSel.value='';
+  window._filtroCategU=null;
+  const catWrap=document.getElementById('u-cat-filter-wrap');if(catWrap)catWrap.style.display='none';
+  const input=document.getElementById('u-prod-input');if(input)input.value='';
+  const sug=document.getElementById('u-prod-suggestions');if(sug)sug.style.display='none';
+  const chip=document.getElementById('u-prod-chip');
+  if(chip){chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
+    chip.innerHTML=`<span style="font-size:.78rem;background:var(--blue);color:#fff;padding:4px 10px;border-radius:20px;font-weight:700;">📦 ${n}</span>`;}
+  const clrBtn=document.getElementById('btn-clear-prod-u');if(clrBtn)clrBtn.style.display='';
+  _actualizarUFilterDot();renderUsuariosTab();
+};
+window.limpiarFiltroProductoU=function(){
+  window._filtroProductoU=null;
+  const input=document.getElementById('u-prod-input');if(input)input.value='';
+  const sug=document.getElementById('u-prod-suggestions');if(sug)sug.style.display='none';
+  const chip=document.getElementById('u-prod-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+  const clrBtn=document.getElementById('btn-clear-prod-u');if(clrBtn)clrBtn.style.display='none';
+  const catWrap=document.getElementById('u-cat-filter-wrap');if(catWrap)catWrap.style.display='';
+  _actualizarUFilterDot();renderUsuariosTab();
+};
+window.aplicarFiltroCatU=function(){
+  const val=document.getElementById('u-cat-select')?.value||'';
+  window._filtroCategU=val||null;
+  if(val){
+    const prodWrap=document.getElementById('u-prod-filter-wrap');if(prodWrap)prodWrap.style.display='none';
+    window._filtroProductoU=null;
+    const inp=document.getElementById('u-prod-input');if(inp)inp.value='';
+    const chip=document.getElementById('u-prod-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+    const clr=document.getElementById('btn-clear-prod-u');if(clr)clr.style.display='none';
+  }else{
+    const prodWrap=document.getElementById('u-prod-filter-wrap');if(prodWrap)prodWrap.style.display='';
+  }
+  const clrBtn=document.getElementById('btn-clear-cat-u');if(clrBtn)clrBtn.style.display=val?'':'none';
+  _actualizarUFilterDot();renderUsuariosTab();
+};
+window.limpiarFiltroCatU=function(){
+  window._filtroCategU=null;
+  const sel=document.getElementById('u-cat-select');if(sel)sel.value='';
+  const clrBtn=document.getElementById('btn-clear-cat-u');if(clrBtn)clrBtn.style.display='none';
+  const prodWrap=document.getElementById('u-prod-filter-wrap');if(prodWrap)prodWrap.style.display='';
+  _actualizarUFilterDot();renderUsuariosTab();
+};
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#u-prod-filter-wrap')){
+    const s=document.getElementById('u-prod-suggestions');if(s)s.style.display='none';
+  }
+});
+function _actualizarUFilterDot(){
+  const hay=window._filtroProductoU||window._filtroCategU;
+  const dot=document.getElementById('u-filter-dot');if(dot)dot.style.display=hay?'block':'none';
+}
+window.toggleUFilterAccordion=function(){
+  const body=document.getElementById('u-filter-accordion-body');
+  const arrow=document.getElementById('u-filter-arrow');
+  if(!body)return;
+  const open=body.classList.toggle('open');
+  if(arrow)arrow.style.transform=open?'rotate(180deg)':'';
+};
+
+// ═══ COMPARAR: producto y categoría ══════════════════════
+window.filtrarSugerenciasProductoCmp=function(){
+  _buildProdSugHtml('cmp-prod-input','cmp-prod-suggestions','_selProdCmp');
+};
+window._selProdCmp=function(n){
+  window._filtroProductoCmp=n.trim();
+  const catSel=document.getElementById('cmp-cat-select');if(catSel)catSel.value='';
+  window._filtroCategCmp=null;
+  const catWrap=document.getElementById('cmp-cat-filter-wrap');if(catWrap)catWrap.style.display='none';
+  const input=document.getElementById('cmp-prod-input');if(input)input.value='';
+  const sug=document.getElementById('cmp-prod-suggestions');if(sug)sug.style.display='none';
+  const chip=document.getElementById('cmp-prod-chip');
+  if(chip){chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
+    chip.innerHTML=`<span style="font-size:.78rem;background:var(--blue);color:#fff;padding:4px 10px;border-radius:20px;font-weight:700;">📦 ${n}</span>`;}
+  const clrBtn=document.getElementById('btn-clear-prod-cmp');if(clrBtn)clrBtn.style.display='';
+  _actualizarCmpFilterDot();
+};
+window.limpiarFiltroProductoCmp=function(){
+  window._filtroProductoCmp=null;
+  const input=document.getElementById('cmp-prod-input');if(input)input.value='';
+  const sug=document.getElementById('cmp-prod-suggestions');if(sug)sug.style.display='none';
+  const chip=document.getElementById('cmp-prod-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+  const clrBtn=document.getElementById('btn-clear-prod-cmp');if(clrBtn)clrBtn.style.display='none';
+  const catWrap=document.getElementById('cmp-cat-filter-wrap');if(catWrap)catWrap.style.display='';
+  _actualizarCmpFilterDot();
+};
+window.aplicarFiltroCatCmp=function(){
+  const val=document.getElementById('cmp-cat-select')?.value||'';
+  window._filtroCategCmp=val||null;
+  if(val){
+    const prodWrap=document.getElementById('cmp-prod-filter-wrap');if(prodWrap)prodWrap.style.display='none';
+    window._filtroProductoCmp=null;
+    const inp=document.getElementById('cmp-prod-input');if(inp)inp.value='';
+    const chip=document.getElementById('cmp-prod-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+    const clr=document.getElementById('btn-clear-prod-cmp');if(clr)clr.style.display='none';
+  }else{
+    const prodWrap=document.getElementById('cmp-prod-filter-wrap');if(prodWrap)prodWrap.style.display='';
+  }
+  const clrBtn=document.getElementById('btn-clear-cat-cmp');if(clrBtn)clrBtn.style.display=val?'':'none';
+  _actualizarCmpFilterDot();
+};
+window.limpiarFiltroCatCmp=function(){
+  window._filtroCategCmp=null;
+  const sel=document.getElementById('cmp-cat-select');if(sel)sel.value='';
+  const clrBtn=document.getElementById('btn-clear-cat-cmp');if(clrBtn)clrBtn.style.display='none';
+  const prodWrap=document.getElementById('cmp-prod-filter-wrap');if(prodWrap)prodWrap.style.display='';
+  _actualizarCmpFilterDot();
+};
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#cmp-prod-filter-wrap')){
+    const s=document.getElementById('cmp-prod-suggestions');if(s)s.style.display='none';
+  }
+});
+function _actualizarCmpFilterDot(){
+  const hay=window._filtroProductoCmp||window._filtroCategCmp;
+  const dot=document.getElementById('cmp-filter-dot');if(dot)dot.style.display=hay?'block':'none';
+}
+window.toggleCmpFilterAccordion=function(){
+  const body=document.getElementById('cmp-filter-accordion-body');
+  const arrow=document.getElementById('cmp-filter-arrow');
+  if(!body)return;
+  const open=body.classList.toggle('open');
+  if(arrow)arrow.style.transform=open?'rotate(180deg)':'';
+};
+
+// ═══ LOGS: producto y categoría ══════════════════════════
+window._filtroCategLog=null;
+window._filtroProductoLog=null;
+window.filtrarSugerenciasProductoLog=function(){
+  _buildProdSugHtml('log-prod-input','log-prod-suggestions','_selProdLog');
+};
+window._selProdLog=function(n){
+  window._filtroProductoLog=n.trim();
+  const catSel=document.getElementById('log-cat-select');if(catSel)catSel.value='';
+  window._filtroCategLog=null;
+  const catWrap=document.getElementById('log-cat-filter-wrap');if(catWrap)catWrap.style.display='none';
+  const input=document.getElementById('log-prod-input');if(input)input.value='';
+  const sug=document.getElementById('log-prod-suggestions');if(sug)sug.style.display='none';
+  const chip=document.getElementById('log-prod-chip');
+  if(chip){chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
+    chip.innerHTML=`<span style="font-size:.78rem;background:var(--blue);color:#fff;padding:4px 10px;border-radius:20px;font-weight:700;">📦 ${n}</span>`;}
+  const clrBtn=document.getElementById('btn-clear-prod-log');if(clrBtn)clrBtn.style.display='';
+  _actualizarLogFilterDot();renderLogs();
+};
+window.limpiarFiltroProductoLog=function(){
+  window._filtroProductoLog=null;
+  const input=document.getElementById('log-prod-input');if(input)input.value='';
+  const sug=document.getElementById('log-prod-suggestions');if(sug)sug.style.display='none';
+  const chip=document.getElementById('log-prod-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+  const clrBtn=document.getElementById('btn-clear-prod-log');if(clrBtn)clrBtn.style.display='none';
+  const catWrap=document.getElementById('log-cat-filter-wrap');if(catWrap)catWrap.style.display='';
+  _actualizarLogFilterDot();renderLogs();
+};
+window.aplicarFiltroCatLog=function(){
+  const val=document.getElementById('log-cat-select')?.value||'';
+  window._filtroCategLog=val||null;
+  if(val){
+    const prodWrap=document.getElementById('log-prod-filter-wrap');if(prodWrap)prodWrap.style.display='none';
+    window._filtroProductoLog=null;
+    const inp=document.getElementById('log-prod-input');if(inp)inp.value='';
+    const chip=document.getElementById('log-prod-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+    const clr=document.getElementById('btn-clear-prod-log');if(clr)clr.style.display='none';
+  }else{
+    const prodWrap=document.getElementById('log-prod-filter-wrap');if(prodWrap)prodWrap.style.display='';
+  }
+  const clrBtn=document.getElementById('btn-clear-cat-log');if(clrBtn)clrBtn.style.display=val?'':'none';
+  _actualizarLogFilterDot();renderLogs();
+};
+window.limpiarFiltroCatLog=function(){
+  window._filtroCategLog=null;
+  const sel=document.getElementById('log-cat-select');if(sel)sel.value='';
+  const clrBtn=document.getElementById('btn-clear-cat-log');if(clrBtn)clrBtn.style.display='none';
+  const prodWrap=document.getElementById('log-prod-filter-wrap');if(prodWrap)prodWrap.style.display='';
+  _actualizarLogFilterDot();renderLogs();
+};
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#log-prod-filter-wrap')){
+    const s=document.getElementById('log-prod-suggestions');if(s)s.style.display='none';
+  }
+});
+function _actualizarLogFilterDot(){
+  const hay=window._filtroProductoLog||window._filtroCategLog;
+  const dot=document.getElementById('log-filter-dot');if(dot)dot.style.display=hay?'block':'none';
+}
+window.toggleLogFilterAccordion=function(){
+  const body=document.getElementById('log-filter-accordion-body');
+  const arrow=document.getElementById('log-filter-arrow');
+  if(!body)return;
+  const open=body.classList.toggle('open');
+  if(arrow)arrow.style.transform=open?'rotate(180deg)':'';
+};
+
+// Patch renderLogs to filter by product/category (applied to entry.detalle text)
+const _origRenderLogs=window.renderLogs;
+window.renderLogs=function(){
+  if(_origRenderLogs)_origRenderLogs();
+  // Post-filter: hide log entries that don't match product/category by scanning .detalle text
+  const hayProd=!!window._filtroProductoLog;
+  const hayCat=!!window._filtroCategLog;
+  if(!hayProd&&!hayCat)return;
+  const lista=document.getElementById('lista-logs');
+  if(!lista)return;
+  // Wait a tick for renderLogs async to finish populating
+  setTimeout(()=>{
+    const items=lista.querySelectorAll('div[style*="border-radius:var(--rmd)"]');
+    items.forEach(item=>{
+      const txt=(item.textContent||'').toLowerCase();
+      if(hayProd&&!txt.includes((window._filtroProductoLog||'').toLowerCase())){item.style.display='none';return;}
+      if(hayCat&&!txt.includes((window._filtroCategLog||'').toLowerCase())){item.style.display='none';return;}
+      item.style.display='';
+    });
+    if(lista.querySelectorAll('div[style*="border-radius:var(--rmd)"]:not([style*="display: none"])').length===0){
+      const nd=lista.querySelector('.no-data');
+      if(!nd)lista.insertAdjacentHTML('beforeend','<p class="no-data">Sin logs para el filtro actual</p>');
+    }
+  },150);
+};
+
+// renderUsuariosTab: filtros de producto/categoría inyectados directamente en la función
+
+// ── Aplicar filtros de producto/categoría al conjunto de datos ──
+// Puede usarse desde renderStats/renderComparaciones/renderUsuariosTab
+window._aplicarFiltrosProdCat=function(datos,tab){
+  let res=[...datos];
+  const prodKey='_filtroProducto'+tab;
+  const catKey='_filtroCateg'+tab;
+  const prod=(window[prodKey]||'').toLowerCase().trim();
+  const cat=(window[catKey]||'').toUpperCase().trim();
+  if(prod)res=res.filter(i=>(i.nombre||'').toLowerCase().trim()===prod);
+  if(cat)res=res.filter(i=>(i.categoria||'').toUpperCase().trim()===cat);
+  return res;
+};
+
+// renderComparaciones: filtros de producto/categoría inyectados directamente en _base()
+
+// Patch _aplicarFiltrosPeriodesRol para mostrar filtros correctos
+const _origAplicarFiltrosPeriodesRolPatch=typeof _aplicarFiltrosPeriodesRol==='function'?_aplicarFiltrosPeriodesRol:null;
+function _aplicarFiltrosPeriodesRolNew(rol){
+  if(_origAplicarFiltrosPeriodesRolPatch)_origAplicarFiltrosPeriodesRolPatch(rol);
+  // Mostrar el accordion de filtros según rol
+  const accWrap=document.getElementById('per-filters-accordion-wrap');
+  if(accWrap){accWrap.style.display=(rol==='admin'||rol==='super_admin'||rol==='admin_supremo')?'':'none';}
+  // admin: mostrar solo filtro usuario inline (dentro del accordion)
+  const adminPerWrap=document.getElementById('stats-admin-filters-periodos-wrap');
+  const saPerWrap=document.getElementById('stats-superadmin-filters-periodos-wrap');
+  if(adminPerWrap)adminPerWrap.style.display=(rol==='admin')?'':'none';
+  if(saPerWrap)saPerWrap.style.display=(rol==='super_admin'||rol==='admin_supremo')?'':'none';
+}
+if(typeof _aplicarFiltrosPeriodesRol!=='undefined'){
+  _aplicarFiltrosPeriodesRol=_aplicarFiltrosPeriodesRolNew;
+}else{
+  window._aplicarFiltrosPeriodesRol=_aplicarFiltrosPeriodesRolNew;
+}
+
 </script>
 </body>
 </html>
