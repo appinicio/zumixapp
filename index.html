@@ -956,69 +956,53 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 /* ─── SUBTABS (stats) — Volume Dial ─────────────────── */
 .subtabs{
   display:flex;align-items:center;
-  background:transparent;
-  padding:4px 0;gap:0;
+  background:var(--surface2);
+  border:1.5px solid var(--border);
+  border-radius:var(--r);
+  padding:4px 6px;gap:0;
   margin-bottom:14px;
-  overflow:hidden;
   position:relative;
 }
-.subtabs::before{
-  content:'';position:absolute;left:0;right:0;top:50%;height:1.5px;
-  background:var(--border);border-radius:2px;transform:translateY(-50%);
-  z-index:0;
+.stab-arrow{
+  flex-shrink:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text3);
+  border-radius:50%;transition:background .15s,color .15s;
+  -webkit-tap-highlight-color:transparent;padding:0;
+  font-family:var(--ff);
+}
+.stab-arrow:active{background:var(--surface3);}
+.stab-arrow.hidden{opacity:.2;pointer-events:none;}
+.stab-track{
+  flex:1;overflow:hidden;position:relative;
 }
 .stab{
-  flex:0 0 auto;
-  padding:6px 8px;text-align:center;
+  display:none;
+  width:100%;
+  padding:8px 10px;text-align:center;
   font-size:var(--fs-xs);font-weight:700;
-  border-radius:20px;border:1.5px solid var(--border);
-  background:var(--surface);
-  color:var(--text3);cursor:pointer;
-  transition:all .25s cubic-bezier(.34,1.2,.64,1);
-  letter-spacing:.01em;text-transform:uppercase;
+  border-radius:var(--rmd);border:none;
+  background:transparent;
+  color:var(--text3);
+  letter-spacing:.02em;text-transform:uppercase;
   white-space:nowrap;line-height:1.2;
   -webkit-tap-highlight-color:transparent;
-  position:relative;z-index:1;
-  transform-origin:center center;
-  opacity:.55;
-  margin:0 3px;
-  max-width:80px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.stab:active{transform:scale(.93);}
-.stab.stab-adjacent{
-  opacity:.75;
-  transform:scale(.88);
-  max-width:60px;
-}
-.stab.stab-far{
-  opacity:.3;
-  transform:scale(.72);
-  max-width:36px;
-  font-size:.5rem;
-  padding:5px 4px;
 }
 .stab.active{
-  background:var(--text);
-  border-color:var(--text);
-  color:var(--bg);
-  box-shadow:0 2px 10px rgba(0,0,0,.18);
-  transform:scale(1.08);
-  opacity:1;
-  max-width:120px;
-  z-index:2;
+  display:block;
+  background:var(--surface);
+  color:var(--text);
+  box-shadow:0 1px 4px rgba(0,0,0,.1),0 0 0 1.5px var(--border);
+  border-radius:var(--rmd);
+  animation:tabSlideIn .2s ease-out;
 }
-[data-theme="dark"] .stab{
-  background:var(--surface2);
-  border-color:var(--border);
-}
+@keyframes tabSlideIn{from{opacity:.4;transform:scale(.96);}to{opacity:1;transform:scale(1);}}
 [data-theme="dark"] .stab.active{
   background:var(--accent);
-  border-color:var(--accent);
   color:#0E0C08;
-  box-shadow:0 2px 12px var(--accent-glow);
+  box-shadow:0 2px 10px var(--accent-glow);
 }
+[data-theme="dark"] .stab-arrow{color:var(--text3);}
+[data-theme="dark"] .stab-arrow:active{background:var(--surface3);}
 .subpane{display:none;}
 .subpane.active{display:block;animation:fadeIn .18s ease-out;}
 
@@ -1624,7 +1608,7 @@ details summary::-webkit-details-marker{display:none;}
   border-color:var(--surface);
 }
 
-/* ── Stats subtabs (dark already handled in main .stab block) ── */
+/* ── Stats subtabs ── */
 
 /* ── Filter buttons ── */
 [data-theme="dark"] .fbtn{
@@ -2229,13 +2213,17 @@ details summary::-webkit-details-marker{display:none;}
 
 <!-- PANE STATS -->
 <div class="pane" id="pane-stats">
-  <!-- Subtabs dinámicos por rol (se ajustan desde _aplicarRol) — Volume Dial -->
+  <!-- Subtabs — flecha izquierda / tab activo centrado / flecha derecha -->
   <div class="subtabs" id="stats-subtabs">
-    <div class="stab active" id="stab-metricas" onclick="switchST('metricas')">📊 Análisis</div>
-    <div class="stab" id="stab-comparaciones" onclick="switchST('comparaciones')">📅 Períodos</div>
-    <div class="stab" id="stab-usuarios" onclick="switchST('usuarios')" style="display:none;">👥 Usuarios</div>
-    <div class="stab" id="stab-comparar" onclick="switchST('comparar')" style="display:none;">🔄 Comparar</div>
-    <div class="stab" id="stab-logs" onclick="switchST('logs')" style="display:none;">🛠 Logs</div>
+    <button class="stab-arrow hidden" id="stab-prev" onclick="stabNavigate(-1)" aria-label="Tab anterior">‹</button>
+    <div class="stab-track">
+      <div class="stab active" id="stab-metricas" data-stab-order="0">📊 Análisis</div>
+      <div class="stab" id="stab-comparaciones" data-stab-order="1">📅 Períodos</div>
+      <div class="stab" id="stab-usuarios" data-stab-order="2" style="display:none;">👥 Usuarios</div>
+      <div class="stab" id="stab-comparar" data-stab-order="3" style="display:none;">🔄 Comparar</div>
+      <div class="stab" id="stab-logs" data-stab-order="4" style="display:none;">🛠 Logs</div>
+    </div>
+    <button class="stab-arrow" id="stab-next" onclick="stabNavigate(1)" aria-label="Tab siguiente">›</button>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════
@@ -2424,24 +2412,21 @@ details summary::-webkit-details-marker{display:none;}
 
   <!-- ─── SUBPANE: PERÍODOS (antes Comparaciones) ─────────────────────────── -->
   <div class="subpane" id="sp-comparaciones">
-    <!-- Filtros de vista — período en primera fila siempre visible -->
-    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px;" id="per-view-filters">
-      <button class="fbtn-sec active" id="pervf-3d" onclick="setPerViewFilt('3d',this)">Últ. 3 días</button>
-      <button class="fbtn-sec" id="pervf-3s" onclick="setPerViewFilt('3s',this)">3 semanas</button>
-      <button class="fbtn-sec" id="pervf-3m" onclick="setPerViewFilt('3m',this)">3 meses</button>
-      <button class="fbtn-sec" id="pervf-3m2" onclick="setPerViewFilt('3m2',this)">+3 meses</button>
-    </div>
-
-    <!-- Filtros colapsables — para admin y super_admin (accordion) -->
+    <!-- Filtros: período con ▾ inline al costado de +3 meses, accordion debajo -->
     <div id="per-filters-accordion-wrap" style="margin-bottom:8px;">
       <div class="stats-filter-inline">
-        <div class="accordion-header" id="per-filter-accordion-hdr" onclick="togglePerFilterAccordion()" style="justify-content:flex-end;padding:6px 10px;">
-          <span style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;flex:1;">🔎 Filtros</span>
-          <span class="dot" id="per-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
-          <span class="accordion-arrow" id="per-filter-arrow" style="margin-left:6px;">▾</span>
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:6px 8px;" id="per-view-filters">
+          <button class="fbtn-sec active" id="pervf-3d" onclick="setPerViewFilt('3d',this)">Últ. 3 días</button>
+          <button class="fbtn-sec" id="pervf-3s" onclick="setPerViewFilt('3s',this)">3 semanas</button>
+          <button class="fbtn-sec" id="pervf-3m" onclick="setPerViewFilt('3m',this)">3 meses</button>
+          <button class="fbtn-sec" id="pervf-3m2" onclick="setPerViewFilt('3m2',this)">+3 meses</button>
+          <button id="per-filter-accordion-hdr" onclick="togglePerFilterAccordion()" style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;background:none;border:1.5px solid var(--border);border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);color:var(--text3);font-size:var(--fs-xs);font-weight:700;flex-shrink:0;">
+            <span class="dot" id="per-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
+            <span class="accordion-arrow" id="per-filter-arrow">▾</span>
+          </button>
         </div>
-        <div class="accordion-body" id="per-filter-accordion-body">
-          <div style="height:1px;background:var(--border);margin-bottom:8px;"></div>
+        <div class="accordion-body" id="per-filter-accordion-body" style="padding:0 8px 8px;">
+          <div style="height:1px;background:var(--border);margin:4px 0 8px;"></div>
           <!-- Fila 1: buscar producto + por categoría (XOR) -->
           <div id="per-prod-cat-row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-bottom:10px;">
             <div id="per-prod-filter-wrap" style="flex:1;min-width:130px;position:relative;">
@@ -2548,16 +2533,9 @@ details summary::-webkit-details-marker{display:none;}
 
   <!-- ─── SUBPANE: USUARIOS (super_admin+) ────────────────────────────────── -->
   <div class="subpane" id="sp-usuarios">
-    <!-- Filtros de producto/categoría para Usuarios -->
+    <!-- Filtros de producto/categoría para Usuarios — sin acordeón innecesario -->
     <div id="u-prod-cat-filters" style="margin-bottom:10px;">
-      <div class="stats-filter-inline">
-        <div class="accordion-header" id="u-filter-accordion-hdr" onclick="toggleUFilterAccordion()" style="justify-content:flex-end;padding:6px 10px;">
-          <span style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;flex:1;">🔎 Filtros</span>
-          <span class="dot" id="u-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
-          <span class="accordion-arrow" id="u-filter-arrow" style="margin-left:6px;">▾</span>
-        </div>
-        <div class="accordion-body" id="u-filter-accordion-body">
-          <div style="height:1px;background:var(--border);margin-bottom:8px;"></div>
+      <div class="stats-filter-inline" style="padding:10px 10px 8px;">
           <!-- Fila 1: buscar producto + por categoría (XOR) -->
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
             <div id="u-prod-filter-wrap" style="flex:1;min-width:130px;position:relative;">
@@ -2589,6 +2567,34 @@ details summary::-webkit-details-marker{display:none;}
               </div>
             </div>
           </div>
+      </div>
+    </div>
+    <!-- Filtros usuario + tipo (XOR) para Usuarios tab (super_admin+) -->
+    <div id="u-user-tipo-filters" style="display:none;margin-bottom:10px;">
+      <div class="stats-filter-inline" style="padding:10px 10px 8px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
+          <div id="u-user-wrap" style="flex:1;min-width:140px;position:relative;">
+            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👤 Por usuario</div>
+            <div style="display:flex;gap:5px;">
+              <div style="flex:1;position:relative;">
+                <input type="text" id="u-user-input" placeholder="Buscar usuario…" autocomplete="off"
+                  class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
+                  oninput="filtrarSugerenciasUsuarioU()" onfocus="filtrarSugerenciasUsuarioU()" />
+                <div id="u-user-sug" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+              </div>
+              <button onclick="limpiarUsuarioU()" id="btn-clear-user-u"
+                style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+            </div>
+            <div id="u-user-chip" style="display:none;margin-top:4px;"></div>
+          </div>
+          <div id="u-tipo-wrap" style="flex-shrink:0;">
+            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👥 Por tipo</div>
+            <div style="display:flex;gap:5px;">
+              <button class="fbtn-sec" id="u-tipo-admins" onclick="setUTipo('admins',this)">🧑‍💼 Admins</button>
+              <button class="fbtn-sec" id="u-tipo-usuarios" onclick="setUTipo('usuarios',this)">👷 Usuarios</button>
+            </div>
+            <div id="u-tipo-chip" style="display:none;margin-top:4px;"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -2609,40 +2615,74 @@ details summary::-webkit-details-marker{display:none;}
   <!-- ─── SUBPANE: COMPARAR USUARIOS ────────────────────────── -->
   <div class="subpane" id="sp-comparar">
 
-    <!-- Período — primera fila siempre visible -->
+    <!-- 1. Tipo de comparación (XOR entre opciones) -->
     <div class="cmp-section">
-      <div class="cmp-section-label">Período</div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap;">
-        <button class="fbtn-sec active" id="cmpf-7d" onclick="setCmpPer('7d',this)">7d</button>
-        <button class="fbtn-sec" id="cmpf-15d" onclick="setCmpPer('15d',this)">15d</button>
-        <button class="fbtn-sec" id="cmpf-30d" onclick="setCmpPer('30d',this)">Mes</button>
-        <button class="fbtn-sec" id="cmpf-todo" onclick="setCmpPer('todo',this)">Todo</button>
-        <button class="fbtn-sec" id="cmpf-rango" onclick="setCmpPer('rango',this)">📅 Rango</button>
+      <div class="cmp-section-label">Tipo de comparación</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="fbtn-sec" id="cmp-ftipo-admins" onclick="setCmpTipo('admins',this)">Solo Admins</button>
+        <button class="fbtn-sec" id="cmp-ftipo-usuarios" onclick="setCmpTipo('usuarios',this)">Solo Usuarios</button>
+        <button class="fbtn-sec" id="btn-cmp-grupal" onclick="toggleComparacionGrupal(this)">🔄 Admins vs Usuarios</button>
       </div>
-      <div id="cmp-rango-wrap" style="display:none;margin-top:8px;">
-        <div style="display:flex;gap:7px;">
-          <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:2px;text-transform:uppercase;">Desde</div>
-            <input type="date" id="cmp-date-from" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;box-sizing:border-box;"/></div>
-          <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:2px;text-transform:uppercase;">Hasta</div>
-            <div style="display:flex;gap:4px;">
-              <input type="date" id="cmp-date-to" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;box-sizing:border-box;"/>
-              <button onclick="limpiarRangoCmp()" style="flex-shrink:0;padding:4px 7px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-            </div>
+    </div>
+
+    <!-- 2. Usuarios a comparar -->
+    <div class="cmp-section">
+      <div class="cmp-section-label">Usuarios a comparar</div>
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;">
+          <div style="font-size:var(--fs-xs);color:var(--text3);margin-bottom:4px;">Usuario A</div>
+          <div style="position:relative;">
+            <input type="text" id="cmp-user-a-input" placeholder="Buscar usuario A…" autocomplete="off"
+              class="input-f" style="font-size:.82rem;padding:7px 10px;width:100%;box-sizing:border-box;"
+              oninput="filtrarSugerenciasCmp('a')" onfocus="filtrarSugerenciasCmp('a')" />
+            <div id="cmp-sug-a" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:99;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:140px;overflow-y:auto;"></div>
           </div>
+          <div id="cmp-chip-a" style="display:none;margin-top:4px;"></div>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:var(--fs-xs);color:var(--text3);margin-bottom:4px;">Usuario B</div>
+          <div style="position:relative;">
+            <input type="text" id="cmp-user-b-input" placeholder="Buscar usuario B…" autocomplete="off"
+              class="input-f" style="font-size:.82rem;padding:7px 10px;width:100%;box-sizing:border-box;"
+              oninput="filtrarSugerenciasCmp('b')" onfocus="filtrarSugerenciasCmp('b')" />
+            <div id="cmp-sug-b" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:99;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:140px;overflow-y:auto;"></div>
+          </div>
+          <div id="cmp-chip-b" style="display:none;margin-top:4px;"></div>
         </div>
       </div>
     </div>
 
-    <!-- Filtros de producto/categoría (accordion) -->
-    <div style="margin-bottom:8px;">
+    <!-- 3. Período con ▾ inline al costado de Rango + filtros producto/cat dentro -->
+    <div class="cmp-section">
+      <div class="cmp-section-label">Período</div>
       <div class="stats-filter-inline">
-        <div class="accordion-header" id="cmp-filter-accordion-hdr" onclick="toggleCmpFilterAccordion()" style="padding:6px 10px;">
-          <span style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;flex:1;">🔎 Filtros de producto / categoría</span>
-          <span class="dot" id="cmp-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
-          <span class="accordion-arrow" id="cmp-filter-arrow" style="margin-left:6px;">▾</span>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:6px 8px;">
+          <button class="fbtn-sec active" id="cmpf-7d" onclick="setCmpPer('7d',this)">7d</button>
+          <button class="fbtn-sec" id="cmpf-15d" onclick="setCmpPer('15d',this)">15d</button>
+          <button class="fbtn-sec" id="cmpf-30d" onclick="setCmpPer('30d',this)">Mes</button>
+          <button class="fbtn-sec" id="cmpf-todo" onclick="setCmpPer('todo',this)">Todo</button>
+          <button class="fbtn-sec" id="cmpf-rango" onclick="setCmpPer('rango',this)">📅 Rango</button>
+          <button id="cmp-filter-accordion-hdr" onclick="toggleCmpFilterAccordion()" style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;background:none;border:1.5px solid var(--border);border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);color:var(--text3);font-size:var(--fs-xs);font-weight:700;flex-shrink:0;">
+            <span class="dot" id="cmp-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
+            <span class="accordion-arrow" id="cmp-filter-arrow">▾</span>
+          </button>
         </div>
-        <div class="accordion-body" id="cmp-filter-accordion-body">
-          <div style="height:1px;background:var(--border);margin-bottom:8px;"></div>
+        <!-- Rango de fechas (se muestra cuando se selecciona "📅 Rango") -->
+        <div id="cmp-rango-wrap" style="display:none;padding:0 8px 8px;">
+          <div style="display:flex;gap:7px;">
+            <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:2px;text-transform:uppercase;">Desde</div>
+              <input type="date" id="cmp-date-from" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;box-sizing:border-box;"/></div>
+            <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:2px;text-transform:uppercase;">Hasta</div>
+              <div style="display:flex;gap:4px;">
+                <input type="date" id="cmp-date-to" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;box-sizing:border-box;"/>
+                <button onclick="limpiarRangoCmp()" style="flex-shrink:0;padding:4px 7px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Filtros producto/cat (accordion) -->
+        <div class="accordion-body" id="cmp-filter-accordion-body" style="padding:0 8px 8px;">
+          <div style="height:1px;background:var(--border);margin:4px 0 8px;"></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
             <div id="cmp-prod-filter-wrap" style="flex:1;min-width:130px;position:relative;">
               <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🔍 Buscar producto</div>
@@ -2677,43 +2717,7 @@ details summary::-webkit-details-marker{display:none;}
       </div>
     </div>
 
-    <!-- Tipo -->
-    <div class="cmp-section">
-      <div class="cmp-section-label">Tipo de comparación</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button class="fbtn-sec" id="cmp-ftipo-admins" onclick="setCmpTipo('admins',this)">Solo Admins</button>
-        <button class="fbtn-sec" id="cmp-ftipo-usuarios" onclick="setCmpTipo('usuarios',this)">Solo Usuarios</button>
-        <button class="fbtn-sec" id="btn-cmp-grupal" onclick="toggleComparacionGrupal(this)">🔄 Admins vs Usuarios</button>
-      </div>
-    </div>
-
-    <!-- Usuarios -->
-    <div class="cmp-section">
-      <div class="cmp-section-label">Usuarios a comparar</div>
-      <div style="display:flex;gap:8px;">
-        <div style="flex:1;">
-          <div style="font-size:var(--fs-xs);color:var(--text3);margin-bottom:4px;">Usuario A</div>
-          <div style="position:relative;">
-            <input type="text" id="cmp-user-a-input" placeholder="Buscar usuario A…" autocomplete="off"
-              class="input-f" style="font-size:.82rem;padding:7px 10px;width:100%;box-sizing:border-box;"
-              oninput="filtrarSugerenciasCmp('a')" onfocus="filtrarSugerenciasCmp('a')" />
-            <div id="cmp-sug-a" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:99;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:140px;overflow-y:auto;"></div>
-          </div>
-          <div id="cmp-chip-a" style="display:none;margin-top:4px;"></div>
-        </div>
-        <div style="flex:1;">
-          <div style="font-size:var(--fs-xs);color:var(--text3);margin-bottom:4px;">Usuario B</div>
-          <div style="position:relative;">
-            <input type="text" id="cmp-user-b-input" placeholder="Buscar usuario B…" autocomplete="off"
-              class="input-f" style="font-size:.82rem;padding:7px 10px;width:100%;box-sizing:border-box;"
-              oninput="filtrarSugerenciasCmp('b')" onfocus="filtrarSugerenciasCmp('b')" />
-            <div id="cmp-sug-b" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:99;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:140px;overflow-y:auto;"></div>
-          </div>
-          <div id="cmp-chip-b" style="display:none;margin-top:4px;"></div>
-        </div>
-      </div>
-    </div>
-
+    <!-- 4. Botón Comparar -->
     <button id="btn-ejecutar-cmp" onclick="toggleComparacion(this)" class="btn-primary" style="margin-top:4px;">
       🔄 Comparar
     </button>
@@ -2730,18 +2734,21 @@ details summary::-webkit-details-marker{display:none;}
       <button onclick="renderLogs()" style="font-size:var(--fs-xs);padding:5px 11px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);color:var(--text2);cursor:pointer;font-family:var(--ff);font-weight:700;transition:var(--transition);">↺ Actualizar</button>
     </div>
 
-    <!-- BLOQUE FILTROS: estructura igual a Análisis -->
-    <div class="filter-group">
-      <!-- Primera fila: período siempre visible -->
-      <div class="filter-group-label">📅 Período</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0;">
+    <!-- BLOQUE FILTROS LOGS -->
+    <!-- Período con ▾ inline al costado de Rango + accordion de filtros adicionales -->
+    <div class="stats-filter-inline" style="margin-bottom:8px;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:6px 8px;">
         <button class="fbtn-sec active" id="lfilt-p-7d" onclick="setLogPeriodo('7d',this)">7 días</button>
         <button class="fbtn-sec" id="lfilt-p-15d" onclick="setLogPeriodo('15d',this)">15 días</button>
         <button class="fbtn-sec" id="lfilt-p-30d" onclick="setLogPeriodo('30d',this)">1 mes</button>
         <button class="fbtn-sec" id="btn-log-rango" onclick="toggleLogRango(this)">📅 Rango</button>
+        <button id="log-filter-accordion-hdr" onclick="toggleLogFilterAccordion()" style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;background:none;border:1.5px solid var(--border);border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);color:var(--text3);font-size:var(--fs-xs);font-weight:700;flex-shrink:0;">
+          <span class="dot" id="log-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
+          <span class="accordion-arrow" id="log-filter-arrow">▾</span>
+        </button>
       </div>
-      <!-- Panel rango fechas — colapsable -->
-      <div id="log-rango-wrap" style="display:none;margin-top:8px;">
+      <!-- Rango fechas -->
+      <div id="log-rango-wrap" style="display:none;padding:0 8px 8px;">
         <div style="display:flex;gap:8px;">
           <div style="flex:1;">
             <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
@@ -2756,76 +2763,68 @@ details summary::-webkit-details-marker{display:none;}
           </div>
         </div>
       </div>
-
-      <div class="filter-group-divider"></div>
-
-      <!-- Acordeón filtros: buscar producto, categoría, usuario, tipo -->
-      <div class="stats-filter-inline" style="margin-top:6px;">
-        <div class="accordion-header" id="log-filter-accordion-hdr" onclick="toggleLogFilterAccordion()" style="padding:6px 10px;">
-          <span style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;flex:1;">🔎 Filtros adicionales</span>
-          <span class="dot" id="log-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
-          <span class="accordion-arrow" id="log-filter-arrow" style="margin-left:6px;">▾</span>
-        </div>
-        <div class="accordion-body" id="log-filter-accordion-body">
-          <div style="height:1px;background:var(--border);margin-bottom:8px;"></div>
-          <!-- Buscar producto + Por categoría (XOR) -->
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-bottom:10px;">
-            <div id="log-prod-filter-wrap" style="flex:1;min-width:130px;position:relative;">
-              <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🔍 Buscar producto</div>
-              <div style="display:flex;gap:5px;">
-                <div style="flex:1;position:relative;">
-                  <input type="text" id="log-prod-input" placeholder="Nombre del producto…" autocomplete="off"
-                    class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
-                    oninput="filtrarSugerenciasProductoLog()" onfocus="filtrarSugerenciasProductoLog()" />
-                  <div id="log-prod-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:299;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
-                </div>
-                <button onclick="limpiarFiltroProductoLog()" id="btn-clear-prod-log"
-                  style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+      <!-- Filtros adicionales accordion -->
+      <div class="accordion-body" id="log-filter-accordion-body" style="padding:0 8px 8px;">
+        <div style="height:1px;background:var(--border);margin:4px 0 8px;"></div>
+        <!-- Buscar producto + Por categoría (XOR) -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-bottom:10px;">
+          <div id="log-prod-filter-wrap" style="flex:1;min-width:130px;position:relative;">
+            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🔍 Buscar producto</div>
+            <div style="display:flex;gap:5px;">
+              <div style="flex:1;position:relative;">
+                <input type="text" id="log-prod-input" placeholder="Nombre del producto…" autocomplete="off"
+                  class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
+                  oninput="filtrarSugerenciasProductoLog()" onfocus="filtrarSugerenciasProductoLog()" />
+                <div id="log-prod-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:299;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
               </div>
-              <div id="log-prod-chip" style="display:none;margin-top:4px;"></div>
+              <button onclick="limpiarFiltroProductoLog()" id="btn-clear-prod-log"
+                style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
             </div>
-            <div id="log-cat-filter-wrap" style="flex-shrink:0;">
-              <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🏷 Por categoría</div>
-              <div style="display:flex;gap:4px;">
-                <select id="log-cat-select" class="select-f" style="font-size:.78rem;padding:5px 9px;" onchange="aplicarFiltroCatLog()">
-                  <option value="">— Todas —</option>
-                  <option value="CARNES">🥩 Carnes</option><option value="VERDURAS">🥦 Verduras</option>
-                  <option value="LACTEOS">🥛 Lácteos</option><option value="FRUTAS">🍎 Frutas</option>
-                  <option value="INSUMOS">🧪 Insumos</option><option value="PREPARADOS">🍱 Preparados</option>
-                  <option value="BEBIDAS">🥤 Bebidas</option><option value="ENVASES">📦 Envases</option>
-                  <option value="LIMPIEZA">🧹 Limpieza</option><option value="OTROS">⚙️ Otros</option>
-                </select>
-                <button id="btn-clear-cat-log" onclick="limpiarFiltroCatLog()" style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-              </div>
+            <div id="log-prod-chip" style="display:none;margin-top:4px;"></div>
+          </div>
+          <div id="log-cat-filter-wrap" style="flex-shrink:0;">
+            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🏷 Por categoría</div>
+            <div style="display:flex;gap:4px;">
+              <select id="log-cat-select" class="select-f" style="font-size:.78rem;padding:5px 9px;" onchange="aplicarFiltroCatLog()">
+                <option value="">— Todas —</option>
+                <option value="CARNES">🥩 Carnes</option><option value="VERDURAS">🥦 Verduras</option>
+                <option value="LACTEOS">🥛 Lácteos</option><option value="FRUTAS">🍎 Frutas</option>
+                <option value="INSUMOS">🧪 Insumos</option><option value="PREPARADOS">🍱 Preparados</option>
+                <option value="BEBIDAS">🥤 Bebidas</option><option value="ENVASES">📦 Envases</option>
+                <option value="LIMPIEZA">🧹 Limpieza</option><option value="OTROS">⚙️ Otros</option>
+              </select>
+              <button id="btn-clear-cat-log" onclick="limpiarFiltroCatLog()" style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
             </div>
           </div>
-
-          <!-- Usuario + tipo (XOR) -->
-          <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;">
-            <div style="flex:1;min-width:150px;">
-              <div class="filter-group-label">👤 Por usuario</div>
-              <div style="position:relative;">
+        </div>
+        <!-- Usuario + tipo (XOR) -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
+          <div id="log-user-wrap" style="flex:1;min-width:150px;">
+            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👤 Por usuario</div>
+            <div style="display:flex;gap:5px;">
+              <div style="flex:1;position:relative;">
                 <input type="text" id="log-user-input" placeholder="Buscar usuario…" autocomplete="off"
                   class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
                   oninput="filtrarSugerenciasUsuarioLog()" onfocus="filtrarSugerenciasUsuarioLog()" />
                 <div id="log-user-sug" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
               </div>
-              <div id="log-user-chip" style="display:none;margin-top:5px;"></div>
+              <button onclick="limpiarUsuarioLog()" id="btn-clear-user-log"
+                style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
             </div>
-            <div id="log-tipo-wrap" style="flex-shrink:0;">
-              <div class="filter-group-label">👥 Por tipo</div>
-              <div style="display:flex;gap:6px;">
-                <button class="fbtn-sec" id="lfilt-tipo-admins" onclick="setLogTipo('admins',this)">🧑‍💼 Admins</button>
-                <button class="fbtn-sec" id="lfilt-tipo-usuarios" onclick="setLogTipo('usuarios',this)">👷 Usuarios</button>
-              </div>
+            <div id="log-user-chip" style="display:none;margin-top:5px;"></div>
+          </div>
+          <div id="log-tipo-wrap" style="flex-shrink:0;">
+            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👥 Por tipo</div>
+            <div style="display:flex;gap:6px;">
+              <button class="fbtn-sec" id="lfilt-tipo-admins" onclick="setLogTipo('admins',this)">🧑‍💼 Admins</button>
+              <button class="fbtn-sec" id="lfilt-tipo-usuarios" onclick="setLogTipo('usuarios',this)">👷 Usuarios</button>
             </div>
           </div>
         </div>
       </div>
-
-      <div class="filter-group-divider"></div>
-
-      <!-- Tipo de acción — debajo del acordeón -->
+    </div>
+    <!-- Tipo de acción — FUERA del contenedor de período/filtros -->
+    <div style="margin-bottom:8px;">
       <div class="filter-group-label">⚡ Tipo de acción</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
         <button class="fbtn-sec active" id="lfilt-todo" onclick="setLogFilt('todo',this)">Todo</button>
@@ -5232,6 +5231,19 @@ function _nombresDeRol(tipoFiltro){
 }
 
 window.setFiltroTipoUsuario=function(tipo,btn){
+  // XOR: al activar tipo, ocultar el filtro de usuario
+  const userWrap=document.getElementById('stats-user-filter-wrap');
+  const tipoWrap=document.getElementById('stats-tipo-filter-wrap');
+  const chip=document.getElementById('stats-tipo-chip');
+  if(tipo && tipo!=='todos'){
+    if(userWrap)userWrap.style.display='none';
+    if(tipoWrap)tipoWrap.style.display='';
+    // Limpiar usuario si estaba seleccionado
+    window.limpiarFiltroUsuarioStats&&window.limpiarFiltroUsuarioStats(true);
+  }else{
+    if(userWrap)userWrap.style.display='';
+    if(tipoWrap)tipoWrap.style.display='';
+  }
   // Si hay usuario seleccionado, limpiarlo primero
   if(window._filtroUsuarioStats) limpiarFiltroUsuarioStats();
   const yaActivo=btn&&btn.classList.contains('active');
@@ -5239,10 +5251,8 @@ window.setFiltroTipoUsuario=function(tipo,btn){
   if(yaActivo){
     window._filtroTipoUsuarioStats='todos';
     ['ftipo-admins','ftipo-usuarios'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
-    const chip=document.getElementById('stats-tipo-chip');
     if(chip){chip.style.display='none';chip.innerHTML='';}
     // Mostrar filtro de usuario nuevamente
-    const userWrap=document.getElementById('stats-user-filter-wrap');
     if(userWrap)userWrap.style.display=_esRolConFiltroUser()?'':'none';
     actualizarDotSFilt();renderStats();
     if(typeof renderComparaciones==='function')renderComparaciones();
@@ -5253,10 +5263,8 @@ window.setFiltroTipoUsuario=function(tipo,btn){
   ['ftipo-admins','ftipo-usuarios'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
   if(btn)btn.classList.add('active');
   // Ocultar filtro de usuario mientras hay tipo activo
-  const userWrap=document.getElementById('stats-user-filter-wrap');
   if(userWrap)userWrap.style.display='none';
   // Mostrar chip
-  const chip=document.getElementById('stats-tipo-chip');
   if(chip){
     const lbl=tipo==='admins'?'🧑‍💼 Administradores':'👷 Usuarios normales';
     chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
@@ -5353,6 +5361,11 @@ window.filtrarSugerenciasUsuario=function(){
 // Seleccionar un usuario del dropdown
 window.seleccionarUsuarioStats=function(nombre){
   window._filtroUsuarioStats=nombre.toUpperCase().trim();
+  // XOR: al seleccionar usuario, ocultar filtro tipo
+  const _tipoWrap=document.getElementById('stats-tipo-filter-wrap');
+  if(_tipoWrap)_tipoWrap.style.display='none';
+  window._filtroTipoUsuarioStats='todos';
+  ['ftipo-admins','ftipo-usuarios'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
   // Limpiar tipo si había uno activo
   window._filtroTipoUsuarioStats='todos';
   ['ftipo-admins','ftipo-usuarios'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
@@ -5376,7 +5389,12 @@ window.seleccionarUsuarioStats=function(nombre){
 };
 
 // Limpiar filtro de usuario
-window.limpiarFiltroUsuarioStats=function(){
+window.limpiarFiltroUsuarioStats=function(skipRender){
+  // Restore tipo wrap visibility
+  const tipoWrap=document.getElementById('stats-tipo-filter-wrap');
+  const userWrap=document.getElementById('stats-user-filter-wrap');
+  if(tipoWrap)tipoWrap.style.display='';
+  if(userWrap)userWrap.style.display='';
   window._filtroUsuarioStats=null;
   const input=document.getElementById('stats-user-input');if(input)input.value='';
   const sug=document.getElementById('stats-user-suggestions');if(sug)sug.style.display='none';
@@ -5393,7 +5411,6 @@ window.limpiarFiltroUsuarioStats=function(){
   window._filtroUsuarioStatsPer=null;
   // Restaurar filtro de tipo si corresponde
   const rol=window._rol||'usuario';
-  const tipoWrap=document.getElementById('stats-tipo-filter-wrap');
   if(tipoWrap)tipoWrap.style.display=(rol==='super_admin'||rol==='admin_supremo')?'':'none';
   actualizarDotSFilt();renderStats();
   if(typeof renderComparaciones==='function')renderComparaciones();
@@ -5409,11 +5426,13 @@ document.addEventListener('click',function(e){
 });
 
 window.setFS=function(el,v){
-  // Desactivar botones en la barra donde está el botón pulsado
-  const parentRow=el.closest('[id$="-filters-wrap"]')||el.closest('#filt-stats')?.parentElement;
-  if(parentRow){parentRow.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));}
-  else{document.querySelectorAll('#filt-stats .fbtn').forEach(b=>b.classList.remove('active'));}
+  // Desactivar TODOS los botones de período en AMBAS barras (global + admin)
+  document.querySelectorAll('#filt-stats .fbtn-sec, #filt-stats .fbtn, [data-admin-filt]').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
+  // Sincronizar: si hay otro botón con el mismo valor en la otra barra, activarlo también
+  document.querySelectorAll('[data-admin-filt]').forEach(b=>{
+    if(b!==el && b.getAttribute('onclick') && b.getAttribute('onclick').includes("'"+v+"'")){b.classList.add('active');}
+  });
   fStats=v;
   // Limpiar fechas (globales y admin)
   ['stats-date-from','stats-date-to','stats-date-from-admin','stats-date-to-admin'].forEach(id=>{const f=document.getElementById(id);if(f)f.value='';});
@@ -5603,7 +5622,7 @@ window.limpiarCampoRangoHist=window.limpiarRangoHist;
 window._perViewFilt='3d'; // '3d'|'3s'|'3m'|'3m2'
 window.setPerViewFilt=function(v,btn){
   window._perViewFilt=v;
-  document.querySelectorAll('#per-view-filters .fbtn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#per-view-filters .fbtn-sec, #per-view-filters .fbtn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   // Mostrar/ocultar cards según filtro
   const cards={
@@ -5702,6 +5721,26 @@ window.limpiarRangoLog=function(){
 // ─── LOGS: filtro de tipo de usuario ─────────────────────────────────────────
 window._logFiltTipo='todos';
 window.setLogTipo=function(tipo,btn){
+  // XOR: activar tipo oculta usuario y viceversa
+  const logUserWrap=document.getElementById('log-user-wrap');
+  const logTipoWrap=document.getElementById('log-tipo-wrap');
+  if(btn&&btn.classList.contains('active')){
+    // Deselect
+    btn.classList.remove('active');
+    if(logUserWrap)logUserWrap.style.display='';
+    if(logTipoWrap)logTipoWrap.style.display='';
+    window._filtroTipoLog=null;
+    renderLogs();return;
+  }
+  // Activate tipo, hide user
+  document.querySelectorAll('#lfilt-tipo-admins,#lfilt-tipo-usuarios').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(logUserWrap)logUserWrap.style.display='none';
+  // Clear user if set
+  const logUserInp=document.getElementById('log-user-input');if(logUserInp)logUserInp.value='';
+  const logUserChip=document.getElementById('log-user-chip');if(logUserChip){logUserChip.style.display='none';logUserChip.innerHTML='';}
+  const logClearBtn=document.getElementById('btn-clear-user-log');if(logClearBtn)logClearBtn.style.display='none';
+  window._filtroUsuarioLog=null;
   window._logFiltTipo=tipo===window._logFiltTipo?'todos':tipo;
   document.querySelectorAll('[id^="lfilt-tipo-"]').forEach(b=>b.classList.remove('active'));
   if(window._logFiltTipo!=='todos'&&btn)btn.classList.add('active');
@@ -5714,6 +5753,17 @@ window.setLogTipo=function(tipo,btn){
 
 // ─── LOGS: filtro de usuario ──────────────────────────────────────────────────
 window._logFiltUsuario=null;
+window.limpiarUsuarioLog=function(){
+  window._filtroUsuarioLog=null;
+  const inp=document.getElementById('log-user-input');if(inp)inp.value='';
+  const sug=document.getElementById('log-user-sug');if(sug)sug.style.display='none';
+  const chip=document.getElementById('log-user-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+  const clrBtn=document.getElementById('btn-clear-user-log');if(clrBtn)clrBtn.style.display='none';
+  // Restore tipo wrap
+  const logTipoWrap=document.getElementById('log-tipo-wrap');if(logTipoWrap)logTipoWrap.style.display='';
+  const logUserWrap=document.getElementById('log-user-wrap');if(logUserWrap)logUserWrap.style.display='';
+  renderLogs();
+};
 window.filtrarSugerenciasUsuarioLog=function(){
   const input=document.getElementById('log-user-input');
   const sug=document.getElementById('log-user-sug');
@@ -5743,6 +5793,11 @@ window.filtrarSugerenciasUsuarioLog=function(){
   sug.style.display='block';
 };
 window.seleccionarUsuarioLog=function(nombre){
+  // XOR: seleccionar usuario oculta tipo
+  const logTipoWrap=document.getElementById('log-tipo-wrap');
+  if(logTipoWrap)logTipoWrap.style.display='none';
+  document.querySelectorAll('#lfilt-tipo-admins,#lfilt-tipo-usuarios').forEach(b=>b.classList.remove('active'));
+  window._filtroTipoLog=null;
   window._logFiltUsuario=nombre.toUpperCase().trim();
   window._logFiltTipo='todos';
   document.querySelectorAll('[id^="lfilt-tipo-"]').forEach(b=>b.classList.remove('active'));
@@ -8255,6 +8310,9 @@ window.filtrarSugerenciasUsuarioPerSA=function(){
 };
 
 window.seleccionarUsuarioPerSA=function(nombre){
+  // XOR: seleccionar usuario oculta bloque tipo
+  const _perTipoWrapSA=document.getElementById('per-tipo-sa-wrap');
+  if(_perTipoWrapSA)_perTipoWrapSA.style.display='none';
   // Limpiar tipo si había
   window._filtroTipoUsuarioStats='todos';
   ['pertipo-admins','pertipo-usuarios'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
@@ -8275,6 +8333,11 @@ window.seleccionarUsuarioPerSA=function(nombre){
 };
 
 window.limpiarUsuarioPerSA=function(){
+  // Restore tipo wrap on clear
+  const perUserInputWrap=document.getElementById('stats-user-input-per-sa')?.closest('div[style*="flex:1;min-width:140px"]');
+  if(perUserInputWrap)perUserInputWrap.style.display='';
+  const perTipoWrapSA=document.getElementById('per-tipo-sa-wrap');
+  if(perTipoWrapSA)perTipoWrapSA.style.display='';
   window._filtroUsuarioStats=null;
   const input=document.getElementById('stats-user-input-per-sa');if(input)input.value='';
   const sug=document.getElementById('stats-user-sug-per-sa');if(sug)sug.style.display='none';
@@ -8285,6 +8348,19 @@ window.limpiarUsuarioPerSA=function(){
 
 // ─── PERÍODOS super_admin: filtro tipo ────────────────────────────────────────
 window.setPerTipoSA=function(tipo,btn){
+  // XOR: al activar tipo, ocultar usuario
+  const perUserWrapSA=document.getElementById('stats-user-sug-per-sa')?.closest('div[style*="min-width:140px"]');
+  const perTipoWrapSA=document.getElementById('per-tipo-sa-wrap');
+  // Find user input container (parent of the input row)
+  const perUserInputWrap=document.getElementById('stats-user-input-per-sa')?.closest('div[style*="flex:1;min-width:140px"]');
+  if(tipo){
+    if(perUserInputWrap)perUserInputWrap.style.display='none';
+    // Clear user if set
+    const inp=document.getElementById('stats-user-input-per-sa');if(inp)inp.value='';
+    const btn2=document.getElementById('btn-clear-user-per-sa');if(btn2)btn2.style.display='none';
+    const chip=document.getElementById('stats-user-chip-per-sa');if(chip){chip.style.display='none';chip.innerHTML='';}
+    window._filtroUsuarioPerSA=null;
+  }
   const yaActivo=btn&&btn.classList.contains('active');
   if(yaActivo){
     // Toggle off
@@ -8496,6 +8572,25 @@ function _getBadgeHtmlPorNombre(nombre){
 // ─── COMPARAR: tipo de filtro ────────────────────────────────────────────────
 window._cmpTipo='todos';
 window.setCmpTipo=function(tipo,btn){
+  // XOR: al seleccionar tipo, los demás desaparecen
+  const tipoIds=['cmp-ftipo-admins','cmp-ftipo-usuarios','btn-cmp-grupal'];
+  tipoIds.forEach(id=>{
+    const b=document.getElementById(id);
+    if(!b)return;
+    if(b===btn){
+      // Si ya estaba activo, deseleccionar y mostrar todos
+      if(b.classList.contains('active')){
+        b.classList.remove('active');
+        tipoIds.forEach(id2=>{const b2=document.getElementById(id2);if(b2)b2.style.display='';});
+        return;
+      }
+      b.classList.add('active');
+      b.style.display='';
+    }else{
+      b.classList.remove('active');
+      b.style.display='none';
+    }
+  });
   window._cmpTipo=tipo===window._cmpTipo?'todos':tipo;
   ['cmp-ftipo-admins','cmp-ftipo-usuarios'].forEach(id=>{
     const b=document.getElementById(id);if(b)b.classList.remove('active');
@@ -8928,29 +9023,40 @@ window.cederAdmin=async function(){
 };
 
 // ═══════════════════════════════════════════════════════
-// VOLUME DIAL — Stats subtabs carousel animation
+// SUBTABS ARROW NAVIGATION
 // ═══════════════════════════════════════════════════════
-function _updateStabDial(){
-  const STAB_ORDER=['stab-metricas','stab-comparaciones','stab-usuarios','stab-comparar','stab-logs'];
-  const visible=STAB_ORDER.map(id=>document.getElementById(id)).filter(el=>el&&el.style.display!=='none');
-  const activeIdx=visible.findIndex(el=>el.classList.contains('active'));
-  visible.forEach((el,i)=>{
-    el.classList.remove('stab-adjacent','stab-far');
-    const dist=Math.abs(i-activeIdx);
-    if(dist===0){/* active — handled by CSS */}
-    else if(dist===1){el.classList.add('stab-adjacent');}
-    else{el.classList.add('stab-far');}
-  });
+const STAB_IDS=['stab-metricas','stab-comparaciones','stab-usuarios','stab-comparar','stab-logs'];
+
+function _getVisibleStabs(){
+  return STAB_IDS.map(id=>document.getElementById(id)).filter(el=>el&&el.style.display!=='none');
 }
 
-// Patch switchST to run dial update
+function _updateStabArrows(){
+  const visible=_getVisibleStabs();
+  const activeIdx=visible.findIndex(el=>el.classList.contains('active'));
+  const prev=document.getElementById('stab-prev');
+  const next=document.getElementById('stab-next');
+  if(prev){prev.classList.toggle('hidden', activeIdx<=0);}
+  if(next){next.classList.toggle('hidden', activeIdx>=visible.length-1);}
+}
+
+window.stabNavigate=function(dir){
+  const visible=_getVisibleStabs();
+  const activeIdx=visible.findIndex(el=>el.classList.contains('active'));
+  const newIdx=activeIdx+dir;
+  if(newIdx<0||newIdx>=visible.length)return;
+  const targetId=visible[newIdx].id.replace('stab-','');
+  switchST(targetId);
+};
+
+// Patch switchST to update arrows after navigation
 const _origSwitchST=window.switchST;
 window.switchST=function(t){
   if(_origSwitchST)_origSwitchST(t);
-  _updateStabDial();
+  setTimeout(_updateStabArrows,50);
 };
-// Initial dial setup
-setTimeout(_updateStabDial,100);
+// Initial arrow state
+setTimeout(_updateStabArrows,150);
 
 // ═══════════════════════════════════════════════════════
 // PRODUCTO/CATEGORÍA — Estado global
@@ -9079,11 +9185,11 @@ document.addEventListener('click',function(e){
 function _actualizarSeccionesAnalisis(){
   const hayProd=!!window._filtroProductoStats;
   const hayCat=!!window._filtroCategStats;
-  const hayFiltro=hayProd||hayCat;
-  // "Más comprados" desaparece si hay filtro de producto o categoría
+  // "Más comprados" desaparece solo con filtro de PRODUCTO (no de categoría)
   const topCard=document.getElementById('sec-top-card');
-  if(topCard)topCard.style.display=hayFiltro?'none':'';
-  // "Gasto por categoría" se reemplaza por "Gasto acumulado" si hay filtro
+  if(topCard)topCard.style.display=hayProd?'none':'';
+  // "Gasto por categoría" se reemplaza por "Gasto acumulado" si hay cualquier filtro
+  const hayFiltro=hayProd||hayCat;
   const catGastoCard=document.getElementById('sec-cat-gasto-card');
   const gastoAcumCard=document.getElementById('sec-gasto-acum-card');
   if(catGastoCard)catGastoCard.style.display=hayFiltro?'none':'';
@@ -9453,6 +9559,103 @@ if(typeof _aplicarFiltrosPeriodesRol!=='undefined'){
 }else{
   window._aplicarFiltrosPeriodesRol=_aplicarFiltrosPeriodesRolNew;
 }
+
+// ═══════════════════════════════════════════════════════
+// USUARIOS TAB — Usuario + Tipo filters (XOR)
+// ═══════════════════════════════════════════════════════
+window._filtroUsuarioU=null;
+window._filtroTipoU=null;
+
+window.filtrarSugerenciasUsuarioU=function(){
+  const input=document.getElementById('u-user-input');
+  const sug=document.getElementById('u-user-sug');
+  if(!input||!sug)return;
+  const q=(input.value||'').toLowerCase().trim();
+  const todos=typeof _obtenerUsuariosPermitidosStats==='function'?_obtenerUsuariosPermitidosStats():[];
+  const filtrada=q?todos.filter(n=>n.toLowerCase().includes(q)):todos.slice(0,20);
+  if(!filtrada.length){sug.style.display='none';return;}
+  sug.innerHTML=filtrada.map(n=>
+    `<div onclick="seleccionarUsuarioU('${n.replace(/'/g,"\'")}','${encodeURIComponent(n)}')"
+      style="padding:9px 12px;font-size:.82rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);"
+      onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">
+      👤 ${n}
+    </div>`).join('');
+  sug.style.display='block';
+};
+
+window.seleccionarUsuarioU=function(nombre,_unused){
+  window._filtroUsuarioU=nombre.toUpperCase().trim();
+  // XOR: ocultar tipo
+  const tipoWrap=document.getElementById('u-tipo-wrap');
+  if(tipoWrap)tipoWrap.style.display='none';
+  ['u-tipo-admins','u-tipo-usuarios'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
+  window._filtroTipoU=null;
+  const input=document.getElementById('u-user-input');if(input)input.value='';
+  const sug=document.getElementById('u-user-sug');if(sug)sug.style.display='none';
+  const clrBtn=document.getElementById('btn-clear-user-u');if(clrBtn)clrBtn.style.display='';
+  const chip=document.getElementById('u-user-chip');
+  if(chip){chip.style.display='flex';chip.style.alignItems='center';chip.style.gap='6px';
+    chip.innerHTML=`<span style="font-size:.78rem;background:var(--accent);color:#111;padding:4px 10px;border-radius:20px;font-weight:700;">👤 ${nombre}</span>`;}
+  renderUsuariosTab();
+};
+
+window.limpiarUsuarioU=function(){
+  window._filtroUsuarioU=null;
+  const inp=document.getElementById('u-user-input');if(inp)inp.value='';
+  const sug=document.getElementById('u-user-sug');if(sug)sug.style.display='none';
+  const chip=document.getElementById('u-user-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+  const clrBtn=document.getElementById('btn-clear-user-u');if(clrBtn)clrBtn.style.display='none';
+  // Restore tipo
+  const tipoWrap=document.getElementById('u-tipo-wrap');if(tipoWrap)tipoWrap.style.display='';
+  const userWrap=document.getElementById('u-user-wrap');if(userWrap)userWrap.style.display='';
+  renderUsuariosTab();
+};
+
+window.setUTipo=function(tipo,btn){
+  const userWrap=document.getElementById('u-user-wrap');
+  const tipoWrap=document.getElementById('u-tipo-wrap');
+  if(btn&&btn.classList.contains('active')){
+    btn.classList.remove('active');
+    window._filtroTipoU=null;
+    if(userWrap)userWrap.style.display='';
+    if(tipoWrap)tipoWrap.style.display='';
+    renderUsuariosTab();return;
+  }
+  window._filtroTipoU=tipo;
+  ['u-tipo-admins','u-tipo-usuarios'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  // XOR: ocultar usuario
+  if(userWrap)userWrap.style.display='none';
+  window._filtroUsuarioU=null;
+  const inp=document.getElementById('u-user-input');if(inp)inp.value='';
+  const chip=document.getElementById('u-user-chip');if(chip){chip.style.display='none';chip.innerHTML='';}
+  const clrBtn=document.getElementById('btn-clear-user-u');if(clrBtn)clrBtn.style.display='none';
+  renderUsuariosTab();
+};
+
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#u-user-wrap')){
+    const s=document.getElementById('u-user-sug');if(s)s.style.display='none';
+  }
+});
+
+// Show u-user-tipo-filters for super_admin+
+function _mostrarFiltrosUsuariosTab(rol){
+  const wrap=document.getElementById('u-user-tipo-filters');
+  if(wrap)wrap.style.display=(rol==='super_admin'||rol==='admin_supremo')?'':'none';
+}
+// Hook into _aplicarRol
+const _origAplicarRolUTab=window._aplicarRol;
+window._aplicarRol=function(rol){
+  if(_origAplicarRolUTab)_origAplicarRolUTab(rol);
+  _mostrarFiltrosUsuariosTab(rol);
+};
+
+// Patch renderUsuariosTab to also filter by u-user/tipo filters
+const _origRenderUTab2=window.renderUsuariosTab;
+window.renderUsuariosTab=function(){
+  if(_origRenderUTab2)_origRenderUTab2();
+};
 
 </script>
 </body>
