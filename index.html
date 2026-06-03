@@ -953,56 +953,72 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
 }
 .search-clear.show{display:block;}
 
-/* ─── SUBTABS (stats) — Volume Dial ─────────────────── */
+/* ─── SUBTABS (stats) — Scrollable Pills ─────────────── */
+/*
+ * UX: Se reemplazó el patrón "Volume Dial" (una sola tab visible + flechas ‹›)
+ * por un carril de pills con scroll horizontal — el estándar mobile de iOS/Android.
+ * Motivo: el modelo anterior ocultaba las demás secciones, generando incertidumbre
+ * sobre cuántas opciones existían. Con pills siempre visibles el usuario escanea
+ * la oferta de un vistazo y navega con un toque, sin depender de flechas.
+ */
 .subtabs{
   display:flex;align-items:center;
-  background:var(--surface2);
-  border:1.5px solid var(--border);
-  border-radius:var(--r);
-  padding:4px 6px;gap:0;
+  background:transparent;
+  border:none;
+  padding:0;gap:0;
   margin-bottom:14px;
   position:relative;
 }
-.stab-arrow{
-  flex-shrink:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;
-  background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text3);
-  border-radius:50%;transition:background .15s,color .15s;
-  -webkit-tap-highlight-color:transparent;padding:0;
-  font-family:var(--ff);
-}
-.stab-arrow:active{background:var(--surface3);}
-.stab-arrow.hidden{opacity:.2;pointer-events:none;}
+/* Flechas eliminadas — el deslizamiento horizontal es la UI estándar en móvil */
+.stab-arrow{display:none!important;}
 .stab-track{
-  flex:1;overflow:hidden;position:relative;
+  flex:1;
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+  padding:2px 1px 6px;
 }
+.stab-track::-webkit-scrollbar{display:none;}
 .stab{
-  display:none;
-  width:100%;
-  padding:8px 10px;text-align:center;
+  display:inline-flex;
+  flex-shrink:0;
+  align-items:center;justify-content:center;
+  padding:7px 14px;
   font-size:var(--fs-xs);font-weight:700;
-  border-radius:var(--rmd);border:none;
-  background:transparent;
-  color:var(--text3);
-  letter-spacing:.02em;text-transform:uppercase;
-  white-space:nowrap;line-height:1.2;
-  -webkit-tap-highlight-color:transparent;
-}
-.stab.active{
-  display:block;
+  border-radius:20px;
+  border:1.5px solid var(--border2);
   background:var(--surface);
-  color:var(--text);
-  box-shadow:0 1px 4px rgba(0,0,0,.1),0 0 0 1.5px var(--border);
-  border-radius:var(--rmd);
-  animation:tabSlideIn .2s ease-out;
+  color:var(--text2);
+  cursor:pointer;
+  letter-spacing:.03em;text-transform:uppercase;
+  white-space:nowrap;line-height:1.2;
+  transition:background .15s,border-color .15s,color .15s,box-shadow .15s,transform .1s;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  box-shadow:var(--sh);
 }
-@keyframes tabSlideIn{from{opacity:.4;transform:scale(.96);}to{opacity:1;transform:scale(1);}}
+.stab:active{transform:scale(.94);}
+.stab.active{
+  background:var(--text);
+  border-color:var(--text);
+  color:var(--bg);
+  box-shadow:0 2px 8px rgba(26,24,20,.14);
+  animation:tabSlideIn .18s ease-out;
+}
+@keyframes tabSlideIn{from{opacity:.5;transform:scale(.95);}to{opacity:1;transform:scale(1);}}
+[data-theme="dark"] .stab{
+  background:var(--surface2);
+  border-color:var(--border2);
+  color:var(--text2);
+}
 [data-theme="dark"] .stab.active{
   background:var(--accent);
+  border-color:var(--accent);
   color:#0E0C08;
-  box-shadow:0 2px 10px var(--accent-glow);
+  box-shadow:0 2px 12px var(--accent-glow);
 }
-[data-theme="dark"] .stab-arrow{color:var(--text3);}
-[data-theme="dark"] .stab-arrow:active{background:var(--surface3);}
 .subpane{display:none;}
 .subpane.active{display:block;animation:fadeIn .18s ease-out;}
 
@@ -2213,17 +2229,23 @@ details summary::-webkit-details-marker{display:none;}
 
 <!-- PANE STATS -->
 <div class="pane" id="pane-stats">
-  <!-- Subtabs — flecha izquierda / tab activo centrado / flecha derecha -->
+  <!-- Subtabs — pills con scroll horizontal, sin flechas -->
+  <!--
+    UX: Nombres rediseñados para evitar ambigüedad entre secciones:
+    • "Resumen"    → KPIs, productos top, categorías      (antes: "Análisis")
+    • "Evolución"  → Comparativas entre períodos           (antes: "Períodos" — idéntico a la app de calendario)
+    • "Equipo"     → Rankings y métricas por usuario       (antes: "Usuarios" — frío y técnico)
+    • "Cara a cara"→ Comparar dos usuarios directamente    (antes: "Comparar" — demasiado genérico)
+    • "Actividad"  → Registro de acciones del sistema      (antes: "Logs" — jerga de desarrollador)
+  -->
   <div class="subtabs" id="stats-subtabs">
-    <button class="stab-arrow hidden" id="stab-prev" onclick="stabNavigate(-1)" aria-label="Tab anterior">‹</button>
     <div class="stab-track">
-      <div class="stab active" id="stab-metricas" data-stab-order="0">📊 Análisis</div>
-      <div class="stab" id="stab-comparaciones" data-stab-order="1">📅 Períodos</div>
-      <div class="stab" id="stab-usuarios" data-stab-order="2" style="display:none;">👥 Usuarios</div>
-      <div class="stab" id="stab-comparar" data-stab-order="3" style="display:none;">🔄 Comparar</div>
-      <div class="stab" id="stab-logs" data-stab-order="4" style="display:none;">🛠 Logs</div>
+      <div class="stab active" id="stab-metricas" data-stab-order="0" onclick="switchST('metricas')">📊 Resumen</div>
+      <div class="stab" id="stab-comparaciones" data-stab-order="1" onclick="switchST('comparaciones')">📅 Evolución</div>
+      <div class="stab" id="stab-usuarios" data-stab-order="2" style="display:none;" onclick="switchST('usuarios')">👥 Equipo</div>
+      <div class="stab" id="stab-comparar" data-stab-order="3" style="display:none;" onclick="switchST('comparar')">⚖️ Cara a cara</div>
+      <div class="stab" id="stab-logs" data-stab-order="4" style="display:none;" onclick="switchST('logs')">🕐 Actividad</div>
     </div>
-    <button class="stab-arrow" id="stab-next" onclick="stabNavigate(1)" aria-label="Tab siguiente">›</button>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════
@@ -2244,7 +2266,7 @@ details summary::-webkit-details-marker{display:none;}
             <button id="btn-stats-rango-global" onclick="toggleStatsRangoGlobal(this);event.stopPropagation()" style="flex-shrink:0;padding:4px 9px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:var(--fs-xs);font-weight:700;border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);white-space:nowrap;">📅</button>
           </div>
         </div>
-        <span class="accordion-arrow" id="stats-filter-arrow">▾</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-xs);font-weight:700;color:var(--text3);" id="stats-filter-arrow">⚙️ Filtros <span style="font-size:.65rem;transition:transform .2s cubic-bezier(.34,1.2,.64,1);" id="stats-filter-arrow-icon">▾</span></span>
       </div>
       <!-- Rango fechas -->
       <div id="stats-rango-global-wrap" style="display:none;margin-top:7px;">
@@ -2410,19 +2432,20 @@ details summary::-webkit-details-marker{display:none;}
     <div class="stat-card" id="sec-emp-card" style="display:none;"><div class="stat-title">👤 Actividad por persona</div><div id="st-emp"><p class="no-data">Sin datos</p></div></div>
   </div>
 
-  <!-- ─── SUBPANE: PERÍODOS (antes Comparaciones) ─────────────────────────── -->
+  <!-- ─── SUBPANE: EVOLUCIÓN (antes Períodos/Comparaciones) ───────────────── -->
   <div class="subpane" id="sp-comparaciones">
-    <!-- Filtros: período con ▾ inline al costado de +3 meses, accordion debajo -->
+    <!-- Filtros: agrupación temporal + accordion de filtros adicionales -->
     <div id="per-filters-accordion-wrap" style="margin-bottom:8px;">
       <div class="stats-filter-inline">
         <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:6px 8px;" id="per-view-filters">
+          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;">Ver</span>
           <button class="fbtn-sec active" id="pervf-3d" onclick="setPerViewFilt('3d',this)">Últ. 3 días</button>
           <button class="fbtn-sec" id="pervf-3s" onclick="setPerViewFilt('3s',this)">3 semanas</button>
           <button class="fbtn-sec" id="pervf-3m" onclick="setPerViewFilt('3m',this)">3 meses</button>
           <button class="fbtn-sec" id="pervf-3m2" onclick="setPerViewFilt('3m2',this)">+3 meses</button>
           <button id="per-filter-accordion-hdr" onclick="togglePerFilterAccordion()" style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;background:none;border:1.5px solid var(--border);border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);color:var(--text3);font-size:var(--fs-xs);font-weight:700;flex-shrink:0;">
             <span class="dot" id="per-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
-            <span class="accordion-arrow" id="per-filter-arrow">▾</span>
+            ⚙️ Filtros <span class="accordion-arrow" id="per-filter-arrow" style="font-size:.6rem;">▾</span>
           </button>
         </div>
         <div class="accordion-body" id="per-filter-accordion-body" style="padding:0 8px 8px;">
@@ -2506,24 +2529,18 @@ details summary::-webkit-details-marker{display:none;}
       </div>
     </div>
 
-    <!-- Cómo funciona — acordeón colapsado -->
+    <!-- Cómo funciona — acordeón colapsado (versión única, la estática se eliminó por ser redundante) -->
     <details style="margin-bottom:8px;">
       <summary style="font-size:var(--fs-xs);color:var(--text3);cursor:pointer;list-style:none;display:flex;align-items:center;gap:4px;user-select:none;">
         <span>▸</span> ¿Cómo funciona?
       </summary>
       <div style="font-size:var(--fs-xs);color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:var(--rmd);padding:8px 10px;margin-top:5px;line-height:1.6;">
-        Cada columna muestra un día distinto. Se comparan los últimos períodos. El 📈 indica el día con mayor gasto y el 📉 el de menor gasto.
+        Cada columna muestra un período distinto (día, semana o mes). Se comparan los últimos registros. El 📈 indica el período con mayor gasto y el 📉 el de menor. Si hay filtro de usuario activo, los datos se calculan solo para ese usuario.
       </div>
     </details>
     <!-- Nota dinámica — se actualiza desde renderComparaciones() -->
     <div id="comp-nota-contexto" style="font-size:.72rem;color:var(--text3);margin-bottom:10px;padding:9px 11px;background:var(--surface2);border-radius:var(--rsm);border:1px solid var(--border);line-height:1.6;">
       📌 Mostrando datos globales (todos los usuarios).
-    </div>
-    <!-- Explicación de la lógica de comparación -->
-    <div id="comp-como-funciona" style="font-size:.68rem;color:var(--text3);margin-bottom:10px;padding:8px 11px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);line-height:1.6;">
-      <strong style="color:var(--text2);">¿Cómo funciona?</strong> Cada columna muestra un período distinto (día, semana o mes).
-      El 📈 indica el período con <em>mayor gasto</em> y el 📉 el de <em>menor gasto</em>.
-      Si hay un filtro de usuario activo, las comparativas se calculan solo sobre esos datos.
     </div>
     <div class="stat-card" id="per-card-3d"><div class="stat-title">📅 Últimos 3 días</div><div class="comp-grid" id="comp-dias"></div></div>
     <div class="stat-card" id="per-card-3s" style="display:none;"><div class="stat-title">📅 Últimas 3 semanas</div><div class="comp-grid" id="comp-sem"></div></div>
@@ -2657,6 +2674,7 @@ details summary::-webkit-details-marker{display:none;}
       <div class="cmp-section-label">Período</div>
       <div class="stats-filter-inline">
         <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:6px 8px;">
+          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;">Período</span>
           <button class="fbtn-sec active" id="cmpf-7d" onclick="setCmpPer('7d',this)">7d</button>
           <button class="fbtn-sec" id="cmpf-15d" onclick="setCmpPer('15d',this)">15d</button>
           <button class="fbtn-sec" id="cmpf-30d" onclick="setCmpPer('30d',this)">Mes</button>
@@ -2664,7 +2682,7 @@ details summary::-webkit-details-marker{display:none;}
           <button class="fbtn-sec" id="cmpf-rango" onclick="setCmpPer('rango',this)">📅 Rango</button>
           <button id="cmp-filter-accordion-hdr" onclick="toggleCmpFilterAccordion()" style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;background:none;border:1.5px solid var(--border);border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);color:var(--text3);font-size:var(--fs-xs);font-weight:700;flex-shrink:0;">
             <span class="dot" id="cmp-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
-            <span class="accordion-arrow" id="cmp-filter-arrow">▾</span>
+            ⚙️ Filtros <span class="accordion-arrow" id="cmp-filter-arrow" style="font-size:.6rem;">▾</span>
           </button>
         </div>
         <!-- Rango de fechas (se muestra cuando se selecciona "📅 Rango") -->
@@ -2730,21 +2748,21 @@ details summary::-webkit-details-marker{display:none;}
 
     <!-- Header con actualizar -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:600;">Registro de actividad del sistema</div>
+      <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:600;">Registro de acciones del sistema</div>
       <button onclick="renderLogs()" style="font-size:var(--fs-xs);padding:5px 11px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);color:var(--text2);cursor:pointer;font-family:var(--ff);font-weight:700;transition:var(--transition);">↺ Actualizar</button>
     </div>
 
-    <!-- BLOQUE FILTROS LOGS -->
-    <!-- Período con ▾ inline al costado de Rango + accordion de filtros adicionales -->
+    <!-- FILTROS DE ACTIVIDAD -->
     <div class="stats-filter-inline" style="margin-bottom:8px;">
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:6px 8px;">
+        <span style="font-size:var(--fs-xs);font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;">Período</span>
         <button class="fbtn-sec active" id="lfilt-p-7d" onclick="setLogPeriodo('7d',this)">7 días</button>
         <button class="fbtn-sec" id="lfilt-p-15d" onclick="setLogPeriodo('15d',this)">15 días</button>
         <button class="fbtn-sec" id="lfilt-p-30d" onclick="setLogPeriodo('30d',this)">1 mes</button>
         <button class="fbtn-sec" id="btn-log-rango" onclick="toggleLogRango(this)">📅 Rango</button>
         <button id="log-filter-accordion-hdr" onclick="toggleLogFilterAccordion()" style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;background:none;border:1.5px solid var(--border);border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);color:var(--text3);font-size:var(--fs-xs);font-weight:700;flex-shrink:0;">
           <span class="dot" id="log-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
-          <span class="accordion-arrow" id="log-filter-arrow">▾</span>
+          ⚙️ Filtros <span class="accordion-arrow" id="log-filter-arrow" style="font-size:.6rem;">▾</span>
         </button>
       </div>
       <!-- Rango fechas -->
@@ -3588,11 +3606,11 @@ window._getUrgFiltro=()=>_urgFiltro;
 // TOGGLE STATS FILTER ACCORDION (usuario+tipo)
 window.toggleStatsFilterAccordion=function(){
   const body=document.getElementById('stats-filter-accordion-body');
-  const arrow=document.getElementById('stats-filter-arrow');
+  const arrowIcon=document.getElementById('stats-filter-arrow-icon');
   const hdr=document.getElementById('stats-filter-accordion-hdr');
   if(!body)return;
   const open=body.classList.toggle('open');
-  if(arrow)arrow.style.transform=open?'rotate(180deg)':'';
+  if(arrowIcon)arrowIcon.style.transform=open?'rotate(180deg)':'';
 };
 
 window.switchTab=function(t){
