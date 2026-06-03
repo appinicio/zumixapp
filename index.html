@@ -1704,6 +1704,199 @@ details summary::-webkit-details-marker{display:none;}
   background:rgba(255,255,255,.03);
   border-color:var(--border);
 }
+
+/* ════════════════════════════════════════════════════════════
+   STATS v2 ─ Rediseño integral del panel de estadísticas
+   ════════════════════════════════════════════════════════════ */
+
+/* ── KPI Cards ─────────────────────────────────────────────── */
+.skpi-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;
+}
+.skpi-card{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:14px 13px;box-shadow:var(--sh);
+  position:relative;overflow:hidden;
+  transition:box-shadow .18s;
+}
+.skpi-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--border2);border-radius:var(--r) var(--r) 0 0;
+  transition:background .2s;
+}
+.skpi-spend::after{background:var(--accent);}
+.skpi-ticket::after{background:var(--green);}
+.skpi-orders::after{background:var(--blue);}
+.skpi-days::after{background:var(--orange);}
+[data-theme="dark"] .skpi-spend::after{background:var(--accent2);}
+.skpi-label{
+  font-size:var(--fs-xs);font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;
+}
+.skpi-value{
+  font-size:1.45rem;font-weight:800;color:var(--text);
+  font-family:var(--ffmono);letter-spacing:-.03em;line-height:1.1;
+  animation:countUp .3s cubic-bezier(.34,1.3,.64,1);
+}
+.skpi-value.skpi-accent{color:var(--accent);}
+[data-theme="dark"] .skpi-value.skpi-accent{color:var(--accent2);}
+.skpi-sub{
+  font-size:var(--fs-xs);color:var(--text3);margin-top:3px;font-weight:500;
+  line-height:1.4;
+}
+
+/* ── Stat Cards v2 ──────────────────────────────────────────── */
+.scard{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r);margin-bottom:10px;
+  box-shadow:var(--sh);overflow:hidden;
+  animation:cardIn .25s ease-out;
+}
+.scard-head{
+  display:flex;align-items:center;gap:7px;
+  padding:10px 14px;
+  font-size:var(--fs-xs);font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--text2);
+  border-bottom:1px solid var(--border);
+  background:var(--surface2);
+  line-height:1;
+}
+[data-theme="dark"] .scard-head{background:var(--surface3);}
+.scard-icon{font-size:.88rem;line-height:1;flex-shrink:0;opacity:.9;}
+.scard>div:last-child:not(.scard-head){padding:12px 14px;}
+/* Overrides para cuando no hay hijo scard-head */
+.scard>.comp-grid{padding:12px 14px;}
+
+/* ── Filter Card (SFI) ──────────────────────────────────────── */
+.sfi-card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--rmd);padding:9px 11px;margin-bottom:10px;
+}
+[data-theme="dark"] .sfi-card{
+  background:var(--surface2);border-color:var(--border2);
+}
+.sfi-row{
+  display:flex;align-items:center;gap:7px;
+}
+.sfi-period{
+  display:flex;gap:5px;flex:1;flex-wrap:nowrap;
+  overflow-x:auto;scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
+.sfi-period::-webkit-scrollbar{display:none;}
+.sfi-toggle-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:5px 10px;
+  background:var(--surface);border:1.5px solid var(--border2);
+  border-radius:var(--rmd);font-family:var(--ff);
+  font-size:var(--fs-xs);font-weight:700;color:var(--text2);
+  cursor:pointer;flex-shrink:0;transition:var(--transition);
+  white-space:nowrap;-webkit-tap-highlight-color:transparent;
+}
+.sfi-toggle-btn:active{transform:scale(.96);}
+.sfi-toggle-btn:hover{background:var(--surface3);}
+.sfi-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--accent);flex-shrink:0;
+  animation:popIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+.sfi-arrow{
+  font-size:.6rem;
+  transition:transform .2s cubic-bezier(.34,1.2,.64,1);
+}
+.sfi-divider{
+  height:1px;background:var(--border);margin:7px 0 9px;
+}
+.sfi-filter-group{
+  display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-bottom:10px;
+}
+.sfi-filter-field{
+  flex:1;min-width:130px;position:relative;
+}
+.sfi-filter-field--shrink{
+  flex:0 1 auto;min-width:unset;
+}
+.sfi-field-label{
+  font-size:var(--fs-xs);color:var(--text3);font-weight:700;
+  margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;
+}
+.sfi-input-row{
+  display:flex;gap:5px;
+}
+.sfi-input{
+  font-size:.78rem!important;padding:6px 9px!important;
+}
+.sfi-date-row{
+  display:flex;gap:7px;
+}
+.sfi-date-field{flex:1;}
+.sfi-date-label{
+  font-size:.6rem;color:var(--text3);font-weight:700;
+  margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em;
+}
+.sfi-date-input{
+  font-size:.78rem!important;padding:6px 8px!important;width:100%;
+}
+.sfi-clear-btn{
+  flex-shrink:0;padding:5px 8px;
+  background:var(--surface3);border:1.5px solid var(--border2);
+  border-radius:var(--rmd);font-size:.7rem;font-weight:700;
+  color:var(--text3);cursor:pointer;font-family:var(--ff);
+  transition:var(--transition);-webkit-tap-highlight-color:transparent;
+}
+.sfi-clear-btn:hover{color:var(--red);border-color:rgba(197,56,42,.3);}
+.sfi-clear-btn:active{transform:scale(.9);}
+
+/* ── Suggestion dropdown ────────────────────────────────────── */
+.sug-dropdown{
+  display:none;position:absolute;left:0;right:0;top:100%;z-index:299;
+  background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);
+  max-height:160px;overflow-y:auto;
+}
+
+/* ── Filter pills (fpill) ───────────────────────────────────── */
+.fpill{
+  padding:5px 11px;font-size:var(--fs-xs);font-weight:700;
+  border-radius:20px;border:1.5px solid var(--border);
+  background:var(--surface);color:var(--text2);
+  cursor:pointer;white-space:nowrap;font-family:var(--ff);
+  transition:background .15s,border-color .15s,color .15s,transform .1s;
+  flex-shrink:0;-webkit-tap-highlight-color:transparent;user-select:none;
+}
+.fpill:active{transform:scale(.92);}
+.fpill.active{
+  background:var(--blue);border-color:var(--blue);color:#fff;
+  box-shadow:0 2px 8px rgba(43,108,176,.2);
+}
+[data-theme="dark"] .fpill.active{
+  background:var(--accent);border-color:var(--accent);
+  color:#0E0C08;box-shadow:0 2px 10px var(--accent-glow);
+}
+.fpill-icon{padding:5px 9px;}
+
+/* ── Log refresh button ─────────────────────────────────────── */
+.slog-refresh-btn{
+  font-size:var(--fs-xs);padding:5px 11px;
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--rmd);color:var(--text2);cursor:pointer;
+  font-family:var(--ff);font-weight:700;transition:var(--transition);
+}
+.slog-refresh-btn:hover{background:var(--surface2);}
+.slog-refresh-btn:active{transform:scale(.95);}
+
+/* ── Stat rows — enhanced hover ─────────────────────────────── */
+.scard .sr{
+  border-radius:var(--rsm);transition:background .15s;
+  padding:3px 4px;margin-left:-4px;margin-right:-4px;
+}
+.scard .sr:hover{background:var(--surface2);}
+.scard .sr.ds-open{background:var(--surface2);}
+
+/* ── Dark mode scard ────────────────────────────────────────── */
+[data-theme="dark"] .scard{
+  border-color:var(--border2);
+}
 </style>
 </head>
 <body>
@@ -2227,85 +2420,76 @@ details summary::-webkit-details-marker{display:none;}
 
 </div>
 
-<!-- PANE STATS -->
+<!-- PANE STATS — Rediseño v2 -->
 <div class="pane" id="pane-stats">
-  <!-- Subtabs — pills con scroll horizontal, sin flechas -->
-  <!--
-    UX: Nombres rediseñados para evitar ambigüedad entre secciones:
-    • "Resumen"    → KPIs, productos top, categorías      (antes: "Análisis")
-    • "Evolución"  → Comparativas entre períodos           (antes: "Períodos" — idéntico a la app de calendario)
-    • "Equipo"     → Rankings y métricas por usuario       (antes: "Usuarios" — frío y técnico)
-    • "Cara a cara"→ Comparar dos usuarios directamente    (antes: "Comparar" — demasiado genérico)
-    • "Actividad"  → Registro de acciones del sistema      (antes: "Logs" — jerga de desarrollador)
-  -->
+
+  <!-- ══ NAVEGACIÓN ════════════════════════════════════════ -->
   <div class="subtabs" id="stats-subtabs">
     <div class="stab-track">
       <div class="stab active" id="stab-metricas" data-stab-order="0" onclick="switchST('metricas')">📊 Resumen</div>
-      <div class="stab" id="stab-comparaciones" data-stab-order="1" onclick="switchST('comparaciones')">📅 Evolución</div>
+      <div class="stab" id="stab-comparaciones" data-stab-order="1" onclick="switchST('comparaciones')">📈 Evolución</div>
       <div class="stab" id="stab-usuarios" data-stab-order="2" style="display:none;" onclick="switchST('usuarios')">👥 Equipo</div>
       <div class="stab" id="stab-comparar" data-stab-order="3" style="display:none;" onclick="switchST('comparar')">⚖️ Cara a cara</div>
       <div class="stab" id="stab-logs" data-stab-order="4" style="display:none;" onclick="switchST('logs')">🕐 Actividad</div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════════
-       BARRA DE FILTROS GLOBAL — super_admin / admin_supremo
-       Se muestra encima de TODO subtab para esos roles. Oculta para admin.
-  ═══════════════════════════════════════════════════════════════════════════ -->
-  <div id="stats-global-filters-wrap" style="display:none;margin-bottom:8px;">
-    <div class="stats-filter-inline">
-      <!-- Fila período + toggle -->
-      <div class="accordion-header" id="stats-filter-accordion-hdr" onclick="toggleStatsFilterAccordion()">
-        <div style="display:flex;align-items:center;gap:6px;overflow-x:auto;flex:1;scrollbar-width:none;">
-          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;">Período</span>
-          <div id="filt-stats" style="display:flex;gap:5px;flex-shrink:0;">
-            <button class="fbtn-sec active" onclick="setFS(this,'7d');event.stopPropagation()">7d</button>
-            <button class="fbtn-sec" onclick="setFS(this,'15d');event.stopPropagation()">15d</button>
-            <button class="fbtn-sec" onclick="setFS(this,'30d');event.stopPropagation()">Mes</button>
-            <button class="fbtn-sec" onclick="setFS(this,'todo');event.stopPropagation()">Todo</button>
-            <button id="btn-stats-rango-global" onclick="toggleStatsRangoGlobal(this);event.stopPropagation()" style="flex-shrink:0;padding:4px 9px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-size:var(--fs-xs);font-weight:700;border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);white-space:nowrap;">📅</button>
-          </div>
+  <!-- ══ FILTROS GLOBALES (super_admin / admin_supremo) ════ -->
+  <div id="stats-global-filters-wrap" style="display:none">
+    <div class="sfi-card">
+      <!-- Fila: período + toggle filtros -->
+      <div class="sfi-row accordion-header" id="stats-filter-accordion-hdr" onclick="toggleStatsFilterAccordion()">
+        <div class="sfi-period" id="filt-stats">
+          <button class="fpill fbtn-sec active" onclick="setFS(this,'7d');event.stopPropagation()">7d</button>
+          <button class="fpill fbtn-sec" onclick="setFS(this,'15d');event.stopPropagation()">15d</button>
+          <button class="fpill fbtn-sec" onclick="setFS(this,'30d');event.stopPropagation()">Mes</button>
+          <button class="fpill fbtn-sec" onclick="setFS(this,'todo');event.stopPropagation()">Todo</button>
+          <button id="btn-stats-rango-global" class="fpill fpill-icon" onclick="toggleStatsRangoGlobal(this);event.stopPropagation()" title="Rango personalizado">📅</button>
         </div>
-        <span style="display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-xs);font-weight:700;color:var(--text3);" id="stats-filter-arrow">⚙️ Filtros <span style="font-size:.65rem;transition:transform .2s cubic-bezier(.34,1.2,.64,1);" id="stats-filter-arrow-icon">▾</span></span>
+        <button class="sfi-toggle-btn" onclick="event.stopPropagation();" style="pointer-events:none;">
+          <span class="sfi-dot" id="stats-filter-dot" style="display:none;"></span>
+          Filtros
+          <span class="sfi-arrow accordion-arrow" id="stats-filter-arrow-icon">▾</span>
+        </button>
       </div>
-      <!-- Rango fechas -->
-      <div id="stats-rango-global-wrap" style="display:none;margin-top:7px;">
-        <div style="display:flex;gap:7px;">
-          <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:2px;text-transform:uppercase;">Desde</div>
-            <input type="date" id="stats-date-from" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/></div>
-          <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:2px;text-transform:uppercase;">Hasta</div>
+      <!-- Rango fechas personalizado -->
+      <div id="stats-rango-global-wrap" style="display:none;padding-top:9px;">
+        <div class="sfi-date-row">
+          <div class="sfi-date-field">
+            <div class="sfi-date-label">Desde</div>
+            <input type="date" id="stats-date-from" class="input-f sfi-date-input" onchange="actualizarDotSFilt();renderStats()"/>
+          </div>
+          <div class="sfi-date-field">
+            <div class="sfi-date-label">Hasta</div>
             <div style="display:flex;gap:4px;">
-              <input type="date" id="stats-date-to" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;" onchange="actualizarDotSFilt();renderStats()"/>
-              <button onclick="limpiarRangoGlobal()" style="flex-shrink:0;padding:4px 7px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              <input type="date" id="stats-date-to" class="input-f sfi-date-input" onchange="actualizarDotSFilt();renderStats()"/>
+              <button onclick="limpiarRangoGlobal()" class="sfi-clear-btn">✕</button>
             </div>
           </div>
         </div>
       </div>
-      <!-- Acordeón: producto + categoría + usuario + tipo (colapsado por defecto) -->
+      <!-- Acordeón: filtros avanzados -->
       <div class="accordion-body" id="stats-filter-accordion-body">
-        <div style="height:1px;background:var(--border);margin-bottom:8px;"></div>
-        <!-- Fila 1: buscar producto + por categoría (XOR entre sí) -->
-        <div id="stats-prod-cat-row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-bottom:10px;">
-          <!-- Buscar producto -->
-          <div id="stats-prod-filter-wrap" style="flex:1;min-width:140px;position:relative;">
-            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🔍 Buscar producto</div>
-            <div style="display:flex;gap:5px;">
+        <div class="sfi-divider"></div>
+        <!-- Producto + Categoría (XOR) -->
+        <div id="stats-prod-cat-row" class="sfi-filter-group">
+          <div id="stats-prod-filter-wrap" class="sfi-filter-field">
+            <div class="sfi-field-label">🔍 Producto</div>
+            <div class="sfi-input-row">
               <div style="flex:1;position:relative;">
                 <input type="text" id="stats-prod-input" placeholder="Nombre del producto…" autocomplete="off"
-                  class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
-                  oninput="filtrarSugerenciasProductoStats()" onfocus="filtrarSugerenciasProductoStats()" />
-                <div id="stats-prod-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:299;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+                  class="input-f sfi-input"
+                  oninput="filtrarSugerenciasProductoStats()" onfocus="filtrarSugerenciasProductoStats()"/>
+                <div id="stats-prod-suggestions" class="sug-dropdown"></div>
               </div>
-              <button onclick="limpiarFiltroProductoStats()" id="btn-clear-prod-stat"
-                style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              <button onclick="limpiarFiltroProductoStats()" id="btn-clear-prod-stat" class="sfi-clear-btn" style="display:none;">✕</button>
             </div>
             <div id="stats-prod-chip" style="display:none;margin-top:4px;"></div>
           </div>
-          <!-- Por categoría -->
-          <div id="stats-cat-filter-wrap" style="flex-shrink:0;">
-            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🏷 Por categoría</div>
+          <div id="stats-cat-filter-wrap" class="sfi-filter-field sfi-filter-field--shrink">
+            <div class="sfi-field-label">🏷 Categoría</div>
             <div style="display:flex;gap:4px;">
-              <select id="stats-cat-select" class="select-f" style="font-size:.78rem;padding:5px 9px;" onchange="aplicarFiltroCatStats()">
+              <select id="stats-cat-select" class="select-f sfi-input" onchange="aplicarFiltroCatStats()">
                 <option value="">— Todas —</option>
                 <option value="CARNES">🥩 Carnes</option><option value="VERDURAS">🥦 Verduras</option>
                 <option value="LACTEOS">🥛 Lácteos</option><option value="FRUTAS">🍎 Frutas</option>
@@ -2313,32 +2497,31 @@ details summary::-webkit-details-marker{display:none;}
                 <option value="BEBIDAS">🥤 Bebidas</option><option value="ENVASES">📦 Envases</option>
                 <option value="LIMPIEZA">🧹 Limpieza</option><option value="OTROS">⚙️ Otros</option>
               </select>
-              <button id="btn-clear-cat-stats" onclick="limpiarFiltroCatStats()" style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              <button id="btn-clear-cat-stats" onclick="limpiarFiltroCatStats()" class="sfi-clear-btn" style="display:none;">✕</button>
             </div>
           </div>
         </div>
-        <!-- Fila 2: usuario + tipo (XOR entre sí) -->
-        <div id="stats-global-row2" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
-          <div id="stats-user-filter-wrap" style="flex:1;min-width:140px;position:relative;">
-            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👤 Usuario</div>
+        <!-- Usuario + Tipo (XOR) -->
+        <div id="stats-global-row2" class="sfi-filter-group">
+          <div id="stats-user-filter-wrap" class="sfi-filter-field">
+            <div class="sfi-field-label">👤 Usuario</div>
             <div id="stats-user-required-note" style="display:none;font-size:.7rem;color:var(--orange);background:var(--orange-bg,rgba(255,152,0,.1));border-radius:6px;padding:4px 8px;margin-bottom:4px;">ℹ️ Selecciona un usuario</div>
-            <div style="display:flex;gap:5px;">
+            <div class="sfi-input-row">
               <div style="flex:1;position:relative;">
                 <input type="text" id="stats-user-input" placeholder="Buscar usuario…" autocomplete="off"
-                  class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
-                  oninput="filtrarSugerenciasUsuario()" onfocus="filtrarSugerenciasUsuario()" />
-                <div id="stats-user-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+                  class="input-f sfi-input"
+                  oninput="filtrarSugerenciasUsuario()" onfocus="filtrarSugerenciasUsuario()"/>
+                <div id="stats-user-suggestions" class="sug-dropdown"></div>
               </div>
-              <button onclick="limpiarFiltroUsuarioStats()" id="btn-clear-user-stat"
-                style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              <button onclick="limpiarFiltroUsuarioStats()" id="btn-clear-user-stat" class="sfi-clear-btn" style="display:none;">✕</button>
             </div>
             <div id="stats-user-chip" style="display:none;margin-top:4px;"></div>
           </div>
-          <div id="stats-tipo-filter-wrap" style="flex-shrink:0;">
-            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👥 Tipo</div>
+          <div id="stats-tipo-filter-wrap" class="sfi-filter-field sfi-filter-field--shrink">
+            <div class="sfi-field-label">👥 Tipo</div>
             <div style="display:flex;gap:5px;">
-              <button class="fbtn-sec" id="ftipo-admins" onclick="setFiltroTipoUsuario('admins',this)">Admins</button>
-              <button class="fbtn-sec" id="ftipo-usuarios" onclick="setFiltroTipoUsuario('usuarios',this)">Usuarios</button>
+              <button class="fpill" id="ftipo-admins" onclick="setFiltroTipoUsuario('admins',this)">Admins</button>
+              <button class="fpill" id="ftipo-usuarios" onclick="setFiltroTipoUsuario('usuarios',this)">Usuarios</button>
             </div>
             <div id="stats-tipo-chip" style="display:none;margin-top:4px;"></div>
           </div>
@@ -2347,129 +2530,165 @@ details summary::-webkit-details-marker{display:none;}
     </div>
   </div>
 
-  <!-- ─── SUBPANE: ANÁLISIS (antes Métricas) ─────────────────────────────── -->
+  <!-- ══════════════════════════════════════════════════════
+       SUBPANE: RESUMEN
+  ══════════════════════════════════════════════════════ -->
   <div class="subpane active" id="sp-metricas">
-    <!-- Filtros para rol ADMIN (usuario tipo super_admin + período + rango) — oculto para super_admin+ -->
-    <div id="stats-admin-filters-wrap" style="display:none;margin-bottom:8px;">
-      <!-- Filtro de usuario estilo super_admin para admin en Análisis -->
-      <div id="stats-user-inline-wrap" style="margin-bottom:8px;">
-        <div style="font-size:.58rem;color:var(--text3);font-weight:700;margin-bottom:3px;letter-spacing:.05em;text-transform:uppercase;">👤 Filtrar por usuario</div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <div style="flex:1;position:relative;">
-            <input type="text" id="stats-user-inline-input" placeholder="Buscar usuario…" autocomplete="off"
-              class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
-              oninput="filtrarSugerenciasUsuarioInline()" onfocus="filtrarSugerenciasUsuarioInline()" />
-            <div id="stats-user-inline-sug" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
-          </div>
-          <button onclick="limpiarUsuarioStatsInline()" id="btn-clear-user-inline"
-            style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
-        </div>
-        <div id="stats-user-inline-chip" style="display:none;margin-top:5px;"></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;">
-        <div style="display:flex;gap:6px;overflow-x:auto;flex:1;padding-bottom:2px;scrollbar-width:none;">
-          <button class="fbtn-sec active" onclick="setFS(this,'7d')" data-admin-filt>7 días</button>
-          <button class="fbtn-sec" onclick="setFS(this,'15d')" data-admin-filt>15 días</button>
-          <button class="fbtn-sec" onclick="setFS(this,'30d')" data-admin-filt>Mes</button>
-          <button class="fbtn-sec" id="btn-stats-rango-admin" onclick="toggleStatsRangoAdmin(this)" style="white-space:nowrap;">📅 Rango</button>
-        </div>
-      </div>
-      <!-- Rango de fecha inline para admin — acotado a 30 días -->
-      <div id="stats-rango-admin-wrap" style="display:none;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rmd);padding:8px 12px;margin-top:6px;gap:8px;flex-direction:row;align-items:flex-end;flex-wrap:wrap;">
-        <div style="flex:1;min-width:110px;">
-          <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
-          <input type="date" id="stats-date-from-admin" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="validarRangoAdmin();syncAdminDateToMain();actualizarDotSFilt();renderStats()"/>
-        </div>
-        <div style="flex:1;min-width:110px;">
-          <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
-          <div style="display:flex;gap:4px;align-items:center;">
-            <input type="date" id="stats-date-to-admin" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="validarRangoAdmin();syncAdminDateToMain();actualizarDotSFilt();renderStats()"/>
-            <button onclick="limpiarRangoAdmin()" title="Limpiar rango y cerrar" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-          </div>
-        </div>
-      </div>
-      <div id="admin-rango-warn" style="display:none;font-size:.72rem;color:var(--red);font-weight:600;background:var(--red-bg);border-radius:var(--rsm);padding:5px 9px;margin-top:4px;">⚠️ El rango no puede superar 30 días (mes actual).</div>
-    </div>
-    <!-- Botón PDF — compacto, al lado del contenido, no protagonista -->
-    <div id="stats-pdf-wrap" style="display:none;margin-bottom:8px;">
-      <button onclick="generarReportePDF()" style="padding:7px 14px;background:var(--surface);border:1.5px solid var(--red);border-radius:var(--rmd);font-family:var(--ff);font-size:var(--fs-xs);font-weight:700;color:var(--red);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:var(--transition);">📄 Exportar PDF</button>
-    </div>
 
-    <!-- KPI RESUMEN — visible siempre (admin+) -->
-    <div id="st-kpi-resumen" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-      <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);padding:13px 12px;box-shadow:var(--sh);">
-        <div style="font-size:.58rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;">💰 Gasto total</div>
-        <div id="kpi-gasto" style="font-size:1.35rem;font-weight:800;color:var(--text);font-family:var(--ffmono);letter-spacing:-.03em;">—</div>
-        <div id="kpi-gasto-sub" style="font-size:.62rem;color:var(--text3);margin-top:2px;"></div>
-      </div>
-      <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);padding:13px 12px;box-shadow:var(--sh);">
-        <div style="font-size:.58rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;">🛒 Compras</div>
-        <div id="kpi-compras" style="font-size:1.35rem;font-weight:800;color:var(--text);font-family:var(--ffmono);letter-spacing:-.03em;">—</div>
-        <div id="kpi-compras-sub" style="font-size:.62rem;color:var(--text3);margin-top:2px;"></div>
-      </div>
-      <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);padding:13px 12px;box-shadow:var(--sh);">
-        <div style="font-size:.58rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;">🎯 Ticket promedio</div>
-        <div id="kpi-ticket" style="font-size:1.35rem;font-weight:800;color:var(--accent);font-family:var(--ffmono);letter-spacing:-.03em;">—</div>
-        <div id="kpi-ticket-sub" style="font-size:.62rem;color:var(--text3);margin-top:2px;"></div>
-      </div>
-      <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);padding:13px 12px;box-shadow:var(--sh);">
-        <div style="font-size:.58rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;">📅 Días activos</div>
-        <div id="kpi-dias" style="font-size:1.35rem;font-weight:800;color:var(--text);font-family:var(--ffmono);letter-spacing:-.03em;">—</div>
-        <div id="kpi-dias-sub" style="font-size:.62rem;color:var(--text3);margin-top:2px;"></div>
+    <!-- Filtros para rol ADMIN -->
+    <div id="stats-admin-filters-wrap" style="display:none">
+      <div class="sfi-card">
+        <div id="stats-user-inline-wrap" style="margin-bottom:9px;">
+          <div class="sfi-field-label" style="margin-bottom:5px;">👤 Filtrar por usuario</div>
+          <div class="sfi-input-row">
+            <div style="flex:1;position:relative;">
+              <input type="text" id="stats-user-inline-input" placeholder="Buscar usuario…" autocomplete="off"
+                class="input-f sfi-input"
+                oninput="filtrarSugerenciasUsuarioInline()" onfocus="filtrarSugerenciasUsuarioInline()"/>
+              <div id="stats-user-inline-sug" class="sug-dropdown"></div>
+            </div>
+            <button onclick="limpiarUsuarioStatsInline()" id="btn-clear-user-inline" class="sfi-clear-btn" style="display:none;">✕</button>
+          </div>
+          <div id="stats-user-inline-chip" style="display:none;margin-top:5px;"></div>
+        </div>
+        <div class="sfi-period">
+          <button class="fpill fbtn-sec active" onclick="setFS(this,'7d')" data-admin-filt>7d</button>
+          <button class="fpill fbtn-sec" onclick="setFS(this,'15d')" data-admin-filt>15d</button>
+          <button class="fpill fbtn-sec" onclick="setFS(this,'30d')" data-admin-filt>Mes</button>
+          <button class="fpill fpill-icon" id="btn-stats-rango-admin" onclick="toggleStatsRangoAdmin(this)">📅</button>
+        </div>
+        <div id="stats-rango-admin-wrap" style="display:none;margin-top:9px;">
+          <div class="sfi-date-row">
+            <div class="sfi-date-field">
+              <div class="sfi-date-label">Desde</div>
+              <input type="date" id="stats-date-from-admin" class="input-f sfi-date-input"
+                onchange="validarRangoAdmin();syncAdminDateToMain();actualizarDotSFilt();renderStats()"/>
+            </div>
+            <div class="sfi-date-field">
+              <div class="sfi-date-label">Hasta</div>
+              <div style="display:flex;gap:4px;align-items:center;">
+                <input type="date" id="stats-date-to-admin" class="input-f sfi-date-input"
+                  onchange="validarRangoAdmin();syncAdminDateToMain();actualizarDotSFilt();renderStats()"/>
+                <button onclick="limpiarRangoAdmin()" class="sfi-clear-btn">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="admin-rango-warn" style="display:none;font-size:.72rem;color:var(--red);font-weight:600;background:var(--red-bg);border-radius:var(--rsm);padding:5px 9px;margin-top:6px;">⚠️ El rango no puede superar 30 días (mes actual).</div>
       </div>
     </div>
 
-    <!-- Cards de análisis -->
-    <div class="stat-card" id="sec-top-card"><div class="stat-title">🏆 Más comprados</div><div id="st-top"><p class="no-data">Sin datos</p></div></div>
-    <div class="stat-card" id="sec-cat-gasto-card"><div class="stat-title">💰 Gasto por categoría</div><div id="st-cat"><p class="no-data">Sin datos</p></div></div>
-    <div class="stat-card" id="sec-gasto-acum-card" style="display:none;"><div class="stat-title">💰 Gasto acumulado</div><div id="st-gasto-acum"><p class="no-data">Sin datos</p></div></div>
-    <div class="stat-card"><div class="stat-title">⏱ Frecuencia de recompra</div><div id="st-freq"><p class="no-data">Sin datos</p></div></div>
-    <div class="stat-card"><div class="stat-title">📦 Cantidad acumulada</div><div id="st-cant"><p class="no-data">Sin datos</p></div></div>
-    <div class="stat-card"><div class="stat-title">📆 Gasto por día de semana</div><div id="st-diasem"><p class="no-data">Sin datos</p></div></div>
-    <!-- Ticket: solo admin+ (reemplaza la versión anterior, ahora más compacta debajo de KPIs) -->
-    <div class="stat-card" id="sec-ticket-card"><div class="stat-title">🎯 Dispersión de precios</div><div id="st-ticket"><p class="no-data">Sin datos</p></div></div>
-    <!-- Actividad por persona: solo super_admin+ -->
-    <div class="stat-card" id="sec-emp-card" style="display:none;"><div class="stat-title">👤 Actividad por persona</div><div id="st-emp"><p class="no-data">Sin datos</p></div></div>
+    <!-- PDF export -->
+    <div id="stats-pdf-wrap" style="display:none">
+      <button onclick="generarReportePDF()" class="btn-pdf-full">📄 Exportar PDF</button>
+    </div>
+
+    <!-- ── KPIs ── -->
+    <div id="st-kpi-resumen" class="skpi-grid">
+      <div class="skpi-card skpi-spend">
+        <div class="skpi-label">💰 Gasto total</div>
+        <div id="kpi-gasto" class="skpi-value">—</div>
+        <div id="kpi-gasto-sub" class="skpi-sub"></div>
+      </div>
+      <div class="skpi-card skpi-orders">
+        <div class="skpi-label">🛒 Compras</div>
+        <div id="kpi-compras" class="skpi-value">—</div>
+        <div id="kpi-compras-sub" class="skpi-sub"></div>
+      </div>
+      <div class="skpi-card skpi-ticket">
+        <div class="skpi-label">🎯 Ticket promedio</div>
+        <div id="kpi-ticket" class="skpi-value skpi-accent">—</div>
+        <div id="kpi-ticket-sub" class="skpi-sub"></div>
+      </div>
+      <div class="skpi-card skpi-days">
+        <div class="skpi-label">📅 Días activos</div>
+        <div id="kpi-dias" class="skpi-value">—</div>
+        <div id="kpi-dias-sub" class="skpi-sub"></div>
+      </div>
+    </div>
+
+    <!-- ── Cards de análisis ── -->
+    <div class="scard" id="sec-top-card">
+      <div class="scard-head"><span class="scard-icon">🏆</span>Más comprados</div>
+      <div id="st-top"><p class="no-data">Sin datos</p></div>
+    </div>
+
+    <div class="scard" id="sec-cat-gasto-card">
+      <div class="scard-head"><span class="scard-icon">💰</span>Gasto por categoría</div>
+      <div id="st-cat"><p class="no-data">Sin datos</p></div>
+    </div>
+
+    <div class="scard" id="sec-gasto-acum-card" style="display:none;">
+      <div class="scard-head"><span class="scard-icon">📈</span>Gasto acumulado</div>
+      <div id="st-gasto-acum"><p class="no-data">Sin datos</p></div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-head"><span class="scard-icon">⏱</span>Frecuencia de recompra</div>
+      <div id="st-freq"><p class="no-data">Sin datos</p></div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-head"><span class="scard-icon">📦</span>Cantidad acumulada</div>
+      <div id="st-cant"><p class="no-data">Sin datos</p></div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-head"><span class="scard-icon">📆</span>Gasto por día de semana</div>
+      <div id="st-diasem"><p class="no-data">Sin datos</p></div>
+    </div>
+
+    <div class="scard" id="sec-ticket-card">
+      <div class="scard-head"><span class="scard-icon">🎯</span>Dispersión de precios</div>
+      <div id="st-ticket"><p class="no-data">Sin datos</p></div>
+    </div>
+
+    <div class="scard" id="sec-emp-card" style="display:none;">
+      <div class="scard-head"><span class="scard-icon">👤</span>Actividad por persona</div>
+      <div id="st-emp"><p class="no-data">Sin datos</p></div>
+    </div>
   </div>
 
-  <!-- ─── SUBPANE: EVOLUCIÓN (antes Períodos/Comparaciones) ───────────────── -->
+  <!-- ══════════════════════════════════════════════════════
+       SUBPANE: EVOLUCIÓN
+  ══════════════════════════════════════════════════════ -->
   <div class="subpane" id="sp-comparaciones">
-    <!-- Filtros: agrupación temporal + accordion de filtros adicionales -->
-    <div id="per-filters-accordion-wrap" style="margin-bottom:8px;">
-      <div class="stats-filter-inline">
-        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:6px 8px;" id="per-view-filters">
-          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;">Ver</span>
-          <button class="fbtn-sec active" id="pervf-3d" onclick="setPerViewFilt('3d',this)">Últ. 3 días</button>
-          <button class="fbtn-sec" id="pervf-3s" onclick="setPerViewFilt('3s',this)">3 semanas</button>
-          <button class="fbtn-sec" id="pervf-3m" onclick="setPerViewFilt('3m',this)">3 meses</button>
-          <button class="fbtn-sec" id="pervf-3m2" onclick="setPerViewFilt('3m2',this)">+3 meses</button>
-          <button id="per-filter-accordion-hdr" onclick="togglePerFilterAccordion()" style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;background:none;border:1.5px solid var(--border);border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);color:var(--text3);font-size:var(--fs-xs);font-weight:700;flex-shrink:0;">
-            <span class="dot" id="per-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
-            ⚙️ Filtros <span class="accordion-arrow" id="per-filter-arrow" style="font-size:.6rem;">▾</span>
+    <div id="per-filters-accordion-wrap">
+      <div class="sfi-card">
+        <div class="sfi-row accordion-header" id="per-view-filters">
+          <div class="sfi-period">
+            <button class="fpill active fbtn-sec" id="pervf-3d" onclick="setPerViewFilt('3d',this)">3 días</button>
+            <button class="fpill fbtn-sec" id="pervf-3s" onclick="setPerViewFilt('3s',this)">3 sem.</button>
+            <button class="fpill fbtn-sec" id="pervf-3m" onclick="setPerViewFilt('3m',this)">3 meses</button>
+            <button class="fpill fbtn-sec" id="pervf-3m2" onclick="setPerViewFilt('3m2',this)">+3 meses</button>
+          </div>
+          <button id="per-filter-accordion-hdr" onclick="togglePerFilterAccordion()" class="sfi-toggle-btn">
+            <span class="sfi-dot" id="per-filter-dot" style="display:none;"></span>
+            Filtros
+            <span class="sfi-arrow accordion-arrow" id="per-filter-arrow">▾</span>
           </button>
         </div>
-        <div class="accordion-body" id="per-filter-accordion-body" style="padding:0 8px 8px;">
-          <div style="height:1px;background:var(--border);margin:4px 0 8px;"></div>
-          <!-- Fila 1: buscar producto + por categoría (XOR) -->
-          <div id="per-prod-cat-row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-bottom:10px;">
-            <div id="per-prod-filter-wrap" style="flex:1;min-width:130px;position:relative;">
-              <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🔍 Buscar producto</div>
-              <div style="display:flex;gap:5px;">
+        <div class="accordion-body" id="per-filter-accordion-body">
+          <div class="sfi-divider"></div>
+          <!-- Prod + Cat -->
+          <div id="per-prod-cat-row" class="sfi-filter-group">
+            <div id="per-prod-filter-wrap" class="sfi-filter-field">
+              <div class="sfi-field-label">🔍 Producto</div>
+              <div class="sfi-input-row">
                 <div style="flex:1;position:relative;">
                   <input type="text" id="per-prod-input" placeholder="Nombre del producto…" autocomplete="off"
-                    class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
-                    oninput="filtrarSugerenciasProductoPer()" onfocus="filtrarSugerenciasProductoPer()" />
-                  <div id="per-prod-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:299;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+                    class="input-f sfi-input"
+                    oninput="filtrarSugerenciasProductoPer()" onfocus="filtrarSugerenciasProductoPer()"/>
+                  <div id="per-prod-suggestions" class="sug-dropdown"></div>
                 </div>
-                <button onclick="limpiarFiltroProductoPer()" id="btn-clear-prod-per"
-                  style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+                <button onclick="limpiarFiltroProductoPer()" id="btn-clear-prod-per" class="sfi-clear-btn" style="display:none;">✕</button>
               </div>
               <div id="per-prod-chip" style="display:none;margin-top:4px;"></div>
             </div>
-            <div id="per-cat-filter-wrap" style="flex-shrink:0;">
-              <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🏷 Por categoría</div>
+            <div id="per-cat-filter-wrap" class="sfi-filter-field sfi-filter-field--shrink">
+              <div class="sfi-field-label">🏷 Categoría</div>
               <div style="display:flex;gap:4px;">
-                <select id="per-cat-select" class="select-f" style="font-size:.78rem;padding:5px 9px;" onchange="aplicarFiltroCatPer()">
+                <select id="per-cat-select" class="select-f sfi-input" onchange="aplicarFiltroCatPer()">
                   <option value="">— Todas —</option>
                   <option value="CARNES">🥩 Carnes</option><option value="VERDURAS">🥦 Verduras</option>
                   <option value="LACTEOS">🥛 Lácteos</option><option value="FRUTAS">🍎 Frutas</option>
@@ -2477,51 +2696,47 @@ details summary::-webkit-details-marker{display:none;}
                   <option value="BEBIDAS">🥤 Bebidas</option><option value="ENVASES">📦 Envases</option>
                   <option value="LIMPIEZA">🧹 Limpieza</option><option value="OTROS">⚙️ Otros</option>
                 </select>
-                <button id="btn-clear-cat-per" onclick="limpiarFiltroCatPer()" style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+                <button id="btn-clear-cat-per" onclick="limpiarFiltroCatPer()" class="sfi-clear-btn" style="display:none;">✕</button>
               </div>
             </div>
           </div>
-
-          <!-- Fila 2: usuario + tipo (para super_admin+) -->
+          <!-- Super admin: usuario + tipo -->
           <div id="stats-superadmin-filters-periodos-wrap" style="display:none;">
-            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
-              <div style="flex:1;min-width:140px;">
-                <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👤 Filtrar por usuario</div>
-                <div style="display:flex;gap:5px;">
+            <div class="sfi-filter-group">
+              <div class="sfi-filter-field">
+                <div class="sfi-field-label">👤 Filtrar por usuario</div>
+                <div class="sfi-input-row">
                   <div style="flex:1;position:relative;">
                     <input type="text" id="stats-user-input-per-sa" placeholder="Buscar usuario…" autocomplete="off"
-                      class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
-                      oninput="filtrarSugerenciasUsuarioPerSA()" onfocus="filtrarSugerenciasUsuarioPerSA()" />
-                    <div id="stats-user-sug-per-sa" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
+                      class="input-f sfi-input"
+                      oninput="filtrarSugerenciasUsuarioPerSA()" onfocus="filtrarSugerenciasUsuarioPerSA()"/>
+                    <div id="stats-user-sug-per-sa" class="sug-dropdown"></div>
                   </div>
-                  <button onclick="limpiarUsuarioPerSA()" id="btn-clear-user-per-sa"
-                    style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
+                  <button onclick="limpiarUsuarioPerSA()" id="btn-clear-user-per-sa" class="sfi-clear-btn" style="display:none;">✕</button>
                 </div>
                 <div id="stats-user-chip-per-sa" style="display:none;margin-top:5px;"></div>
               </div>
-              <div id="per-tipo-sa-wrap" style="flex-shrink:0;">
-                <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👥 Filtrar por tipo</div>
-                <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                  <button class="fbtn" id="pertipo-admins" onclick="setPerTipoSA('admins',this)" style="font-size:.72rem;padding:6px 13px;">🧑‍💼 Admins</button>
-                  <button class="fbtn" id="pertipo-usuarios" onclick="setPerTipoSA('usuarios',this)" style="font-size:.72rem;padding:6px 13px;">👷 Usuarios</button>
+              <div id="per-tipo-sa-wrap" class="sfi-filter-field sfi-filter-field--shrink">
+                <div class="sfi-field-label">👥 Tipo</div>
+                <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                  <button class="fpill" id="pertipo-admins" onclick="setPerTipoSA('admins',this)">🧑‍💼 Admins</button>
+                  <button class="fpill" id="pertipo-usuarios" onclick="setPerTipoSA('usuarios',this)">👷 Usuarios</button>
                 </div>
                 <div id="stats-per-tipo-chip-sa" style="display:none;margin-top:3px;"></div>
               </div>
             </div>
           </div>
-
-          <!-- Fila usuario (solo para admin) -->
+          <!-- Admin: solo usuario -->
           <div id="stats-admin-filters-periodos-wrap" style="display:none;">
-            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:3px;">👤 Filtrar por usuario</div>
-            <div style="display:flex;gap:6px;align-items:center;">
+            <div class="sfi-field-label" style="margin-bottom:4px;">👤 Filtrar por usuario</div>
+            <div class="sfi-input-row">
               <div style="flex:1;position:relative;">
                 <input type="text" id="stats-user-inline-input-per" placeholder="Buscar usuario…" autocomplete="off"
-                  class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
-                  oninput="filtrarSugerenciasUsuarioInlinePer()" onfocus="filtrarSugerenciasUsuarioInlinePer()" />
-                <div id="stats-user-inline-sug-per" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;min-width:160px;"></div>
+                  class="input-f sfi-input"
+                  oninput="filtrarSugerenciasUsuarioInlinePer()" onfocus="filtrarSugerenciasUsuarioInlinePer()"/>
+                <div id="stats-user-inline-sug-per" class="sug-dropdown"></div>
               </div>
-              <button onclick="limpiarUsuarioStatsInlinePer()" id="btn-clear-user-inline-per"
-                style="display:none;flex-shrink:0;padding:5px 9px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);white-space:nowrap;">✕</button>
+              <button onclick="limpiarUsuarioStatsInlinePer()" id="btn-clear-user-inline-per" class="sfi-clear-btn" style="display:none;">✕</button>
             </div>
             <div id="stats-per-user-chip" style="display:none;margin-top:5px;"></div>
           </div>
@@ -2529,281 +2744,62 @@ details summary::-webkit-details-marker{display:none;}
       </div>
     </div>
 
-    <!-- Cómo funciona — acordeón colapsado (versión única, la estática se eliminó por ser redundante) -->
     <details style="margin-bottom:8px;">
-      <summary style="font-size:var(--fs-xs);color:var(--text3);cursor:pointer;list-style:none;display:flex;align-items:center;gap:4px;user-select:none;">
+      <summary style="font-size:var(--fs-xs);color:var(--text3);cursor:pointer;list-style:none;display:flex;align-items:center;gap:4px;user-select:none;padding:3px 0;">
         <span>▸</span> ¿Cómo funciona?
       </summary>
       <div style="font-size:var(--fs-xs);color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:var(--rmd);padding:8px 10px;margin-top:5px;line-height:1.6;">
         Cada columna muestra un período distinto (día, semana o mes). Se comparan los últimos registros. El 📈 indica el período con mayor gasto y el 📉 el de menor. Si hay filtro de usuario activo, los datos se calculan solo para ese usuario.
       </div>
     </details>
-    <!-- Nota dinámica — se actualiza desde renderComparaciones() -->
+
     <div id="comp-nota-contexto" style="font-size:.72rem;color:var(--text3);margin-bottom:10px;padding:9px 11px;background:var(--surface2);border-radius:var(--rsm);border:1px solid var(--border);line-height:1.6;">
       📌 Mostrando datos globales (todos los usuarios).
     </div>
-    <div class="stat-card" id="per-card-3d"><div class="stat-title">📅 Últimos 3 días</div><div class="comp-grid" id="comp-dias"></div></div>
-    <div class="stat-card" id="per-card-3s" style="display:none;"><div class="stat-title">📅 Últimas 3 semanas</div><div class="comp-grid" id="comp-sem"></div></div>
-    <div class="stat-card" id="per-card-3m" style="display:none;"><div class="stat-title">📅 Últimos 3 meses</div><div class="comp-grid" id="comp-mes"></div></div>
-    <div class="stat-card" id="per-card-3m2" style="display:none;"><div class="stat-title">📅 Meses 4–6 anteriores</div><div class="comp-grid" id="comp-mes2"></div></div>
+
+    <div class="scard" id="per-card-3d">
+      <div class="scard-head"><span class="scard-icon">📅</span>Últimos 3 días</div>
+      <div class="comp-grid" id="comp-dias"></div>
+    </div>
+    <div class="scard" id="per-card-3s" style="display:none;">
+      <div class="scard-head"><span class="scard-icon">📅</span>Últimas 3 semanas</div>
+      <div class="comp-grid" id="comp-sem"></div>
+    </div>
+    <div class="scard" id="per-card-3m" style="display:none;">
+      <div class="scard-head"><span class="scard-icon">📅</span>Últimos 3 meses</div>
+      <div class="comp-grid" id="comp-mes"></div>
+    </div>
+    <div class="scard" id="per-card-3m2" style="display:none;">
+      <div class="scard-head"><span class="scard-icon">📅</span>Meses 4–6 anteriores</div>
+      <div class="comp-grid" id="comp-mes2"></div>
+    </div>
   </div>
 
-  <!-- ─── SUBPANE: USUARIOS (super_admin+) ────────────────────────────────── -->
+  <!-- ══════════════════════════════════════════════════════
+       SUBPANE: EQUIPO (super_admin+)
+  ══════════════════════════════════════════════════════ -->
   <div class="subpane" id="sp-usuarios">
-    <!-- Filtros de producto/categoría para Usuarios — sin acordeón innecesario -->
-    <div id="u-prod-cat-filters" style="margin-bottom:10px;">
-      <div class="stats-filter-inline" style="padding:10px 10px 8px;">
-          <!-- Fila 1: buscar producto + por categoría (XOR) -->
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
-            <div id="u-prod-filter-wrap" style="flex:1;min-width:130px;position:relative;">
-              <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🔍 Buscar producto</div>
-              <div style="display:flex;gap:5px;">
-                <div style="flex:1;position:relative;">
-                  <input type="text" id="u-prod-input" placeholder="Nombre del producto…" autocomplete="off"
-                    class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
-                    oninput="filtrarSugerenciasProductoU()" onfocus="filtrarSugerenciasProductoU()" />
-                  <div id="u-prod-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:299;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
-                </div>
-                <button onclick="limpiarFiltroProductoU()" id="btn-clear-prod-u"
-                  style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-              </div>
-              <div id="u-prod-chip" style="display:none;margin-top:4px;"></div>
-            </div>
-            <div id="u-cat-filter-wrap" style="flex-shrink:0;">
-              <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🏷 Por categoría</div>
-              <div style="display:flex;gap:4px;">
-                <select id="u-cat-select" class="select-f" style="font-size:.78rem;padding:5px 9px;" onchange="aplicarFiltroCatU()">
-                  <option value="">— Todas —</option>
-                  <option value="CARNES">🥩 Carnes</option><option value="VERDURAS">🥦 Verduras</option>
-                  <option value="LACTEOS">🥛 Lácteos</option><option value="FRUTAS">🍎 Frutas</option>
-                  <option value="INSUMOS">🧪 Insumos</option><option value="PREPARADOS">🍱 Preparados</option>
-                  <option value="BEBIDAS">🥤 Bebidas</option><option value="ENVASES">📦 Envases</option>
-                  <option value="LIMPIEZA">🧹 Limpieza</option><option value="OTROS">⚙️ Otros</option>
-                </select>
-                <button id="btn-clear-cat-u" onclick="limpiarFiltroCatU()" style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-              </div>
-            </div>
-          </div>
-      </div>
-    </div>
-    <!-- Filtros usuario + tipo (XOR) para Usuarios tab (super_admin+) -->
-    <div id="u-user-tipo-filters" style="display:none;margin-bottom:10px;">
-      <div class="stats-filter-inline" style="padding:10px 10px 8px;">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
-          <div id="u-user-wrap" style="flex:1;min-width:140px;position:relative;">
-            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👤 Por usuario</div>
-            <div style="display:flex;gap:5px;">
+    <!-- Filtros prod/cat -->
+    <div id="u-prod-cat-filters">
+      <div class="sfi-card">
+        <div class="sfi-filter-group" style="margin-bottom:0;">
+          <div id="u-prod-filter-wrap" class="sfi-filter-field">
+            <div class="sfi-field-label">🔍 Producto</div>
+            <div class="sfi-input-row">
               <div style="flex:1;position:relative;">
-                <input type="text" id="u-user-input" placeholder="Buscar usuario…" autocomplete="off"
-                  class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
-                  oninput="filtrarSugerenciasUsuarioU()" onfocus="filtrarSugerenciasUsuarioU()" />
-                <div id="u-user-sug" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
+                <input type="text" id="u-prod-input" placeholder="Nombre del producto…" autocomplete="off"
+                  class="input-f sfi-input"
+                  oninput="filtrarSugerenciasProductoU()" onfocus="filtrarSugerenciasProductoU()"/>
+                <div id="u-prod-suggestions" class="sug-dropdown"></div>
               </div>
-              <button onclick="limpiarUsuarioU()" id="btn-clear-user-u"
-                style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
+              <button onclick="limpiarFiltroProductoU()" id="btn-clear-prod-u" class="sfi-clear-btn" style="display:none;">✕</button>
             </div>
-            <div id="u-user-chip" style="display:none;margin-top:4px;"></div>
+            <div id="u-prod-chip" style="display:none;margin-top:4px;"></div>
           </div>
-          <div id="u-tipo-wrap" style="flex-shrink:0;">
-            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👥 Por tipo</div>
-            <div style="display:flex;gap:5px;">
-              <button class="fbtn-sec" id="u-tipo-admins" onclick="setUTipo('admins',this)">🧑‍💼 Admins</button>
-              <button class="fbtn-sec" id="u-tipo-usuarios" onclick="setUTipo('usuarios',this)">👷 Usuarios</button>
-            </div>
-            <div id="u-tipo-chip" style="display:none;margin-top:4px;"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- KPI resumen global de la sección usuarios -->
-    <div id="u-kpi-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;"></div>
-    <!-- Ranking compras -->
-    <div class="stat-card"><div class="stat-title">🏅 Ranking — N° de compras</div><div id="st-ranking-users"><p class="no-data">Sin datos</p></div></div>
-    <!-- Ranking gasto -->
-    <div class="stat-card"><div class="stat-title">💳 Ranking — Gasto acumulado</div><div id="st-gasto-users"><p class="no-data">Sin datos</p></div></div>
-    <!-- Ticket por usuario -->
-    <div class="stat-card"><div class="stat-title">🎯 Ticket promedio por usuario</div><div id="st-ticket-users"><p class="no-data">Sin datos</p></div></div>
-    <!-- Días activos por usuario -->
-    <div class="stat-card"><div class="stat-title">📅 Días activos por usuario</div><div id="st-dias-users"><p class="no-data">Sin datos</p></div></div>
-    <!-- Categoría favorita por usuario -->
-    <div class="stat-card"><div class="stat-title">🏷 Categoría favorita por usuario</div><div id="st-cat-users"><p class="no-data">Sin datos</p></div></div>
-  </div>
-
-  <!-- ─── SUBPANE: COMPARAR USUARIOS ────────────────────────── -->
-  <div class="subpane" id="sp-comparar">
-
-    <!-- 1. Tipo de comparación (XOR entre opciones) -->
-    <div class="cmp-section">
-      <div class="cmp-section-label">Tipo de comparación</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button class="fbtn-sec" id="cmp-ftipo-admins" onclick="setCmpTipo('admins',this)">Solo Admins</button>
-        <button class="fbtn-sec" id="cmp-ftipo-usuarios" onclick="setCmpTipo('usuarios',this)">Solo Usuarios</button>
-        <button class="fbtn-sec" id="btn-cmp-grupal" onclick="toggleComparacionGrupal(this)">🔄 Admins vs Usuarios</button>
-      </div>
-    </div>
-
-    <!-- 2. Usuarios a comparar -->
-    <div class="cmp-section">
-      <div class="cmp-section-label">Usuarios a comparar</div>
-      <div style="display:flex;gap:8px;">
-        <div style="flex:1;">
-          <div style="font-size:var(--fs-xs);color:var(--text3);margin-bottom:4px;">Usuario A</div>
-          <div style="position:relative;">
-            <input type="text" id="cmp-user-a-input" placeholder="Buscar usuario A…" autocomplete="off"
-              class="input-f" style="font-size:.82rem;padding:7px 10px;width:100%;box-sizing:border-box;"
-              oninput="filtrarSugerenciasCmp('a')" onfocus="filtrarSugerenciasCmp('a')" />
-            <div id="cmp-sug-a" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:99;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:140px;overflow-y:auto;"></div>
-          </div>
-          <div id="cmp-chip-a" style="display:none;margin-top:4px;"></div>
-        </div>
-        <div style="flex:1;">
-          <div style="font-size:var(--fs-xs);color:var(--text3);margin-bottom:4px;">Usuario B</div>
-          <div style="position:relative;">
-            <input type="text" id="cmp-user-b-input" placeholder="Buscar usuario B…" autocomplete="off"
-              class="input-f" style="font-size:.82rem;padding:7px 10px;width:100%;box-sizing:border-box;"
-              oninput="filtrarSugerenciasCmp('b')" onfocus="filtrarSugerenciasCmp('b')" />
-            <div id="cmp-sug-b" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:99;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:140px;overflow-y:auto;"></div>
-          </div>
-          <div id="cmp-chip-b" style="display:none;margin-top:4px;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. Período con ▾ inline al costado de Rango + filtros producto/cat dentro -->
-    <div class="cmp-section">
-      <div class="cmp-section-label">Período</div>
-      <div class="stats-filter-inline">
-        <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:6px 8px;">
-          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;">Período</span>
-          <button class="fbtn-sec active" id="cmpf-7d" onclick="setCmpPer('7d',this)">7d</button>
-          <button class="fbtn-sec" id="cmpf-15d" onclick="setCmpPer('15d',this)">15d</button>
-          <button class="fbtn-sec" id="cmpf-30d" onclick="setCmpPer('30d',this)">Mes</button>
-          <button class="fbtn-sec" id="cmpf-todo" onclick="setCmpPer('todo',this)">Todo</button>
-          <button class="fbtn-sec" id="cmpf-rango" onclick="setCmpPer('rango',this)">📅 Rango</button>
-          <button id="cmp-filter-accordion-hdr" onclick="toggleCmpFilterAccordion()" style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;background:none;border:1.5px solid var(--border);border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);color:var(--text3);font-size:var(--fs-xs);font-weight:700;flex-shrink:0;">
-            <span class="dot" id="cmp-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
-            ⚙️ Filtros <span class="accordion-arrow" id="cmp-filter-arrow" style="font-size:.6rem;">▾</span>
-          </button>
-        </div>
-        <!-- Rango de fechas (se muestra cuando se selecciona "📅 Rango") -->
-        <div id="cmp-rango-wrap" style="display:none;padding:0 8px 8px;">
-          <div style="display:flex;gap:7px;">
-            <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:2px;text-transform:uppercase;">Desde</div>
-              <input type="date" id="cmp-date-from" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;box-sizing:border-box;"/></div>
-            <div style="flex:1;"><div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:2px;text-transform:uppercase;">Hasta</div>
-              <div style="display:flex;gap:4px;">
-                <input type="date" id="cmp-date-to" class="input-f" style="font-size:.78rem;padding:5px 8px;width:100%;box-sizing:border-box;"/>
-                <button onclick="limpiarRangoCmp()" style="flex-shrink:0;padding:4px 7px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Filtros producto/cat (accordion) -->
-        <div class="accordion-body" id="cmp-filter-accordion-body" style="padding:0 8px 8px;">
-          <div style="height:1px;background:var(--border);margin:4px 0 8px;"></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
-            <div id="cmp-prod-filter-wrap" style="flex:1;min-width:130px;position:relative;">
-              <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🔍 Buscar producto</div>
-              <div style="display:flex;gap:5px;">
-                <div style="flex:1;position:relative;">
-                  <input type="text" id="cmp-prod-input" placeholder="Nombre del producto…" autocomplete="off"
-                    class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
-                    oninput="filtrarSugerenciasProductoCmp()" onfocus="filtrarSugerenciasProductoCmp()" />
-                  <div id="cmp-prod-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:299;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
-                </div>
-                <button onclick="limpiarFiltroProductoCmp()" id="btn-clear-prod-cmp"
-                  style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-              </div>
-              <div id="cmp-prod-chip" style="display:none;margin-top:4px;"></div>
-            </div>
-            <div id="cmp-cat-filter-wrap" style="flex-shrink:0;">
-              <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🏷 Por categoría</div>
-              <div style="display:flex;gap:4px;">
-                <select id="cmp-cat-select" class="select-f" style="font-size:.78rem;padding:5px 9px;" onchange="aplicarFiltroCatCmp()">
-                  <option value="">— Todas —</option>
-                  <option value="CARNES">🥩 Carnes</option><option value="VERDURAS">🥦 Verduras</option>
-                  <option value="LACTEOS">🥛 Lácteos</option><option value="FRUTAS">🍎 Frutas</option>
-                  <option value="INSUMOS">🧪 Insumos</option><option value="PREPARADOS">🍱 Preparados</option>
-                  <option value="BEBIDAS">🥤 Bebidas</option><option value="ENVASES">📦 Envases</option>
-                  <option value="LIMPIEZA">🧹 Limpieza</option><option value="OTROS">⚙️ Otros</option>
-                </select>
-                <button id="btn-clear-cat-cmp" onclick="limpiarFiltroCatCmp()" style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 4. Botón Comparar -->
-    <button id="btn-ejecutar-cmp" onclick="toggleComparacion(this)" class="btn-primary" style="margin-top:4px;">
-      🔄 Comparar
-    </button>
-
-    <div id="cmp-resultado" style="display:none;margin-top:12px;"></div>
-  </div>
-
-  <!-- ─── SUBPANE: LOGS ───────────────────────────────────── -->
-  <div class="subpane" id="sp-logs">
-
-    <!-- Header con actualizar -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:600;">Registro de acciones del sistema</div>
-      <button onclick="renderLogs()" style="font-size:var(--fs-xs);padding:5px 11px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rmd);color:var(--text2);cursor:pointer;font-family:var(--ff);font-weight:700;transition:var(--transition);">↺ Actualizar</button>
-    </div>
-
-    <!-- FILTROS DE ACTIVIDAD -->
-    <div class="stats-filter-inline" style="margin-bottom:8px;">
-      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:6px 8px;">
-        <span style="font-size:var(--fs-xs);font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;">Período</span>
-        <button class="fbtn-sec active" id="lfilt-p-7d" onclick="setLogPeriodo('7d',this)">7 días</button>
-        <button class="fbtn-sec" id="lfilt-p-15d" onclick="setLogPeriodo('15d',this)">15 días</button>
-        <button class="fbtn-sec" id="lfilt-p-30d" onclick="setLogPeriodo('30d',this)">1 mes</button>
-        <button class="fbtn-sec" id="btn-log-rango" onclick="toggleLogRango(this)">📅 Rango</button>
-        <button id="log-filter-accordion-hdr" onclick="toggleLogFilterAccordion()" style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;background:none;border:1.5px solid var(--border);border-radius:var(--rmd);cursor:pointer;font-family:var(--ff);color:var(--text3);font-size:var(--fs-xs);font-weight:700;flex-shrink:0;">
-          <span class="dot" id="log-filter-dot" style="display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
-          ⚙️ Filtros <span class="accordion-arrow" id="log-filter-arrow" style="font-size:.6rem;">▾</span>
-        </button>
-      </div>
-      <!-- Rango fechas -->
-      <div id="log-rango-wrap" style="display:none;padding:0 8px 8px;">
-        <div style="display:flex;gap:8px;">
-          <div style="flex:1;">
-            <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Desde</div>
-            <input type="date" id="log-date-from" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="renderLogs()"/>
-          </div>
-          <div style="flex:1;">
-            <div style="font-size:.6rem;color:var(--text3);font-weight:700;margin-bottom:3px;text-transform:uppercase;">Hasta</div>
-            <div style="display:flex;gap:4px;align-items:center;">
-              <input type="date" id="log-date-to" class="input-f" style="font-size:.78rem;padding:6px 9px;width:100%;" onchange="renderLogs()"/>
-              <button onclick="limpiarRangoLog()" style="flex-shrink:0;padding:5px 8px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:var(--rmd);font-size:.72rem;font-weight:700;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Filtros adicionales accordion -->
-      <div class="accordion-body" id="log-filter-accordion-body" style="padding:0 8px 8px;">
-        <div style="height:1px;background:var(--border);margin:4px 0 8px;"></div>
-        <!-- Buscar producto + Por categoría (XOR) -->
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-bottom:10px;">
-          <div id="log-prod-filter-wrap" style="flex:1;min-width:130px;position:relative;">
-            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🔍 Buscar producto</div>
-            <div style="display:flex;gap:5px;">
-              <div style="flex:1;position:relative;">
-                <input type="text" id="log-prod-input" placeholder="Nombre del producto…" autocomplete="off"
-                  class="input-f" style="font-size:.78rem;padding:5px 9px;width:100%;box-sizing:border-box;"
-                  oninput="filtrarSugerenciasProductoLog()" onfocus="filtrarSugerenciasProductoLog()" />
-                <div id="log-prod-suggestions" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:299;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
-              </div>
-              <button onclick="limpiarFiltroProductoLog()" id="btn-clear-prod-log"
-                style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-            </div>
-            <div id="log-prod-chip" style="display:none;margin-top:4px;"></div>
-          </div>
-          <div id="log-cat-filter-wrap" style="flex-shrink:0;">
-            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">🏷 Por categoría</div>
+          <div id="u-cat-filter-wrap" class="sfi-filter-field sfi-filter-field--shrink">
+            <div class="sfi-field-label">🏷 Categoría</div>
             <div style="display:flex;gap:4px;">
-              <select id="log-cat-select" class="select-f" style="font-size:.78rem;padding:5px 9px;" onchange="aplicarFiltroCatLog()">
+              <select id="u-cat-select" class="select-f sfi-input" onchange="aplicarFiltroCatU()">
                 <option value="">— Todas —</option>
                 <option value="CARNES">🥩 Carnes</option><option value="VERDURAS">🥦 Verduras</option>
                 <option value="LACTEOS">🥛 Lácteos</option><option value="FRUTAS">🍎 Frutas</option>
@@ -2811,50 +2807,302 @@ details summary::-webkit-details-marker{display:none;}
                 <option value="BEBIDAS">🥤 Bebidas</option><option value="ENVASES">📦 Envases</option>
                 <option value="LIMPIEZA">🧹 Limpieza</option><option value="OTROS">⚙️ Otros</option>
               </select>
-              <button id="btn-clear-cat-log" onclick="limpiarFiltroCatLog()" style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-            </div>
-          </div>
-        </div>
-        <!-- Usuario + tipo (XOR) -->
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
-          <div id="log-user-wrap" style="flex:1;min-width:150px;">
-            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👤 Por usuario</div>
-            <div style="display:flex;gap:5px;">
-              <div style="flex:1;position:relative;">
-                <input type="text" id="log-user-input" placeholder="Buscar usuario…" autocomplete="off"
-                  class="input-f" style="font-size:.78rem;padding:6px 10px;width:100%;box-sizing:border-box;"
-                  oninput="filtrarSugerenciasUsuarioLog()" onfocus="filtrarSugerenciasUsuarioLog()" />
-                <div id="log-user-sug" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:199;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:160px;overflow-y:auto;"></div>
-              </div>
-              <button onclick="limpiarUsuarioLog()" id="btn-clear-user-log"
-                style="display:none;flex-shrink:0;padding:4px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rmd);font-size:.7rem;color:var(--text3);cursor:pointer;font-family:var(--ff);">✕</button>
-            </div>
-            <div id="log-user-chip" style="display:none;margin-top:5px;"></div>
-          </div>
-          <div id="log-tipo-wrap" style="flex-shrink:0;">
-            <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:700;margin-bottom:4px;">👥 Por tipo</div>
-            <div style="display:flex;gap:6px;">
-              <button class="fbtn-sec" id="lfilt-tipo-admins" onclick="setLogTipo('admins',this)">🧑‍💼 Admins</button>
-              <button class="fbtn-sec" id="lfilt-tipo-usuarios" onclick="setLogTipo('usuarios',this)">👷 Usuarios</button>
+              <button id="btn-clear-cat-u" onclick="limpiarFiltroCatU()" class="sfi-clear-btn" style="display:none;">✕</button>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <!-- Tipo de acción — FUERA del contenedor de período/filtros -->
-    <div style="margin-bottom:8px;">
-      <div class="filter-group-label">⚡ Tipo de acción</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button class="fbtn-sec active" id="lfilt-todo" onclick="setLogFilt('todo',this)">Todo</button>
-        <button class="fbtn-sec" id="lfilt-eliminar" onclick="setLogFilt('eliminar',this)">🗑 Eliminaciones</button>
-        <button class="fbtn-sec" id="lfilt-editar" onclick="setLogFilt('editar',this)">✏️ Ediciones</button>
-        <button class="fbtn-sec" id="lfilt-exportar" onclick="setLogFilt('exportar',this)">📊 Exportaciones</button>
+    <!-- Filtros usuario + tipo (super_admin+) -->
+    <div id="u-user-tipo-filters" style="display:none">
+      <div class="sfi-card">
+        <div class="sfi-filter-group" style="margin-bottom:0;">
+          <div id="u-user-wrap" class="sfi-filter-field">
+            <div class="sfi-field-label">👤 Por usuario</div>
+            <div class="sfi-input-row">
+              <div style="flex:1;position:relative;">
+                <input type="text" id="u-user-input" placeholder="Buscar usuario…" autocomplete="off"
+                  class="input-f sfi-input"
+                  oninput="filtrarSugerenciasUsuarioU()" onfocus="filtrarSugerenciasUsuarioU()"/>
+                <div id="u-user-sug" class="sug-dropdown"></div>
+              </div>
+              <button onclick="limpiarUsuarioU()" id="btn-clear-user-u" class="sfi-clear-btn" style="display:none;">✕</button>
+            </div>
+            <div id="u-user-chip" style="display:none;margin-top:4px;"></div>
+          </div>
+          <div id="u-tipo-wrap" class="sfi-filter-field sfi-filter-field--shrink">
+            <div class="sfi-field-label">👥 Por tipo</div>
+            <div style="display:flex;gap:5px;">
+              <button class="fpill" id="u-tipo-admins" onclick="setUTipo('admins',this)">🧑‍💼 Admins</button>
+              <button class="fpill" id="u-tipo-usuarios" onclick="setUTipo('usuarios',this)">👷 Usuarios</button>
+            </div>
+            <div id="u-tipo-chip" style="display:none;margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- KPI resumen equipo -->
+    <div id="u-kpi-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;"></div>
+    <div class="scard">
+      <div class="scard-head"><span class="scard-icon">🏅</span>Ranking — N° de compras</div>
+      <div id="st-ranking-users"><p class="no-data">Sin datos</p></div>
+    </div>
+    <div class="scard">
+      <div class="scard-head"><span class="scard-icon">💳</span>Ranking — Gasto acumulado</div>
+      <div id="st-gasto-users"><p class="no-data">Sin datos</p></div>
+    </div>
+    <div class="scard">
+      <div class="scard-head"><span class="scard-icon">🎯</span>Ticket promedio por usuario</div>
+      <div id="st-ticket-users"><p class="no-data">Sin datos</p></div>
+    </div>
+    <div class="scard">
+      <div class="scard-head"><span class="scard-icon">📅</span>Días activos por usuario</div>
+      <div id="st-dias-users"><p class="no-data">Sin datos</p></div>
+    </div>
+    <div class="scard">
+      <div class="scard-head"><span class="scard-icon">🏷</span>Categoría favorita por usuario</div>
+      <div id="st-cat-users"><p class="no-data">Sin datos</p></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       SUBPANE: CARA A CARA
+  ══════════════════════════════════════════════════════ -->
+  <div class="subpane" id="sp-comparar">
+    <div class="scard" style="margin-bottom:10px;">
+      <div class="scard-head"><span class="scard-icon">⚙️</span>Configuración</div>
+      <div style="padding:12px 14px;">
+
+        <!-- 1. Tipo de comparación -->
+        <div class="cmp-section">
+          <div class="cmp-section-label">Tipo de comparación</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="fpill" id="cmp-ftipo-admins" onclick="setCmpTipo('admins',this)">Solo Admins</button>
+            <button class="fpill" id="cmp-ftipo-usuarios" onclick="setCmpTipo('usuarios',this)">Solo Usuarios</button>
+            <button class="fpill" id="btn-cmp-grupal" onclick="toggleComparacionGrupal(this)">🔄 Admins vs Usuarios</button>
+          </div>
+        </div>
+
+        <!-- 2. Usuarios a comparar -->
+        <div class="cmp-section">
+          <div class="cmp-section-label">Usuarios a comparar</div>
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;">
+              <div class="sfi-field-label" style="margin-bottom:4px;">Usuario A</div>
+              <div style="position:relative;">
+                <input type="text" id="cmp-user-a-input" placeholder="Buscar usuario A…" autocomplete="off"
+                  class="input-f sfi-input"
+                  oninput="filtrarSugerenciasCmp('a')" onfocus="filtrarSugerenciasCmp('a')"/>
+                <div id="cmp-sug-a" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:99;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:140px;overflow-y:auto;"></div>
+              </div>
+              <div id="cmp-chip-a" style="display:none;margin-top:4px;"></div>
+            </div>
+            <div style="flex:1;">
+              <div class="sfi-field-label" style="margin-bottom:4px;">Usuario B</div>
+              <div style="position:relative;">
+                <input type="text" id="cmp-user-b-input" placeholder="Buscar usuario B…" autocomplete="off"
+                  class="input-f sfi-input"
+                  oninput="filtrarSugerenciasCmp('b')" onfocus="filtrarSugerenciasCmp('b')"/>
+                <div id="cmp-sug-b" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:99;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);max-height:140px;overflow-y:auto;"></div>
+              </div>
+              <div id="cmp-chip-b" style="display:none;margin-top:4px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Período -->
+        <div class="cmp-section" style="margin-bottom:0;">
+          <div class="cmp-section-label">Período</div>
+          <div class="sfi-card" style="margin-bottom:0;">
+            <div class="sfi-row">
+              <div class="sfi-period">
+                <button class="fpill active" id="cmpf-7d" onclick="setCmpPer('7d',this)">7d</button>
+                <button class="fpill" id="cmpf-15d" onclick="setCmpPer('15d',this)">15d</button>
+                <button class="fpill" id="cmpf-30d" onclick="setCmpPer('30d',this)">Mes</button>
+                <button class="fpill" id="cmpf-todo" onclick="setCmpPer('todo',this)">Todo</button>
+                <button class="fpill fpill-icon" id="cmpf-rango" onclick="setCmpPer('rango',this)">📅</button>
+              </div>
+              <button id="cmp-filter-accordion-hdr" onclick="toggleCmpFilterAccordion()" class="sfi-toggle-btn">
+                <span class="sfi-dot" id="cmp-filter-dot" style="display:none;"></span>
+                Filtros
+                <span class="sfi-arrow accordion-arrow" id="cmp-filter-arrow">▾</span>
+              </button>
+            </div>
+            <div id="cmp-rango-wrap" style="display:none;padding-top:8px;">
+              <div class="sfi-date-row">
+                <div class="sfi-date-field">
+                  <div class="sfi-date-label">Desde</div>
+                  <input type="date" id="cmp-date-from" class="input-f sfi-date-input"/>
+                </div>
+                <div class="sfi-date-field">
+                  <div class="sfi-date-label">Hasta</div>
+                  <div style="display:flex;gap:4px;">
+                    <input type="date" id="cmp-date-to" class="input-f sfi-date-input"/>
+                    <button onclick="limpiarRangoCmp()" class="sfi-clear-btn">✕</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="accordion-body" id="cmp-filter-accordion-body">
+              <div class="sfi-divider"></div>
+              <div class="sfi-filter-group" style="margin-bottom:0;">
+                <div id="cmp-prod-filter-wrap" class="sfi-filter-field">
+                  <div class="sfi-field-label">🔍 Producto</div>
+                  <div class="sfi-input-row">
+                    <div style="flex:1;position:relative;">
+                      <input type="text" id="cmp-prod-input" placeholder="Nombre del producto…" autocomplete="off"
+                        class="input-f sfi-input"
+                        oninput="filtrarSugerenciasProductoCmp()" onfocus="filtrarSugerenciasProductoCmp()"/>
+                      <div id="cmp-prod-suggestions" class="sug-dropdown"></div>
+                    </div>
+                    <button onclick="limpiarFiltroProductoCmp()" id="btn-clear-prod-cmp" class="sfi-clear-btn" style="display:none;">✕</button>
+                  </div>
+                  <div id="cmp-prod-chip" style="display:none;margin-top:4px;"></div>
+                </div>
+                <div id="cmp-cat-filter-wrap" class="sfi-filter-field sfi-filter-field--shrink">
+                  <div class="sfi-field-label">🏷 Categoría</div>
+                  <div style="display:flex;gap:4px;">
+                    <select id="cmp-cat-select" class="select-f sfi-input" onchange="aplicarFiltroCatCmp()">
+                      <option value="">— Todas —</option>
+                      <option value="CARNES">🥩 Carnes</option><option value="VERDURAS">🥦 Verduras</option>
+                      <option value="LACTEOS">🥛 Lácteos</option><option value="FRUTAS">🍎 Frutas</option>
+                      <option value="INSUMOS">🧪 Insumos</option><option value="PREPARADOS">🍱 Preparados</option>
+                      <option value="BEBIDAS">🥤 Bebidas</option><option value="ENVASES">📦 Envases</option>
+                      <option value="LIMPIEZA">🧹 Limpieza</option><option value="OTROS">⚙️ Otros</option>
+                    </select>
+                    <button id="btn-clear-cat-cmp" onclick="limpiarFiltroCatCmp()" class="sfi-clear-btn" style="display:none;">✕</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón Comparar -->
+    <button id="btn-ejecutar-cmp" onclick="toggleComparacion(this)" class="btn-primary" style="margin-top:4px;">
+      🔄 Comparar
+    </button>
+    <div id="cmp-resultado" style="display:none;margin-top:12px;"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       SUBPANE: ACTIVIDAD (Logs)
+  ══════════════════════════════════════════════════════ -->
+  <div class="subpane" id="sp-logs">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:var(--fs-xs);color:var(--text3);font-weight:600;letter-spacing:.02em;">Registro de acciones del sistema</div>
+      <button onclick="renderLogs()" class="slog-refresh-btn">↺ Actualizar</button>
+    </div>
+
+    <!-- Filtros: período + toggle -->
+    <div class="sfi-card" style="margin-bottom:10px;">
+      <div class="sfi-row accordion-header">
+        <div class="sfi-period">
+          <button class="fpill active" id="lfilt-p-7d" onclick="setLogPeriodo('7d',this)">7d</button>
+          <button class="fpill" id="lfilt-p-15d" onclick="setLogPeriodo('15d',this)">15d</button>
+          <button class="fpill" id="lfilt-p-30d" onclick="setLogPeriodo('30d',this)">1 mes</button>
+          <button class="fpill fpill-icon" id="btn-log-rango" onclick="toggleLogRango(this)">📅</button>
+        </div>
+        <button id="log-filter-accordion-hdr" onclick="toggleLogFilterAccordion()" class="sfi-toggle-btn">
+          <span class="sfi-dot" id="log-filter-dot" style="display:none;"></span>
+          Filtros
+          <span class="sfi-arrow accordion-arrow" id="log-filter-arrow">▾</span>
+        </button>
+      </div>
+      <!-- Rango fechas -->
+      <div id="log-rango-wrap" style="display:none;padding-top:8px;">
+        <div class="sfi-date-row">
+          <div class="sfi-date-field">
+            <div class="sfi-date-label">Desde</div>
+            <input type="date" id="log-date-from" class="input-f sfi-date-input" onchange="renderLogs()"/>
+          </div>
+          <div class="sfi-date-field">
+            <div class="sfi-date-label">Hasta</div>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <input type="date" id="log-date-to" class="input-f sfi-date-input" onchange="renderLogs()"/>
+              <button onclick="limpiarRangoLog()" class="sfi-clear-btn">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Filtros adicionales (accordion) -->
+      <div class="accordion-body" id="log-filter-accordion-body">
+        <div class="sfi-divider"></div>
+        <!-- Prod + Cat -->
+        <div class="sfi-filter-group">
+          <div id="log-prod-filter-wrap" class="sfi-filter-field">
+            <div class="sfi-field-label">🔍 Producto</div>
+            <div class="sfi-input-row">
+              <div style="flex:1;position:relative;">
+                <input type="text" id="log-prod-input" placeholder="Nombre del producto…" autocomplete="off"
+                  class="input-f sfi-input"
+                  oninput="filtrarSugerenciasProductoLog()" onfocus="filtrarSugerenciasProductoLog()"/>
+                <div id="log-prod-suggestions" class="sug-dropdown"></div>
+              </div>
+              <button onclick="limpiarFiltroProductoLog()" id="btn-clear-prod-log" class="sfi-clear-btn" style="display:none;">✕</button>
+            </div>
+            <div id="log-prod-chip" style="display:none;margin-top:4px;"></div>
+          </div>
+          <div id="log-cat-filter-wrap" class="sfi-filter-field sfi-filter-field--shrink">
+            <div class="sfi-field-label">🏷 Categoría</div>
+            <div style="display:flex;gap:4px;">
+              <select id="log-cat-select" class="select-f sfi-input" onchange="aplicarFiltroCatLog()">
+                <option value="">— Todas —</option>
+                <option value="CARNES">🥩 Carnes</option><option value="VERDURAS">🥦 Verduras</option>
+                <option value="LACTEOS">🥛 Lácteos</option><option value="FRUTAS">🍎 Frutas</option>
+                <option value="INSUMOS">🧪 Insumos</option><option value="PREPARADOS">🍱 Preparados</option>
+                <option value="BEBIDAS">🥤 Bebidas</option><option value="ENVASES">📦 Envases</option>
+                <option value="LIMPIEZA">🧹 Limpieza</option><option value="OTROS">⚙️ Otros</option>
+              </select>
+              <button id="btn-clear-cat-log" onclick="limpiarFiltroCatLog()" class="sfi-clear-btn" style="display:none;">✕</button>
+            </div>
+          </div>
+        </div>
+        <!-- Usuario + tipo -->
+        <div class="sfi-filter-group" style="margin-bottom:0;">
+          <div id="log-user-wrap" class="sfi-filter-field">
+            <div class="sfi-field-label">👤 Por usuario</div>
+            <div class="sfi-input-row">
+              <div style="flex:1;position:relative;">
+                <input type="text" id="log-user-input" placeholder="Buscar usuario…" autocomplete="off"
+                  class="input-f sfi-input"
+                  oninput="filtrarSugerenciasUsuarioLog()" onfocus="filtrarSugerenciasUsuarioLog()"/>
+                <div id="log-user-sug" class="sug-dropdown"></div>
+              </div>
+              <button onclick="limpiarUsuarioLog()" id="btn-clear-user-log" class="sfi-clear-btn" style="display:none;">✕</button>
+            </div>
+            <div id="log-user-chip" style="display:none;margin-top:5px;"></div>
+          </div>
+          <div id="log-tipo-wrap" class="sfi-filter-field sfi-filter-field--shrink">
+            <div class="sfi-field-label">👥 Por tipo</div>
+            <div style="display:flex;gap:6px;">
+              <button class="fpill" id="lfilt-tipo-admins" onclick="setLogTipo('admins',this)">🧑‍💼 Admins</button>
+              <button class="fpill" id="lfilt-tipo-usuarios" onclick="setLogTipo('usuarios',this)">👷 Usuarios</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tipo de acción -->
+    <div class="sfi-card" style="margin-bottom:10px;">
+      <div class="sfi-field-label" style="margin-bottom:8px;">⚡ Tipo de acción</div>
+      <div class="sfi-period" style="flex-wrap:wrap;">
+        <button class="fpill active" id="lfilt-todo" onclick="setLogFilt('todo',this)">Todo</button>
+        <button class="fpill" id="lfilt-eliminar" onclick="setLogFilt('eliminar',this)">🗑 Eliminaciones</button>
+        <button class="fpill" id="lfilt-editar" onclick="setLogFilt('editar',this)">✏️ Ediciones</button>
+        <button class="fpill" id="lfilt-exportar" onclick="setLogFilt('exportar',this)">📊 Exportaciones</button>
       </div>
     </div>
 
     <!-- Lista de logs -->
     <div id="lista-logs"><p class="no-data">Cargando logs…</p></div>
   </div>
+
 </div>
 
 <!-- FAB — Registrar producto -->
