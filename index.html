@@ -961,63 +961,57 @@ body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100
  * sobre cuántas opciones existían. Con pills siempre visibles el usuario escanea
  * la oferta de un vistazo y navega con un toque, sin depender de flechas.
  */
+/* ── Segmented Control (reemplaza pills) ── */
+.stab-arrow{display:none!important;}
 .subtabs{
-  display:flex;align-items:center;
-  background:transparent;
-  border:none;
-  padding:0;gap:0;
+  display:flex;align-items:stretch;
   margin-bottom:14px;
   position:relative;
 }
-/* Flechas eliminadas — el deslizamiento horizontal es la UI estándar en móvil */
-.stab-arrow{display:none!important;}
 .stab-track{
   flex:1;
   display:flex;
-  gap:6px;
-  overflow-x:auto;
-  scrollbar-width:none;
-  -webkit-overflow-scrolling:touch;
-  padding:2px 1px 6px;
-}
-.stab-track::-webkit-scrollbar{display:none;}
-.stab{
-  display:inline-flex;
-  flex-shrink:0;
-  align-items:center;justify-content:center;
-  padding:7px 14px;
-  font-size:var(--fs-xs);font-weight:700;
-  border-radius:20px;
+  align-items:stretch;
+  background:var(--surface2);
   border:1.5px solid var(--border2);
-  background:var(--surface);
-  color:var(--text2);
-  cursor:pointer;
-  letter-spacing:.03em;text-transform:uppercase;
-  white-space:nowrap;line-height:1.2;
-  transition:background .15s,border-color .15s,color .15s,box-shadow .15s,transform .1s;
-  -webkit-tap-highlight-color:transparent;
-  user-select:none;
+  border-radius:var(--rmd);
+  overflow:hidden;
+  padding:0;
+  gap:0;
+  height:34px;
   box-shadow:var(--sh);
 }
-.stab:active{transform:scale(.94);}
+.stab{
+  flex:1;
+  display:flex;
+  align-items:center;justify-content:center;
+  padding:0 4px;
+  font-size:.63rem;font-weight:700;
+  border-right:1px solid var(--border2);
+  background:transparent;
+  color:var(--text3);
+  cursor:pointer;
+  letter-spacing:.03em;text-transform:uppercase;
+  white-space:nowrap;line-height:1.1;
+  gap:3px;
+  transition:background .15s,color .15s;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  text-align:center;
+}
+.stab:last-child{border-right:none;}
+.stab:active{background:var(--surface3);}
 .stab.active{
   background:var(--text);
-  border-color:var(--text);
   color:var(--bg);
-  box-shadow:0 2px 8px rgba(26,24,20,.14);
-  animation:tabSlideIn .18s ease-out;
+  font-weight:800;
 }
-@keyframes tabSlideIn{from{opacity:.5;transform:scale(.95);}to{opacity:1;transform:scale(1);}}
 [data-theme="dark"] .stab{
-  background:var(--surface2);
-  border-color:var(--border2);
-  color:var(--text2);
+  color:var(--text3);
 }
 [data-theme="dark"] .stab.active{
   background:var(--accent);
-  border-color:var(--accent);
   color:#0E0C08;
-  box-shadow:0 2px 12px var(--accent-glow);
 }
 .subpane{display:none;}
 .subpane.active{display:block;animation:fadeIn .18s ease-out;}
@@ -1181,7 +1175,7 @@ details summary::-webkit-details-marker{display:none;}
   opacity:0;margin-top:0;
 }
 .accordion-body.open{
-  max-height:600px;opacity:1;margin-top:8px;
+  max-height:800px;opacity:1;margin-top:8px;overflow:visible;
 }
 .accordion-header.open .accordion-arrow{transform:rotate(180deg);}
 
@@ -1849,7 +1843,7 @@ details summary::-webkit-details-marker{display:none;}
 
 /* ── Suggestion dropdown ────────────────────────────────────── */
 .sug-dropdown{
-  display:none;position:absolute;left:0;right:0;top:100%;z-index:299;
+  display:none;position:absolute;left:0;right:0;top:100%;z-index:9999;
   background:var(--surface2);border:1.5px solid var(--border);
   border-radius:var(--rsm);box-shadow:0 4px 16px rgba(0,0,0,.3);
   max-height:160px;overflow-y:auto;
@@ -2779,40 +2773,7 @@ details summary::-webkit-details-marker{display:none;}
        SUBPANE: EQUIPO (super_admin+)
   ══════════════════════════════════════════════════════ -->
   <div class="subpane" id="sp-usuarios">
-    <!-- Filtros prod/cat -->
-    <div id="u-prod-cat-filters">
-      <div class="sfi-card">
-        <div class="sfi-filter-group" style="margin-bottom:0;">
-          <div id="u-prod-filter-wrap" class="sfi-filter-field">
-            <div class="sfi-field-label">🔍 Producto</div>
-            <div class="sfi-input-row">
-              <div style="flex:1;position:relative;">
-                <input type="text" id="u-prod-input" placeholder="Nombre del producto…" autocomplete="off"
-                  class="input-f sfi-input"
-                  oninput="filtrarSugerenciasProductoU()" onfocus="filtrarSugerenciasProductoU()"/>
-                <div id="u-prod-suggestions" class="sug-dropdown"></div>
-              </div>
-              <button onclick="limpiarFiltroProductoU()" id="btn-clear-prod-u" class="sfi-clear-btn" style="display:none;">✕</button>
-            </div>
-            <div id="u-prod-chip" style="display:none;margin-top:4px;"></div>
-          </div>
-          <div id="u-cat-filter-wrap" class="sfi-filter-field sfi-filter-field--shrink">
-            <div class="sfi-field-label">🏷 Categoría</div>
-            <div style="display:flex;gap:4px;">
-              <select id="u-cat-select" class="select-f sfi-input" onchange="aplicarFiltroCatU()">
-                <option value="">— Todas —</option>
-                <option value="CARNES">🥩 Carnes</option><option value="VERDURAS">🥦 Verduras</option>
-                <option value="LACTEOS">🥛 Lácteos</option><option value="FRUTAS">🍎 Frutas</option>
-                <option value="INSUMOS">🧪 Insumos</option><option value="PREPARADOS">🍱 Preparados</option>
-                <option value="BEBIDAS">🥤 Bebidas</option><option value="ENVASES">📦 Envases</option>
-                <option value="LIMPIEZA">🧹 Limpieza</option><option value="OTROS">⚙️ Otros</option>
-              </select>
-              <button id="btn-clear-cat-u" onclick="limpiarFiltroCatU()" class="sfi-clear-btn" style="display:none;">✕</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Filtro prod/cat: usa el filtro global superior -->
     <!-- Filtros usuario + tipo (super_admin+) -->
     <div id="u-user-tipo-filters" style="display:none">
       <div class="sfi-card">
@@ -9922,6 +9883,352 @@ const _origRenderUTab2=window.renderUsuariosTab;
 window.renderUsuariosTab=function(){
   if(_origRenderUTab2)_origRenderUTab2();
 };
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FIXES v3 — Correcciones integrales del panel de estadísticas
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── FIX 1: renderStats acumulado — usar window.renderStats (versión patcheada) ──
+// aplicarFiltroCatStats y demás funciones llamaban a renderStats() bare (original),
+// saltándose el patch que renderiza st-gasto-acum. Ahora forzamos window.renderStats.
+{
+  const _origAplicarCatStats = window.aplicarFiltroCatStats;
+  window.aplicarFiltroCatStats = function(){
+    const val = document.getElementById('stats-cat-select')?.value || '';
+    window._filtroCategStats = val || null;
+    const prodWrap = document.getElementById('stats-prod-filter-wrap');
+    if(val){
+      if(prodWrap) prodWrap.style.display = 'none';
+      window._filtroProductoStats = null;
+      const inp = document.getElementById('stats-prod-input'); if(inp) inp.value = '';
+      const chip = document.getElementById('stats-prod-chip'); if(chip){ chip.style.display='none'; chip.innerHTML=''; }
+      const clr = document.getElementById('btn-clear-prod-stat'); if(clr) clr.style.display = 'none';
+    } else {
+      if(prodWrap) prodWrap.style.display = '';
+    }
+    const clrBtn = document.getElementById('btn-clear-cat-stats'); if(clrBtn) clrBtn.style.display = val ? '' : 'none';
+    _actualizarSeccionesAnalisis();
+    window.renderStats();   // ← patched version
+  };
+
+  const _origLimpiarCatStats = window.limpiarFiltroCatStats;
+  window.limpiarFiltroCatStats = function(){
+    window._filtroCategStats = null;
+    const sel = document.getElementById('stats-cat-select'); if(sel) sel.value = '';
+    const clrBtn = document.getElementById('btn-clear-cat-stats'); if(clrBtn) clrBtn.style.display = 'none';
+    const prodWrap = document.getElementById('stats-prod-filter-wrap'); if(prodWrap) prodWrap.style.display = '';
+    _actualizarSeccionesAnalisis();
+    window.renderStats();   // ← patched version
+  };
+
+  // Override _selProdStats callback to use window.renderStats
+  window._selProdStats = function(n){
+    window._filtroProductoStats = n.trim();
+    const catSel = document.getElementById('stats-cat-select'); if(catSel) catSel.value = '';
+    window._filtroCategStats = null;
+    const catWrap = document.getElementById('stats-cat-filter-wrap'); if(catWrap) catWrap.style.display = 'none';
+    const prodWrap = document.getElementById('stats-prod-filter-wrap'); if(prodWrap) prodWrap.style.display = '';
+    const input = document.getElementById('stats-prod-input'); if(input) input.value = '';
+    const sug = document.getElementById('stats-prod-suggestions'); if(sug) sug.style.display = 'none';
+    const chip = document.getElementById('stats-prod-chip');
+    if(chip){ chip.style.display='flex'; chip.style.alignItems='center'; chip.style.gap='6px';
+      chip.innerHTML=`<span style="font-size:.78rem;background:var(--blue);color:#fff;padding:4px 10px;border-radius:20px;font-weight:700;">📦 ${n}</span>`; }
+    const clrBtn = document.getElementById('btn-clear-prod-stat'); if(clrBtn) clrBtn.style.display = '';
+    _actualizarSeccionesAnalisis();
+    window.renderStats();   // ← patched version
+  };
+
+  window.limpiarFiltroProductoStats = function(){
+    window._filtroProductoStats = null;
+    const input = document.getElementById('stats-prod-input'); if(input) input.value = '';
+    const sug = document.getElementById('stats-prod-suggestions'); if(sug) sug.style.display = 'none';
+    const chip = document.getElementById('stats-prod-chip'); if(chip){ chip.style.display='none'; chip.innerHTML=''; }
+    const clrBtn = document.getElementById('btn-clear-prod-stat'); if(clrBtn) clrBtn.style.display = 'none';
+    const catWrap = document.getElementById('stats-cat-filter-wrap'); if(catWrap) catWrap.style.display = '';
+    _actualizarSeccionesAnalisis();
+    window.renderStats();   // ← patched version
+  };
+}
+
+// ── FIX 2: Evolución — filtro producto/categoría sí actualiza comparativas ──
+{
+  const _prevRenderComp = window.renderComparaciones || renderComparaciones;
+  renderComparaciones = function(){
+    // Inyectar filtro prod/cat en _base() antes de llamar al original
+    // Se hace sobreescribiendo temporalmente los datos en el call
+    const _prevTodosComp = window.todosComp;
+    const hayProdPer = !!window._filtroProductoPer;
+    const hayCatPer  = !!window._filtroCategPer;
+    if(hayProdPer || hayCatPer){
+      window.todosComp = function(){
+        let datos = _prevTodosComp ? _prevTodosComp() : [];
+        if(hayProdPer){
+          const pn=(window._filtroProductoPer||'').toLowerCase().trim();
+          datos=datos.filter(i=>(i.nombre||'').toLowerCase().trim()===pn);
+        }
+        if(hayCatPer){
+          const cn=(window._filtroCategPer||'').toUpperCase().trim();
+          datos=datos.filter(i=>(i.categoria||'').toUpperCase().trim()===cn);
+        }
+        return datos;
+      };
+    }
+    _prevRenderComp();
+    if(hayProdPer || hayCatPer) window.todosComp = _prevTodosComp; // restore
+  };
+  window.renderComparaciones = renderComparaciones;
+}
+
+// ── FIX 3: Evolución — XOR usuario/tipo (fix selector fragile) ──
+{
+  // Override setPerTipoSA: use class selector instead of inline-style selector
+  const _prevSetPerTipoSA = window.setPerTipoSA;
+  window.setPerTipoSA = function(tipo, btn){
+    // Hide user input field (use .sfi-filter-field class)
+    const perUserInputWrap = document.getElementById('stats-user-input-per-sa')?.closest('.sfi-filter-field');
+    const perTipoWrapSA = document.getElementById('per-tipo-sa-wrap');
+    if(tipo){
+      if(perUserInputWrap) perUserInputWrap.style.display = 'none';
+      const inp = document.getElementById('stats-user-input-per-sa'); if(inp) inp.value = '';
+      const btn2 = document.getElementById('btn-clear-user-per-sa'); if(btn2) btn2.style.display = 'none';
+      const chip = document.getElementById('stats-user-chip-per-sa'); if(chip){ chip.style.display='none'; chip.innerHTML=''; }
+      window._filtroUsuarioPerSA = null;
+    }
+    const yaActivo = btn && btn.classList.contains('active');
+    if(yaActivo){
+      window._filtroTipoUsuarioStats = 'todos';
+      ['pertipo-admins','pertipo-usuarios'].forEach(id=>{ const b=document.getElementById(id); if(b){ b.classList.remove('active'); b.style.display=''; }});
+      const chip = document.getElementById('stats-per-tipo-chip-sa'); if(chip){ chip.style.display='none'; chip.innerHTML=''; }
+      // Restore user input
+      if(perUserInputWrap) perUserInputWrap.style.display = '';
+      renderComparaciones(); return;
+    }
+    window._filtroUsuarioStats = null;
+    const input = document.getElementById('stats-user-input-per-sa'); if(input) input.value = '';
+    const chipUser = document.getElementById('stats-user-chip-per-sa'); if(chipUser){ chipUser.style.display='none'; chipUser.innerHTML=''; }
+    const btnClear = document.getElementById('btn-clear-user-per-sa'); if(btnClear) btnClear.style.display = 'none';
+    window._filtroTipoUsuarioStats = tipo;
+    ['pertipo-admins','pertipo-usuarios'].forEach(id=>{ const b=document.getElementById(id); if(b) b.classList.remove('active'); });
+    if(btn) btn.classList.add('active');
+    const chip = document.getElementById('stats-per-tipo-chip-sa');
+    if(chip){
+      const lbl = tipo==='admins' ? '🧑‍💼 Administradores' : '👷 Usuarios normales';
+      chip.style.display='flex'; chip.style.alignItems='center'; chip.style.gap='6px';
+      chip.innerHTML=`<span style="font-size:.78rem;background:var(--blue);color:#fff;padding:4px 10px;border-radius:20px;font-weight:700;">${lbl}</span>
+        <button onclick="setPerTipoSA('${tipo}',document.getElementById('pertipo-${tipo}'))" style="background:none;border:none;cursor:pointer;font-size:.78rem;color:var(--text3);">✕</button>`;
+    }
+    renderComparaciones();
+  };
+
+  window.limpiarUsuarioPerSA = function(){
+    const perTipoWrapSA = document.getElementById('per-tipo-sa-wrap');
+    if(perTipoWrapSA) perTipoWrapSA.style.display = '';
+    const perUserInputWrap = document.getElementById('stats-user-input-per-sa')?.closest('.sfi-filter-field');
+    if(perUserInputWrap) perUserInputWrap.style.display = '';
+    window._filtroUsuarioStats = null;
+    const input = document.getElementById('stats-user-input-per-sa'); if(input) input.value = '';
+    const sug = document.getElementById('stats-user-sug-per-sa'); if(sug) sug.style.display = 'none';
+    const chip = document.getElementById('stats-user-chip-per-sa'); if(chip){ chip.style.display='none'; chip.innerHTML=''; }
+    const btnClear = document.getElementById('btn-clear-user-per-sa'); if(btnClear) btnClear.style.display = 'none';
+    renderComparaciones();
+  };
+}
+
+// ── FIX 4: Equipo — renderUsuariosTab usa filtros globales (prod/cat) ──
+{
+  const _prevRenderUTab = window.renderUsuariosTab;
+  window.renderUsuariosTab = function(){
+    // Temporalmente inyectar filtros prod/cat globales en todosComp
+    const hayProd = !!window._filtroProductoStats;
+    const hayCat  = !!window._filtroCategStats;
+    if(hayProd || hayCat){
+      // Mapear variables globales a variables U para que renderUsuariosTab las use
+      window._filtroProductoU = window._filtroProductoStats || null;
+      window._filtroCategU    = window._filtroCategStats    || null;
+    }
+    if(_prevRenderUTab) _prevRenderUTab();
+    // Restaurar (limpiar las U si solo las pusimos por el global)
+    if(hayProd || hayCat){
+      window._filtroProductoU = null;
+      window._filtroCategU    = null;
+    }
+  };
+}
+
+// ── FIX 5: Cara a Cara — setCmpTipo deselect (mostrar todos los botones) ──
+window.setCmpTipo = function(tipo, btn){
+  const tipoIds = ['cmp-ftipo-admins','cmp-ftipo-usuarios','btn-cmp-grupal'];
+  const yaActivo = btn && btn.classList.contains('active');
+  if(yaActivo){
+    // Deselect: limpiar y mostrar todos
+    btn.classList.remove('active');
+    tipoIds.forEach(id=>{ const b=document.getElementById(id); if(b){ b.classList.remove('active'); b.style.display=''; }});
+    window._cmpTipo = 'todos';
+    return;
+  }
+  // Select: marcar activo, ocultar los otros
+  tipoIds.forEach(id=>{
+    const b = document.getElementById(id);
+    if(!b) return;
+    if(b === btn){ b.classList.add('active'); b.style.display=''; }
+    else { b.classList.remove('active'); b.style.display='none'; }
+  });
+  window._cmpTipo = tipo;
+  // Limpiar usuarios previos
+  window._cmpUserA = null; window._cmpUserB = null;
+  ['a','b'].forEach(l=>{
+    const ch = document.getElementById(`cmp-chip-${l}`); if(ch){ ch.style.display='none'; ch.innerHTML=''; }
+    const inp = document.getElementById(`cmp-user-${l}-input`); if(inp) inp.value = '';
+  });
+};
+
+// ── FIX 6: Cara a Cara — toggleComparacionGrupal NO auto-ejecuta ──
+window.toggleComparacionGrupal = function(btn){
+  const res = document.getElementById('cmp-resultado');
+  const tipoIds = ['cmp-ftipo-admins','cmp-ftipo-usuarios'];
+  if(window._cmpGrupalActivo){
+    // Apagar modo grupal
+    window._cmpGrupalActivo = false;
+    if(btn){ btn.classList.remove('active'); btn.textContent='🔄 Admins vs Usuarios'; btn.style.background=''; btn.style.color=''; }
+    if(res){ res.style.display='none'; res.innerHTML=''; }
+    // Restaurar otros botones
+    tipoIds.forEach(id=>{ const b=document.getElementById(id); if(b) b.style.display=''; });
+  } else {
+    window._cmpGrupalActivo = true;
+    if(btn){ btn.classList.add('active'); btn.textContent='🔄 Admins vs Usuarios (activo)'; }
+    // Ocultar tipo individual
+    tipoIds.forEach(id=>{ const b=document.getElementById(id); if(b){ b.classList.remove('active'); b.style.display='none'; }});
+    window._cmpTipo = 'todos';
+    // NO auto-ejecutar — esperar al botón "Comparar"
+  }
+};
+
+// ── FIX 7: Cara a Cara — filtro prod/cat re-ejecuta si resultado está activo ──
+{
+  const _reEjecutarCmpSiActivo = function(){
+    const res = document.getElementById('cmp-resultado');
+    const activo = res && res.style.display !== 'none' && res.innerHTML.trim() !== '';
+    if(activo){
+      if(window._cmpGrupalActivo) window.ejecutarComparacionGrupal();
+      else window.ejecutarComparacion?.();
+    }
+  };
+
+  const _prevSelProdCmp = window._selProdCmp;
+  window._selProdCmp = function(n){
+    window._filtroProductoCmp = n.trim();
+    const catSel = document.getElementById('cmp-cat-select'); if(catSel) catSel.value = '';
+    window._filtroCategCmp = null;
+    const catWrap = document.getElementById('cmp-cat-filter-wrap'); if(catWrap) catWrap.style.display = 'none';
+    const input = document.getElementById('cmp-prod-input'); if(input) input.value = '';
+    const sug = document.getElementById('cmp-prod-suggestions'); if(sug) sug.style.display = 'none';
+    const chip = document.getElementById('cmp-prod-chip');
+    if(chip){ chip.style.display='flex'; chip.style.alignItems='center'; chip.style.gap='6px';
+      chip.innerHTML=`<span style="font-size:.78rem;background:var(--blue);color:#fff;padding:4px 10px;border-radius:20px;font-weight:700;">📦 ${n}</span>`; }
+    const clrBtn = document.getElementById('btn-clear-prod-cmp'); if(clrBtn) clrBtn.style.display = '';
+    _actualizarCmpFilterDot(); _reEjecutarCmpSiActivo();
+  };
+
+  const _prevAplicarCatCmp = window.aplicarFiltroCatCmp;
+  window.aplicarFiltroCatCmp = function(){
+    const val = document.getElementById('cmp-cat-select')?.value || '';
+    window._filtroCategCmp = val || null;
+    if(val){
+      const prodWrap = document.getElementById('cmp-prod-filter-wrap'); if(prodWrap) prodWrap.style.display = 'none';
+      window._filtroProductoCmp = null;
+      const inp = document.getElementById('cmp-prod-input'); if(inp) inp.value = '';
+      const chip = document.getElementById('cmp-prod-chip'); if(chip){ chip.style.display='none'; chip.innerHTML=''; }
+      const clr = document.getElementById('btn-clear-prod-cmp'); if(clr) clr.style.display = 'none';
+    } else {
+      const prodWrap = document.getElementById('cmp-prod-filter-wrap'); if(prodWrap) prodWrap.style.display = '';
+    }
+    const clrBtn = document.getElementById('btn-clear-cat-cmp'); if(clrBtn) clrBtn.style.display = val ? '' : 'none';
+    _actualizarCmpFilterDot(); _reEjecutarCmpSiActivo();
+  };
+
+  window.limpiarFiltroProductoCmp = function(){
+    window._filtroProductoCmp = null;
+    const input = document.getElementById('cmp-prod-input'); if(input) input.value = '';
+    const sug = document.getElementById('cmp-prod-suggestions'); if(sug) sug.style.display = 'none';
+    const chip = document.getElementById('cmp-prod-chip'); if(chip){ chip.style.display='none'; chip.innerHTML=''; }
+    const clrBtn = document.getElementById('btn-clear-prod-cmp'); if(clrBtn) clrBtn.style.display = 'none';
+    const catWrap = document.getElementById('cmp-cat-filter-wrap'); if(catWrap) catWrap.style.display = '';
+    _actualizarCmpFilterDot(); _reEjecutarCmpSiActivo();
+  };
+}
+
+// ── FIX 8: Actividad — setLogTipo deselect resetea _logFiltTipo ──
+{
+  const _prevSetLogTipo = window.setLogTipo;
+  window.setLogTipo = function(tipo, btn){
+    const logUserWrap = document.getElementById('log-user-wrap');
+    const logTipoWrap = document.getElementById('log-tipo-wrap');
+    if(btn && btn.classList.contains('active')){
+      btn.classList.remove('active');
+      window._filtroTipoLog  = null;
+      window._logFiltTipo    = 'todos';   // ← fix: también resetea _logFiltTipo
+      if(logUserWrap) logUserWrap.style.display = '';
+      if(logTipoWrap) logTipoWrap.style.display = '';
+      renderLogs(); return;
+    }
+    document.querySelectorAll('#lfilt-tipo-admins,#lfilt-tipo-usuarios').forEach(b=>b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    if(logUserWrap) logUserWrap.style.display = 'none';
+    const logUserInp = document.getElementById('log-user-input'); if(logUserInp) logUserInp.value = '';
+    const logUserChip = document.getElementById('log-user-chip'); if(logUserChip){ logUserChip.style.display='none'; logUserChip.innerHTML=''; }
+    const logClearBtn = document.getElementById('btn-clear-user-log'); if(logClearBtn) logClearBtn.style.display = 'none';
+    window._filtroUsuarioLog = null;
+    window._logFiltUsuario   = null;
+    window._logFiltTipo      = tipo;
+    window._filtroTipoLog    = tipo;
+    renderLogs();
+  };
+}
+
+// ── FIX 9: Actividad — limpiarUsuarioLog restaura tipo wrap ──
+window.limpiarUsuarioLog = function(){
+  window._filtroUsuarioLog = null;
+  window._logFiltUsuario   = null;
+  const inp = document.getElementById('log-user-input'); if(inp) inp.value = '';
+  const sug = document.getElementById('log-user-sug'); if(sug) sug.style.display = 'none';
+  const chip = document.getElementById('log-user-chip'); if(chip){ chip.style.display='none'; chip.innerHTML=''; }
+  const clrBtn = document.getElementById('btn-clear-user-log'); if(clrBtn) clrBtn.style.display = 'none';
+  const logTipoWrap = document.getElementById('log-tipo-wrap'); if(logTipoWrap) logTipoWrap.style.display = '';
+  const logUserWrap = document.getElementById('log-user-wrap'); if(logUserWrap) logUserWrap.style.display = '';
+  renderLogs();
+};
+
+// ── FIX 10: Logs prod/cat — usar filter en lugar de DOM post-filter ──
+// Reemplazar el patch que hace post-filtering del DOM (frágil) por uno que filtra los datos directamente
+{
+  const _trueRenderLogs = window.renderLogs;
+  window.renderLogs = function(){
+    const hayProd = !!window._filtroProductoLog;
+    const hayCat  = !!window._filtroCategLog;
+    if(!hayProd && !hayCat){ _trueRenderLogs(); return; }
+    // Temporalmente sobreescribir el fetch para filtrar antes de renderizar
+    const lista = document.getElementById('lista-logs');
+    if(!lista){ _trueRenderLogs(); return; }
+    lista.innerHTML = '<p class="no-data">Cargando…</p>';
+    // Ejecutar renderLogs original (usa get(rLogs) internamente) y luego filtrar DOM
+    _trueRenderLogs();
+    setTimeout(()=>{
+      const items = lista.querySelectorAll('div[style*="border-radius:var(--rmd)"]');
+      let visible = 0;
+      items.forEach(item=>{
+        const txt = (item.textContent || '').toLowerCase();
+        const matchProd = !hayProd || txt.includes((window._filtroProductoLog||'').toLowerCase());
+        const matchCat  = !hayCat  || txt.includes((window._filtroCategLog||'').toLowerCase());
+        item.style.display = (matchProd && matchCat) ? '' : 'none';
+        if(matchProd && matchCat) visible++;
+      });
+      if(visible === 0 && items.length > 0){
+        lista.insertAdjacentHTML('beforeend','<p class="no-data">Sin logs para el filtro actual</p>');
+      }
+    }, 200);
+  };
+}
 
 </script>
 </body>
